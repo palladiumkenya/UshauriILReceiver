@@ -37,14 +37,14 @@ app.post("/hl7_message", (req, res) => {
 			var value = result[i].value;
 
 			if (key == "FIRST_NAME") {
-				FIRST_NAME = result[20].value;
+				FIRST_NAME = result[i].value;
 
 				console.log("FIRST_NAME  => " + FIRST_NAME + "<br> ");
 			} else if (key == "MIDDLE_NAME") {
-				MIDDLE_NAME = result[21].value;
+				MIDDLE_NAME = result[i].value;
 				console.log("MIDDLE_NAME  => " + MIDDLE_NAME + "<br> ");
 			} else if (key == "LAST_NAME") {
-				LAST_NAME = result[22].value;
+				LAST_NAME = result[i].value;
 				console.log("LAST_NAME => " + LAST_NAME + "<br> ");
 			} else if (key == "DATE_OF_BIRTH") {
 				console.log("Date of Birth " + DATE_OF_BIRTH);
