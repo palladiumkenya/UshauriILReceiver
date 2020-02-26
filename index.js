@@ -15,109 +15,68 @@ app.post("/hl7_message", (req, res) => {
 	if (message_type == "ADT^A04") {
 		console.log("ADT^A04 Patient registration received ....");
 		var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
+		var patientID = jsonObj.PATIENT_IDENTIFICATION.INTERNAL_PATIENT_ID;
 		var CCC_NUMBER;
-		console.log("REGISTRATION GODS NUMBER =>" + GODS_NUMBER);
-		var FIRST_NAME;
-		var MIDDLE_NAME;
-		var LAST_NAME;
+		for (let i = 0; i < patientID.length; i++) {
+			if (patientID[i].IDENTIFIER_TYPE == "CCC_NUMBER") {
+				CCC_NUMBER = patientID[i].ID;
+			}
+		}
+		var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+		var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
+		var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
 		var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
-		var SEX;
-		var PHONE_NUMBER;
-		var MARITAL_STATUS;
+		var SEX = jsonObj.PATIENT_IDENTIFICATION.SEX;
+		var PHONE_NUMBER = jsonObj.PATIENT_IDENTIFICATION.PHONE_NUMBER;
+		var MARITAL_STATUS = jsonObj.PATIENT_IDENTIFICATION.MARITAL_STATUS;
 		var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.PATIENT_SOURCE;
 		var ENROLLMENT_DATE = jsonObj.PATIENT_VISIT.HIV_CARE_ENROLLMENT_DATE;
 		var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
-		var SENDING_FACILITY;
+		var SENDING_FACILITY = jsonObj.MESSAGE_HEADER.SENDING_FACILITY;
 		var GROUP_ID;
 
-		var result = get_json(jsonObj);
+		var DoB = DATE_OF_BIRTH;
 
-		for (var i = 0; i < result.length; i++) {
-			var key = result[i].key;
-			var value = result[i].value;
+		var year = DoB.substring(0, 4);
+		var month = DoB.substring(4, 6);
+		var day = DoB.substring(6, 8);
 
-			if (key == "FIRST_NAME") {
-				FIRST_NAME = result[i].value;
+		var today = DATE_TODAY;
 
-				console.log("FIRST_NAME  => " + FIRST_NAME + "<br> ");
-			} else if (key == "MIDDLE_NAME") {
-				MIDDLE_NAME = result[i].value;
-				console.log("MIDDLE_NAME  => " + MIDDLE_NAME + "<br> ");
-			} else if (key == "LAST_NAME") {
-				LAST_NAME = result[i].value;
-				console.log("LAST_NAME => " + LAST_NAME + "<br> ");
-			} else if (key == "DATE_OF_BIRTH") {
-				console.log("Date of Birth " + DATE_OF_BIRTH);
-				var DoB = DATE_OF_BIRTH;
+		var new_date = year + "-" + month + "-" + day;
+		var date_diff = moment(today).diff(
+			moment(new_date).format("YYYY-MM-DD"),
+			"days"
+		);
 
-				var year = DoB.substring(0, 4);
-				var month = DoB.substring(4, 6);
-				var day = DoB.substring(6, 8);
-
-				var today = DATE_TODAY;
-
-				var new_date = year + "-" + month + "-" + day;
-				console.log("new date ni: " + new_date);
-				var date_diff = moment(today).diff(
-					moment(new_date).format("YYYY-MM-DD"),
-					"days"
-				);
-
-				console.log("Date Difference => " + date_diff); // at time of posting, 106 days
-
-				console.log("Birth Date  => " + new_date + " Today " + today);
-
-				if (date_diff >= 5475 && date_diff <= 6935) {
-					GROUP_ID = "2";
-				}
-				if (date_diff >= 7300) {
-					GROUP_ID = "1";
-				}
-				if (date_diff <= 5110) {
-					GROUP_ID = "6";
-				}
-
-				console.log("Hi group yake ni: " + GROUP_ID);
-				console.log("Hi dob yake ni: " + new_date);
-			} else if (key == "SEX") {
-				if (result[i].value == "F") {
-					SEX = "1";
-				} else {
-					SEX = "2";
-				}
-
-				console.log("SEX => " + SEX + "<br> ");
-			} else if (key == "PHONE_NUMBER") {
-				PHONE_NUMBER = result[i].value;
-				console.log("PHONE_NUMBER => " + PHONE_NUMBER + "<br> ");
-			} else if (key == "MARITAL_STATUS") {
-				if (result[i].value === "") {
-					// do stuff
-					MARITAL_STATUS = "1";
-				}
-				if (result[i].value == "D") {
-					MARITAL_STATUS = "3";
-				} else if (result[i].value == "M") {
-					MARITAL_STATUS = "2";
-				} else if (result[i].value == "S") {
-					MARITAL_STATUS = "1";
-				} else if (result[i].value == "W") {
-					MARITAL_STATUS = "4";
-				} else if (result[i].value == "C") {
-					MARITAL_STATUS = "5";
-				}
-
-				console.log("MARITAL_STATUS => " + MARITAL_STATUS + "<br> ");
-			}
-			if (key == "SENDING_FACILITY") {
-				SENDING_FACILITY = result[i].value;
-				console.log("CCC_NUMBER => " + CCC_NUMBER + " ");
-			}
-			if (key == "ID") {
-				if (result[i + 1].value == "CCC_NUMBER") {
-					CCC_NUMBER = result[i].value;
-				}
-			}
+		if (date_diff >= 5475 && date_diff <= 6935) {
+			GROUP_ID = "2";
+		}
+		if (date_diff >= 7300) {
+			GROUP_ID = "1";
+		}
+		if (date_diff <= 5110) {
+			GROUP_ID = "6";
+		}
+		if (SEX == "F") {
+			SEX = "1";
+		} else {
+			SEX = "2";
+		}
+		if (MARITAL_STATUS === "") {
+			// do stuff
+			MARITAL_STATUS = "1";
+		}
+		if (MARITAL_STATUS == "D") {
+			MARITAL_STATUS = "3";
+		} else if (MARITAL_STATUS == "M") {
+			MARITAL_STATUS = "2";
+		} else if (MARITAL_STATUS == "S") {
+			MARITAL_STATUS = "1";
+		} else if (MARITAL_STATUS == "W") {
+			MARITAL_STATUS = "4";
+		} else if (MARITAL_STATUS == "C") {
+			MARITAL_STATUS = "5";
 		}
 
 		var enroll_year = ENROLLMENT_DATE.substring(0, 4);
@@ -134,173 +93,147 @@ app.post("/hl7_message", (req, res) => {
 				console.log(err);
 				process.exit(1);
 			} else {
-				console.log(
-					FIRST_NAME +
-						MIDDLE_NAME +
-						LAST_NAME +
-						DATE_OF_BIRTH +
-						CCC_NUMBER +
-						SENDING_FACILITY +
-						GROUP_ID
-				);
-				var gateway_sql =
-					"Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, entry_point, PATIENT_SOURCE, enrollment_date, client_type) VALUES ('" +
-					FIRST_NAME +
-					"', '" +
-					MIDDLE_NAME +
-					"','" +
-					LAST_NAME +
-					"','" +
-					new_date +
-					"','" +
-					CCC_NUMBER +
-					"','" +
-					SENDING_FACILITY +
-					"','" +
-					SEX +
-					"','" +
-					MARITAL_STATUS +
-					"','" +
-					PHONE_NUMBER +
-					"','" +
-					GODS_NUMBER +
-					"','" +
-					parseInt(GROUP_ID) +
-					"','" +
-					SENDING_APPLICATION +
-					"','IL','" +
-					PATIENT_SOURCE +
-					"','" +
-					new_enroll_date +
-					"','" +
-					PATIENT_TYPE +
-					"')";
-
-				var response;
-				// Use the connection
-				connection.query(gateway_sql, function(error, results, fields) {
-					// And done with the connection.
-					connection.release();
-
+				let find_partnerID =
+					"SELECT partner_id FROM tbl_partner_facility WHERE mfl_code =" +
+					SENDING_FACILITY;
+				connection.query(find_partnerID, function(error, results, fields) {
 					// Handle error after the release.
 					if (error) {
 						//throw error;
 						response = "Transaction Error => " + error.sqlMessage;
 					} else {
-						response = "Success,Patient Registration  !!!";
+						response = results;
 					}
-					res.send(response);
+					let partner_id = results[0].partner_id;
 
 					// Don't use the connection here, it has been returned to the pool.
+
+					var gateway_sql =
+						"Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,partner_id,gender,marital,phone_no,GODS_NUMBER,group_id,clinic_id,SENDING_APPLICATION, entry_point, PATIENT_SOURCE, enrollment_date, client_type) VALUES ('" +
+						FIRST_NAME +
+						"', '" +
+						MIDDLE_NAME +
+						"','" +
+						LAST_NAME +
+						"','" +
+						new_date +
+						"','" +
+						CCC_NUMBER +
+						"','" +
+						SENDING_FACILITY +
+						"','" +
+						partner_id +
+						"','" +
+						SEX +
+						"','" +
+						MARITAL_STATUS +
+						"','" +
+						PHONE_NUMBER +
+						"','" +
+						GODS_NUMBER +
+						"','" +
+						parseInt(GROUP_ID) +
+						"','" +
+						1 +
+						"','" +
+						SENDING_APPLICATION +
+						"','IL','" +
+						PATIENT_SOURCE +
+						"','" +
+						new_enroll_date +
+						"','" +
+						PATIENT_TYPE +
+						"')";
+
+					var response;
+					// Use the connection
+					connection.query(gateway_sql, function(error, results, fields) {
+						// And done with the connection.
+						connection.release();
+
+						// Handle error after the release.
+						if (error) {
+							//throw error;
+							response = "Transaction Error => " + error.sqlMessage;
+						} else {
+							response = "Success,Patient Registration  !!!";
+						}
+						res.send(response);
+
+						// Don't use the connection here, it has been returned to the pool.
+					});
 				});
 			}
 		});
 	} else if (message_type == "ADT^A08") {
 		console.log("ADT^A08 => Patient Update....");
 		var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
+		var patientID = jsonObj.PATIENT_IDENTIFICATION.INTERNAL_PATIENT_ID;
 		var CCC_NUMBER;
-		console.log("REGISTRATION GODS NUMBER =>" + GODS_NUMBER);
-		var FIRST_NAME;
-		var MIDDLE_NAME;
-		var LAST_NAME;
+		for (let i = 0; i < patientID.length; i++) {
+			if (patientID[i].IDENTIFIER_TYPE == "CCC_NUMBER") {
+				CCC_NUMBER = patientID[i].ID;
+			}
+		}
+		var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+		var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
+		var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
 		var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
-		var SEX;
-		var PHONE_NUMBER;
-		var MARITAL_STATUS;
+		var SEX = jsonObj.PATIENT_IDENTIFICATION.SEX;
+		var PHONE_NUMBER = jsonObj.PATIENT_IDENTIFICATION.PHONE_NUMBER;
+		var MARITAL_STATUS = jsonObj.PATIENT_IDENTIFICATION.MARITAL_STATUS;
 		var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.PATIENT_SOURCE;
 		var ENROLLMENT_DATE = jsonObj.PATIENT_VISIT.HIV_CARE_ENROLLMENT_DATE;
 		var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
-		var SENDING_FACILITY;
+		var SENDING_FACILITY = jsonObj.MESSAGE_HEADER.SENDING_FACILITY;
+		var DEATH_DATE = jsonObj.PATIENT_IDENTIFICATION.DEATH_DATE;
+		if (DEATH_DATE) {
+			var STATUS = "Deceased";
+		}
 		var GROUP_ID;
 
-		var result = get_json(jsonObj);
+		var DoB = DATE_OF_BIRTH;
 
-		for (var i = 0; i < result.length; i++) {
-			var key = result[i].key;
-			var value = result[i].value;
+		var year = DoB.substring(0, 4);
+		var month = DoB.substring(4, 6);
+		var day = DoB.substring(6, 8);
 
-			if (key == "FIRST_NAME") {
-				FIRST_NAME = result[20].value;
+		var today = DATE_TODAY;
 
-				console.log("FIRST_NAME  => " + FIRST_NAME + "<br> ");
-			} else if (key == "MIDDLE_NAME") {
-				MIDDLE_NAME = result[21].value;
-				console.log("MIDDLE_NAME  => " + MIDDLE_NAME + "<br> ");
-			} else if (key == "LAST_NAME") {
-				LAST_NAME = result[22].value;
-				console.log("LAST_NAME => " + LAST_NAME + "<br> ");
-			} else if (key == "DATE_OF_BIRTH") {
-				console.log("Date of Birth " + DATE_OF_BIRTH);
-				var DoB = DATE_OF_BIRTH;
+		var new_date = year + "-" + month + "-" + day;
+		var date_diff = moment(today).diff(
+			moment(new_date).format("YYYY-MM-DD"),
+			"days"
+		);
 
-				var year = DoB.substring(0, 4);
-				var month = DoB.substring(4, 6);
-				var day = DoB.substring(6, 8);
-
-				var today = DATE_TODAY;
-
-				var new_date = year + "-" + month + "-" + day;
-				console.log("new date ni: " + new_date);
-				var date_diff = moment(today).diff(
-					moment(new_date).format("YYYY-MM-DD"),
-					"days"
-				);
-
-				console.log("Date Difference => " + date_diff); // at time of posting, 106 days
-
-				console.log("Birth Date  => " + new_date + " Today " + today);
-
-				if (date_diff >= 5475 && date_diff <= 6935) {
-					GROUP_ID = "2";
-				}
-				if (date_diff >= 7300) {
-					GROUP_ID = "1";
-				}
-				if (date_diff <= 5110) {
-					GROUP_ID = "6";
-				}
-
-				console.log("Hi group yake ni: " + GROUP_ID);
-				console.log("Hi dob yake ni: " + new_date);
-			} else if (key == "SEX") {
-				if (result[i].value == "F") {
-					SEX = "1";
-				} else {
-					SEX = "2";
-				}
-
-				console.log("SEX => " + SEX + "<br> ");
-			} else if (key == "PHONE_NUMBER") {
-				PHONE_NUMBER = result[i].value;
-				console.log("PHONE_NUMBER => " + PHONE_NUMBER + "<br> ");
-			} else if (key == "MARITAL_STATUS") {
-				if (result[i].value === "") {
-					// do stuff
-					MARITAL_STATUS = "1";
-				}
-				if (result[i].value == "D") {
-					MARITAL_STATUS = "3";
-				} else if (result[i].value == "M") {
-					MARITAL_STATUS = "2";
-				} else if (result[i].value == "S") {
-					MARITAL_STATUS = "1";
-				} else if (result[i].value == "W") {
-					MARITAL_STATUS = "4";
-				} else if (result[i].value == "C") {
-					MARITAL_STATUS = "5";
-				}
-
-				console.log("MARITAL_STATUS => " + MARITAL_STATUS + "<br> ");
-			}
-			if (key == "SENDING_FACILITY") {
-				SENDING_FACILITY = result[i].value;
-				console.log("CCC_NUMBER => " + CCC_NUMBER + " ");
-			}
-			if (key == "ID") {
-				if (result[i + 1].value == "CCC_NUMBER") {
-					CCC_NUMBER = result[i].value;
-				}
-			}
+		if (date_diff >= 5475 && date_diff <= 6935) {
+			GROUP_ID = "2";
+		}
+		if (date_diff >= 7300) {
+			GROUP_ID = "1";
+		}
+		if (date_diff <= 5110) {
+			GROUP_ID = "6";
+		}
+		if (SEX == "F") {
+			SEX = "1";
+		} else {
+			SEX = "2";
+		}
+		if (MARITAL_STATUS === "") {
+			// do stuff
+			MARITAL_STATUS = "1";
+		}
+		if (MARITAL_STATUS == "D") {
+			MARITAL_STATUS = "3";
+		} else if (MARITAL_STATUS == "M") {
+			MARITAL_STATUS = "2";
+		} else if (MARITAL_STATUS == "S") {
+			MARITAL_STATUS = "1";
+		} else if (MARITAL_STATUS == "W") {
+			MARITAL_STATUS = "4";
+		} else if (MARITAL_STATUS == "C") {
+			MARITAL_STATUS = "5";
 		}
 
 		var enroll_year = ENROLLMENT_DATE.substring(0, 4);
@@ -309,15 +242,14 @@ app.post("/hl7_message", (req, res) => {
 		var new_enroll_date = enroll_year + "-" + enroll_month + "-" + enroll_day;
 
 		if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-			res.send("Invalid CCC NUMBER");
+			res.send(`Invalid CCC Number: ${CCC_NUMBER}`);
 		}
-
 		db.getConnection(function(err, connection) {
 			if (err) {
 				console.log(err);
 			} else {
 				var update_sql =
-					"tbl_client SET f_name='" +
+					"UPDATE tbl_client SET f_name='" +
 					FIRST_NAME +
 					"',m_name='" +
 					MIDDLE_NAME +
@@ -333,6 +265,10 @@ app.post("/hl7_message", (req, res) => {
 					MARITAL_STATUS +
 					"',phone_no='" +
 					PHONE_NUMBER +
+					"',DEATH_DATE='" +
+					DEATH_DATE +
+					"',status='" +
+					STATUS +
 					"',group_id='" +
 					GROUP_ID +
 					"' WHERE clinic_number='" +
