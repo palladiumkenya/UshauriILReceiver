@@ -1,5 +1,4 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const moment = require("moment");
 const db = require("./dbconnection.js"); //reference of dbconnection.js
 const app = express();
@@ -468,7 +467,7 @@ app.post("/hl7_message", (req, res) => {
 	res.send(true);
 });
 
-app.listen(1440, () => {
+app.listen(3000, () => {
 	console.log("Ushauri IL listening on port 1440");
 });
 
