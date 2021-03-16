@@ -328,7 +328,7 @@ app.post("/hl7_message", (req, res) => {
 			} else if (key == "ACTION_CODE") {
 				ACTION_CODE = result[i].value;
 			} else if (key == "APPOINTMENT_PLACING_ENTITY") {
-				APPOINTMENT_PLACING_ENTITY = result[22].value;
+				APPOINTMENT_PLACING_ENTITY = result[i].value;
 			} else if (key == "APPOINTMENT_DATE") {
 				APPOINTMENT_DATE = result[i].value;
 				APPOINTMENT_DATE = APPOINTMENT_DATE;
@@ -368,6 +368,28 @@ app.post("/hl7_message", (req, res) => {
 					"Select id from tbl_client where clinic_number='" +
 					CCC_NUMBER +
 					"' LIMIT 1";
+
+				// Get appointment type by id
+				var get_app_type =
+					"Select id from tbl_appointment_types WHERE UPPER(name)='" +
+					APPOINTMENT_TYPE.toString().toUpperCase() +
+					"' LIMIT 1";
+					
+				connection.query(get_app_type,  function (error, results, fields){	
+					if (error) {
+						//throw error;
+						APPOINTMENT_TYPE = 2;
+						//set default to clinical review on fail
+					} else {
+						for (var res in results) {
+							APPOINTMENT_TYPE = results[res].id;
+						}
+					}
+				});
+
+				if (!APPOINTMENT_TYPE) {
+					APPOINTMENT_TYPE = 2;
+				}
 
 				// Use the connection
 				connection.query(get_client_sql, function (error, results, fields) {
