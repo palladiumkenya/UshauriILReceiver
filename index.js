@@ -106,13 +106,13 @@ app.post("/hl7_message", (req, res) => {
 
         if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
             response = `Invalid CCC Number: ${CCC_NUMBER}`;
-            res.send(response);
+            console.log(response);
             return;
         }
 
         db.getConnection(function(err, connection) {
             if (err) {
-                res.send(err);
+                console.log(err);
                 return;
             } else {
                 var gateway_sql =
@@ -151,8 +151,15 @@ app.post("/hl7_message", (req, res) => {
                 // Use the connection
                 connection.query(gateway_sql, function(error, results, fields) {
                     // And done with the connection.
-                    connection.release();
+                    if (error) {
 
+                        console.log(error);
+
+                    } else {
+
+                        connection.release();
+
+                    }
                     // Don't use the connection here, it has been returned to the pool.
                 });
             }
@@ -250,7 +257,7 @@ app.post("/hl7_message", (req, res) => {
         var new_enroll_date = enroll_year + "-" + enroll_month + "-" + enroll_day;
 
         if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-            res.send("Invalid CCC NUMBER");
+            console.log("Invalid CCC NUMBER");
             return;
         }
 
@@ -355,7 +362,7 @@ app.post("/hl7_message", (req, res) => {
             }
         }
         if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-            res.send("Invalid CCC NUMBER");
+            console.log("Invalid CCC NUMBER");
         }
         if (!APPOINTMENT_TYPE) {
             APPOINTMENT_TYPE = 2;
@@ -487,7 +494,7 @@ app.post("/hl7_message", (req, res) => {
         });
     }
 
-    res.send(true);
+    console.log(true);
 });
 
 app.listen(3000, () => {
