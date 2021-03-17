@@ -368,7 +368,7 @@ app.post("/hl7_message", (req, res) => {
                 var get_client_sql =
                     "Select id from tbl_client where clinic_number='" +
                     CCC_NUMBER +
-                    "' LIMIT 1";
+                    "' is not null LIMIT 1";
 
                 // Get appointment type by id
                 var get_app_type =
@@ -399,6 +399,7 @@ app.post("/hl7_message", (req, res) => {
                     // Handle error after the release.
                     if (error) {
                         //throw error;
+                        console.log(error)
                     } else {
                         for (var res in results) {
                             var client_id = results[res].id;
