@@ -7,6 +7,7 @@ app.use(express.json());
 app.use(express.urlencoded());
 app.post("/hl7_message", (req, res) => {
     jsonObj = req.body;
+    console.log(jsonObj);
     var DATE_TODAY = moment(new Date()).format("YYYY-MM-DD");
 
     var message_type = jsonObj.MESSAGE_HEADER.MESSAGE_TYPE;
@@ -234,7 +235,7 @@ app.post("/hl7_message", (req, res) => {
                     MARITAL_STATUS = "5";
                 }
             }
-            if (key == "SENDING_FACILITY") {
+ if (key == "SENDING_FACILITY") {
                 SENDING_FACILITY = result[i].value;
             }
             if (key == "ID") {
@@ -489,7 +490,7 @@ app.post("/hl7_message", (req, res) => {
     res.send(true);
 });
 
-app.listen(3000, () => {
+app.listen(1440, () => {
     console.log("Ushauri IL listening on port 1440");
 });
 
