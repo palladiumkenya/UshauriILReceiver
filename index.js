@@ -6,11 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded());
 app.post("/hl7_message", (req, res) => {
-    console.log(req);
-
-    if (req === undefined) {
-
-    }
+    console.log(req.body);
 
     jsonObj = req.body;
     var DATE_TODAY = moment(new Date()).format("YYYY-MM-DD");
