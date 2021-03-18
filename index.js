@@ -1,19 +1,21 @@
 const express = require("express");
 const moment = require("moment");
 const db = require("./dbconnection.js"); //reference of dbconnection.js
+let stringify = require('json-stringify-safe');
+
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded());
 app.post("/hl7_message", (req, res) => {
 
-    var obj1 = req.toString().replace(/'/g, "\""); //Replace single quotes with double quotes
-    console.log(typeof obj1); // string
+    let obj1 = stringify(req);
     console.log(obj1);
 
-    //var myjsonobj = JSON.parse(obj1); //convert to JSON
-
     jsonObj = obj1.body;
+
+    console.log(jsonObj);
+
     var DATE_TODAY = moment(new Date()).format("YYYY-MM-DD");
 
     var message_type = jsonObj.MESSAGE_HEADER.MESSAGE_TYPE;
