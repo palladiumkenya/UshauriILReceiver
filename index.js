@@ -6,15 +6,22 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded());
 app.post("/hl7_message", (req, res) => {
-    console.log(req.body);
 
-    jsonObj = req.body;
+    var obj1 = req.toString().replace(/'/g, "\""); //Replace single quotes with double quotes
+    console.log(typeof obj1); // string
+    console.log(obj1);
+
+    //var myjsonobj = JSON.parse(obj1); //convert to JSON
+
+    jsonObj = obj1.body;
     var DATE_TODAY = moment(new Date()).format("YYYY-MM-DD");
 
     var message_type = jsonObj.MESSAGE_HEADER.MESSAGE_TYPE;
     var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
     var MESSAGE_DATETIME = jsonObj.MESSAGE_HEADER.MESSAGE_DATETIME;
     let response;
+
+    //only post KENYAEMR and ADT appointments and clients
 
     if (SENDING_APPLICATION === 'KENYAEMR' || SENDING_APPLICATION === 'ADT') {
 
@@ -121,7 +128,7 @@ app.post("/hl7_message", (req, res) => {
                     return;
                 } else {
                     var gateway_sql =
-                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type) VALUES ('" +
+                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, entry_point, client_type) VALUES ('" +
                         FIRST_NAME +
                         "', '" +
                         MIDDLE_NAME +
@@ -149,6 +156,8 @@ app.post("/hl7_message", (req, res) => {
                         PATIENT_SOURCE +
                         "','" +
                         new_enroll_date +
+                        "','" +
+                        SENDING_APPLICATION +
                         "','" +
                         PATIENT_TYPE +
                         "')";
@@ -515,6 +524,7 @@ app.listen(1440, () => {
     console.log("Ushauri IL listening on port 1440");
 });
 
+//convert json object to key value pairs
 function get_json(jsonObj) {
     var output = [];
 
@@ -530,4 +540,17 @@ function get_json(jsonObj) {
     }
 
     return output;
+}
+
+function strAfter(string, delimiter) {
+    if (delimiter === '') {
+        return string
+    }
+
+    const substrings = string.split(delimiter)
+
+    return substrings.length === 1 ?
+        string // delimiter is not part of the string
+        :
+        substrings.slice(1).join(delimiter)
 }
