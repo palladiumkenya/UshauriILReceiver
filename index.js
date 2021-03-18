@@ -7,6 +7,11 @@ app.use(express.json());
 app.use(express.urlencoded());
 app.post("/hl7_message", (req, res) => {
     console.log(req);
+
+    if (req === undefined) {
+
+    }
+
     jsonObj = req.body;
     var DATE_TODAY = moment(new Date()).format("YYYY-MM-DD");
 
@@ -15,7 +20,7 @@ app.post("/hl7_message", (req, res) => {
     var MESSAGE_DATETIME = jsonObj.MESSAGE_HEADER.MESSAGE_DATETIME;
     let response;
 
-    if (SENDING_APPLICATION !== 'IQCARE') {
+    if (SENDING_APPLICATION === 'KENYAEMR' || SENDING_APPLICATION === 'ADT') {
 
         if (message_type == "ADT^A04") {
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
@@ -500,9 +505,14 @@ app.post("/hl7_message", (req, res) => {
             });
         }
 
+        console.log(true);
+
+    } else {
+
+        console.log("IQCare Message, skip")
     }
 
-    console.log(true);
+
 });
 
 app.listen(1440, () => {
