@@ -1,18 +1,19 @@
 const express = require("express");
 const moment = require("moment");
 const db = require("./dbconnection.js"); //reference of dbconnection.js
-let stringify = require('json-stringify-safe');
+var bodyParser = require("body-parser");
 
 const app = express();
 
+app.use(bodyParser.json());
+
 app.use(express.json());
 app.use(express.urlencoded());
-app.post("/hl7_message", (req, res) => {
+app.post("/hl7_message", function(req, res) {
 
-    let obj1 = stringify(req);
-    console.log(obj1);
+    console.log(req);
 
-    jsonObj = obj1.body;
+    jsonObj = req.body;
 
     console.log(jsonObj);
 
@@ -544,15 +545,3 @@ function get_json(jsonObj) {
     return output;
 }
 
-function strAfter(string, delimiter) {
-    if (delimiter === '') {
-        return string
-    }
-
-    const substrings = string.split(delimiter)
-
-    return substrings.length === 1 ?
-        string // delimiter is not part of the string
-        :
-        substrings.slice(1).join(delimiter)
-}
