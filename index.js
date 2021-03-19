@@ -1,17 +1,22 @@
 const express = require("express");
 const moment = require("moment");
 const db = require("./dbconnection.js"); //reference of dbconnection.js
-let stringify = require('json-stringify-safe');
+var bodyParser = require("body-parser");
 
 const app = express();
 
+app.use(bodyParser.json());
+
 app.use(express.json());
 app.use(express.urlencoded());
-app.post("/hl7_message", (req, res) => {
+app.post("/hl7_message", function(req, res) {
 
     console.log(req)
 
-    jsonObj = req.body
+    jsonObj = req.body;
+
+    console.log(jsonObj);
+
     var DATE_TODAY = moment(new Date()).format("YYYY-MM-DD");
 
     var message_type = jsonObj.MESSAGE_HEADER.MESSAGE_TYPE;
