@@ -1,19 +1,21 @@
+
 const express = require("express");
 const moment = require("moment");
 const db = require("./dbconnection.js"); //reference of dbconnection.js
-var bodyParser = require("body-parser");
+//let stringify = require('json-stringify-safe');
 
+var bodyParser = require('body-parser');
 const app = express();
 
-app.use(bodyParser.json());
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(express.json());
-app.use(express.urlencoded());
-app.post("/hl7_message", function(req, res) {
+//app.use(express.json());
+//app.use(express.urlencoded());
+app.post("/hl7_message", (req, res) => {
 
-    console.log(req)
-
-    jsonObj = req.body;
+    let obj1 = req;
+    jsonObj = obj1.body;
 
     console.log(jsonObj);
 
@@ -30,7 +32,7 @@ app.post("/hl7_message", function(req, res) {
 
         if (message_type == "ADT^A04") {
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
-            var CCC_NUMBER;
+            var CC_NUMBER;
             var FIRST_NAME;
             var MIDDLE_NAME;
             var LAST_NAME;
@@ -155,7 +157,7 @@ app.post("/hl7_message", function(req, res) {
                         parseInt(GROUP_ID) +
                         "','" +
                         SENDING_APPLICATION +
-                        "','IL','" +
+                        "','" +
                         PATIENT_SOURCE +
                         "','" +
                         new_enroll_date +
@@ -388,16 +390,17 @@ app.post("/hl7_message", function(req, res) {
                 if (err) {
                     //process.exit(1);
                 } else {
+console.log(CCC_NUMBER)
                     var get_client_sql =
                         "Select id from tbl_client where clinic_number='" +
                         CCC_NUMBER +
-                        "' is not null LIMIT 1";
+                        "'  LIMIT 1";
 
                     // Get appointment type by id
                     var get_app_type =
                         "Select id from tbl_appointment_types WHERE UPPER(name)='" +
                         APPOINTMENT_TYPE.toString().toUpperCase() +
-                        "' is not null LIMIT 1";
+                        "'  LIMIT 1";
 
                     connection.query(get_app_type, function(error, results, fields) {
                         if (error) {
@@ -411,9 +414,9 @@ app.post("/hl7_message", function(req, res) {
                         }
                     });
 
-                    if (!APPOINTMENT_TYPE) {
+//                    if (!APPOINTMENT_TYPE) {
                         APPOINTMENT_TYPE = 2;
-                    }
+  //                  }
 
                     // Use the connection
                     connection.query(get_client_sql, function(error, results, fields) {
@@ -425,6 +428,7 @@ app.post("/hl7_message", function(req, res) {
                             console.log(error)
                         } else {
                             for (var res in results) {
+console.log(res, results)
                                 var client_id = results[res].id;
                                 var APP_STATUS = "Booked";
                                 var ACTIVE_APP = "1";
