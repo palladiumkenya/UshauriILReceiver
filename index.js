@@ -32,7 +32,7 @@ app.post("/hl7_message", (req, res) => {
 
         if (message_type == "ADT^A04") {
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
-            var CC_NUMBER;
+            var CCC_NUMBER;
             var FIRST_NAME;
             var MIDDLE_NAME;
             var LAST_NAME;
@@ -492,136 +492,135 @@ app.post("/hl7_message", (req, res) => {
                             //throw error;
                             console.log(error)
                         } else {
-                            if(results.length == 0) {
-                                var gateway_sql =
-                                    "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, entry_point, client_type) VALUES ('" +
-                                    FIRST_NAME +
-                                    "', '" +
-                                    MIDDLE_NAME +
-                                    "','" +
-                                    LAST_NAME +
-                                    "','" +
-                                    new_date +
-                                    "','" +
-                                    CCC_NUMBER +
-                                    "','" +
-                                    SENDING_FACILITY +
-                                    "','" +
-                                    SEX +
-                                    "','" +
-                                    MARITAL_STATUS +
-                                    "','" +
-                                    PHONE_NUMBER +
-                                    "','" +
-                                    GODS_NUMBER +
-                                    "','" +
-                                    parseInt("1") +
-                                    "','" +
-                                    SENDING_APPLICATION +
-                                    "','" +
-                                    SENDING_APPLICATION +
-                                    "','" +
-                                    PATIENT_TYPE +
-                                    "')";
+                        //     if(results.length == 0) {
+                        //         var gateway_sql =
+                        //             "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, entry_point, client_type) VALUES ('" +
+                        //             FIRST_NAME +
+                        //             "', '" +
+                        //             MIDDLE_NAME +
+                        //             "','" +
+                        //             LAST_NAME +
+                        //             "','" +
+                        //             new_date +
+                        //             "','" +
+                        //             CCC_NUMBER +
+                        //             "','" +
+                        //             SENDING_FACILITY +
+                        //             "','" +
+                        //             SEX +
+                        //             "','" +
+                        //             MARITAL_STATUS +
+                        //             "','" +
+                        //             PHONE_NUMBER +
+                        //             "','" +
+                        //             GODS_NUMBER +
+                        //             "','" +
+                        //             parseInt("1") +
+                        //             "','" +
+                        //             SENDING_APPLICATION +
+                        //             "','" +
+                        //             SENDING_APPLICATION +
+                        //             "','" +
+                        //             PATIENT_TYPE +
+                        //             "')";
             
-                                // Use the connection
-                                connection.query(gateway_sql, function(error, r, fields) {
-                                    // And done with the connection.
-                                    if (error) {
-                                        console.log(error);
-                                    } else {
-                                        console.log(r);
-                                        connection.query(get_client_sql, function(error, all_results, fields) {
-                                            if (error) {
-                                                //throw error;
-                                                console.log(error)
-                                            }else{
-                                                for (var res in all_results) {
-                                                        var client_id = all_results[res].id;
-                                                        var APP_STATUS = "Booked";
-                                                        var ACTIVE_APP = "1";
-                                                        var SENDING_APPLICATION =
-                                                            jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
-                                                        if (ACTION_CODE == "A") {
-                                                            //Add new Appointment
-                                                            var appointment_sql =
-                                                                "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason) VALUES ('" +
-                                                                client_id +
-                                                                "', '" +
-                                                                APPOINTMENT_DATE +
-                                                                "','" +
-                                                                APPOINTMENT_TYPE +
-                                                                "','" +
-                                                                APPOINTMENT_REASON +
-                                                                "','" +
-                                                                APP_STATUS +
-                                                                "','" +
-                                                                SENDING_APPLICATION +
-                                                                "','" +
-                                                                ACTIVE_APP +
-                                                                "','" +
-                                                                APPOINTMENT_LOCATION +
-                                                                "','" +
-                                                                APPOINTMENT_NOTE +
-                                                                "')";
-                                                        }
-                                                        if (ACTION_CODE == "D") {
-                                                            //Delete an Appointment
-                                                        }
-                                                        if (ACTION_CODE == "U") {
-                                                            //Update an Appointment
-                                                            var appointment_sql =
-                                                                "Update  tbl_appointment SET appntmnt_date='" +
-                                                                APPOINTMENT_DATE +
-                                                                "' , app_type_1='" +
-                                                                APPOINTMENT_TYPE +
-                                                                "',reason='" +
-                                                                APPOINTMENT_NOTE +
-                                                                "',expln_app='" +
-                                                                APPOINTMENT_REASON +
-                                                                "'  (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,reason) VALUES ('" +
-                                                                client_id +
-                                                                "', '" +
-                                                                APPOINTMENT_DATE +
-                                                                "','" +
-                                                                APPOINTMENT_TYPE +
-                                                                "','" +
-                                                                APPOINTMENT_REASON +
-                                                                "','" +
-                                                                APP_STATUS +
-                                                                "','" +
-                                                                SENDING_APPLICATION +
-                                                                "','" +
-                                                                ACTIVE_APP +
-                                                                "','" +
-                                                                APPOINTMENT_NOTE +
-                                                                "')";
-                                                        }
+                        //         // Use the connection
+                        //         connection.query(gateway_sql, function(error, r, fields) {
+                        //             // And done with the connection.
+                        //             if (error) {
+                        //                 console.log(error);
+                        //             } else {
+                        //                 console.log(r);
+                        //                 connection.query(get_client_sql, function(error, all_results, fields) {
+                        //                     if (error) {
+                        //                         //throw error;
+                        //                         console.log(error)
+                        //                     }else{
+                        //                         for (var res in all_results) {
+                        //                                 var client_id = all_results[res].id;
+                        //                                 var APP_STATUS = "Booked";
+                        //                                 var ACTIVE_APP = "1";
+                        //                                 var SENDING_APPLICATION =
+                        //                                     jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
+                        //                                 if (ACTION_CODE == "A") {
+                        //                                     //Add new Appointment
+                        //                                     var appointment_sql =
+                        //                                         "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason) VALUES ('" +
+                        //                                         client_id +
+                        //                                         "', '" +
+                        //                                         APPOINTMENT_DATE +
+                        //                                         "','" +
+                        //                                         APPOINTMENT_TYPE +
+                        //                                         "','" +
+                        //                                         APPOINTMENT_REASON +
+                        //                                         "','" +
+                        //                                         APP_STATUS +
+                        //                                         "','" +
+                        //                                         SENDING_APPLICATION +
+                        //                                         "','" +
+                        //                                         ACTIVE_APP +
+                        //                                         "','" +
+                        //                                         APPOINTMENT_LOCATION +
+                        //                                         "','" +
+                        //                                         APPOINTMENT_NOTE +
+                        //                                         "')";
+                        //                                 }
+                        //                                 if (ACTION_CODE == "D") {
+                        //                                     //Delete an Appointment
+                        //                                 }
+                        //                                 if (ACTION_CODE == "U") {
+                        //                                     //Update an Appointment
+                        //                                     var appointment_sql =
+                        //                                         "Update  tbl_appointment SET appntmnt_date='" +
+                        //                                         APPOINTMENT_DATE +
+                        //                                         "' , app_type_1='" +
+                        //                                         APPOINTMENT_TYPE +
+                        //                                         "',reason='" +
+                        //                                         APPOINTMENT_NOTE +
+                        //                                         "',expln_app='" +
+                        //                                         APPOINTMENT_REASON +
+                        //                                         "'  (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,reason) VALUES ('" +
+                        //                                         client_id +
+                        //                                         "', '" +
+                        //                                         APPOINTMENT_DATE +
+                        //                                         "','" +
+                        //                                         APPOINTMENT_TYPE +
+                        //                                         "','" +
+                        //                                         APPOINTMENT_REASON +
+                        //                                         "','" +
+                        //                                         APP_STATUS +
+                        //                                         "','" +
+                        //                                         SENDING_APPLICATION +
+                        //                                         "','" +
+                        //                                         ACTIVE_APP +
+                        //                                         "','" +
+                        //                                         APPOINTMENT_NOTE +
+                        //                                         "')";
+                        //                                 }
 
-                                                        // Use the connection
-                                                        console.log(appointment_sql);
-                                                        connection.query(appointment_sql, function(
-                                                            error,
-                                                            results,
-                                                            fields
-                                                        ) {
-                                                            if (error) {
-                                                                console.log(error);
-                                                            } else {
-                                                                console.log(results);
-                                                            }
-                                                            // And done with the connection.
-                                                            connection.release();
+                        //                                 // Use the connection
+                        //                                 console.log(appointment_sql);
+                        //                                 connection.query(appointment_sql, function(
+                        //                                     error,
+                        //                                     results,
+                        //                                     fields
+                        //                                 ) {
+                        //                                     if (error) {
+                        //                                         console.log(error);
+                        //                                     } else {
+                        //                                         console.log(results);
+                        //                                     }
+                        //                                     // And done with the connection.
+                        //                                     connection.release();
 
-                                                            // Don't use the connection here, it has been returned to the pool.
-                                                        });
-                                                }
-                                            }
-                                        })
-                                    }
-                                })
-                            }
-                        } 
+                        //                                     // Don't use the connection here, it has been returned to the pool.
+                        //                                 });
+                        //                         }
+                        //                     }
+                        //                 })
+                        //             }
+                        //         })
+                        //     }
                         for (var res in results) {
                             var client_id = results[res].id;
                             var APP_STATUS = "Booked";
@@ -703,6 +702,7 @@ app.post("/hl7_message", (req, res) => {
                                 // Don't use the connection here, it has been returned to the pool.
                             });
                         }
+                        } 
 
                         // Don't use the connection here, it has been returned to the pool.
                     });
