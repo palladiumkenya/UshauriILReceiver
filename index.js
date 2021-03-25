@@ -1,4 +1,4 @@
-
+es
 const express = require("express");
 const moment = require("moment");
 const db = require("./dbconnection.js"); //reference of dbconnection.js
@@ -176,6 +176,7 @@ app.post("/hl7_message", (req, res) => {
 
                         } else {
 
+                            console.lo(results);
                             connection.release();
 
                         }
@@ -629,6 +630,9 @@ app.post("/hl7_message", (req, res) => {
                                 jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
                             if (ACTION_CODE == "A") {
                                 //Add new Appointment
+
+				if(client_id === ''){consiole.log("not in ushauri")}
+
                                 var appointment_sql =
                                     "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason) VALUES ('" +
                                     client_id +
