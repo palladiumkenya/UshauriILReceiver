@@ -331,78 +331,14 @@ app.post("/hl7_message", (req, res) => {
             var APPOINTMENT_NOTE;
             var APPOINTMENT_HONORED;
 
-            var FIRST_NAME;
-            var MIDDLE_NAME;
-            var LAST_NAME;
-            var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
-            var SEX;
-            var PHONE_NUMBER;
-            var MARITAL_STATUS;
-            var PATIENT_TYPE = 'New';
-            var SENDING_FACILITY;
-            var GROUP_ID;
-
             var result = get_json(jsonObj);
 
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;
                 var key_value = result[i].value;
+
                 if (key == "SENDING_FACILITY") {
                     SENDING_FACILITY = result[i].value;
-                }
-
-                if (key == "FIRST_NAME") {
-                    FIRST_NAME = result[i].value;
-                } else if (key == "MIDDLE_NAME") {
-                    MIDDLE_NAME = result[i].value;
-                } else if (key == "LAST_NAME") {
-                    LAST_NAME = result[i].value;
-                } else if (key == "DATE_OF_BIRTH") {
-                    var DoB = DATE_OF_BIRTH;
-
-                    var year = DoB.substring(0, 4);
-                    var month = DoB.substring(4, 6);
-                    var day = DoB.substring(6, 8);
-
-                    var today = DATE_TODAY;
-
-                    var new_date = year + "-" + month + "-" + day;
-                    var date_diff = moment(today).diff(
-                        moment(new_date).format("YYYY-MM-DD"),
-                        "days"
-                    );
-                    if (date_diff >= 5475 && date_diff <= 6935) {
-                        GROUP_ID = "2";
-                    }
-                    if (date_diff >= 7300) {
-                        GROUP_ID = "1";
-                    }
-                    if (date_diff <= 5110) {
-                        GROUP_ID = "6";
-                    }
-                } else if (key == "SEX") {
-                    if (result[i].value == "F") {
-                        SEX = "1";
-                    } else {
-                        SEX = "2";
-                    }
-                } else if (key == "PHONE_NUMBER") {
-                    PHONE_NUMBER = result[i].value;
-                } else if (key == "MARITAL_STATUS") {
-                    if (result[i].value === "") {
-                        MARITAL_STATUS = "1";
-                    }
-                    if (result[i].value == "D") {
-                        MARITAL_STATUS = "3";
-                    } else if (result[i].value == "M") {
-                        MARITAL_STATUS = "2";
-                    } else if (result[i].value == "S") {
-                        MARITAL_STATUS = "1";
-                    } else if (result[i].value == "W") {
-                        MARITAL_STATUS = "4";
-                    } else if (result[i].value == "C") {
-                        MARITAL_STATUS = "5";
-                    }
                 } else if (key == "GODS_NUMBER") {
                     //GODS_NUMBER = result[20].value;
                 } else if (key == "APPOINTMENT_REASON") {
@@ -435,26 +371,25 @@ app.post("/hl7_message", (req, res) => {
                     var BirthDate = moment(app_date);
                     APPOINTMENT_DATE = BirthDate.format("YYYY-MM-DD");
                 }
-                if (key == "SENDING_FACILITY") {
-                    SENDING_FACILITY = result[i].value;
-                }
+                
                 if (key == "ID") {
                     if (result[i + 1].value == "CCC_NUMBER") {
                         CCC_NUMBER = result[i].value;
                     }
                }
             }
+
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
                 console.log("Invalid CCC NUMBER");
             }
+
             if (!APPOINTMENT_TYPE) {
                 APPOINTMENT_TYPE = 2;
             }
             
-
             db.getConnection(function(err, connection) {
                 if (err) {
-                    //process.exit(1);
+                    console.log(err)
                 } else {
 
                     var get_client_sql =
@@ -493,167 +428,39 @@ app.post("/hl7_message", (req, res) => {
                             //throw error;
                             console.log(error)
                         } else {
-                        //     if(results.length == 0) {
-                        //         var gateway_sql =
-                        //             "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, entry_point, client_type) VALUES ('" +
-                        //             FIRST_NAME +
-                        //             "', '" +
-                        //             MIDDLE_NAME +
-                        //             "','" +
-                        //             LAST_NAME +
-                        //             "','" +
-                        //             new_date +
-                        //             "','" +
-                        //             CCC_NUMBER +
-                        //             "','" +
-                        //             SENDING_FACILITY +
-                        //             "','" +
-                        //             SEX +
-                        //             "','" +
-                        //             MARITAL_STATUS +
-                        //             "','" +
-                        //             PHONE_NUMBER +
-                        //             "','" +
-                        //             GODS_NUMBER +
-                        //             "','" +
-                        //             parseInt("1") +
-                        //             "','" +
-                        //             SENDING_APPLICATION +
-                        //             "','" +
-                        //             SENDING_APPLICATION +
-                        //             "','" +
-                        //             PATIENT_TYPE +
-                        //             "')";
-            
-                        //         // Use the connection
-                        //         connection.query(gateway_sql, function(error, r, fields) {
-                        //             // And done with the connection.
-                        //             if (error) {
-                        //                 console.log(error);
-                        //             } else {
-                        //                 console.log(r);
-                        //                 connection.query(get_client_sql, function(error, all_results, fields) {
-                        //                     if (error) {
-                        //                         //throw error;
-                        //                         console.log(error)
-                        //                     }else{
-                        //                         for (var res in all_results) {
-                        //                                 var client_id = all_results[res].id;
-                        //                                 var APP_STATUS = "Booked";
-                        //                                 var ACTIVE_APP = "1";
-                        //                                 var SENDING_APPLICATION =
-                        //                                     jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
-                        //                                 if (ACTION_CODE == "A") {
-                        //                                     //Add new Appointment
-                        //                                     var appointment_sql =
-                        //                                         "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason) VALUES ('" +
-                        //                                         client_id +
-                        //                                         "', '" +
-                        //                                         APPOINTMENT_DATE +
-                        //                                         "','" +
-                        //                                         APPOINTMENT_TYPE +
-                        //                                         "','" +
-                        //                                         APPOINTMENT_REASON +
-                        //                                         "','" +
-                        //                                         APP_STATUS +
-                        //                                         "','" +
-                        //                                         SENDING_APPLICATION +
-                        //                                         "','" +
-                        //                                         ACTIVE_APP +
-                        //                                         "','" +
-                        //                                         APPOINTMENT_LOCATION +
-                        //                                         "','" +
-                        //                                         APPOINTMENT_NOTE +
-                        //                                         "')";
-                        //                                 }
-                        //                                 if (ACTION_CODE == "D") {
-                        //                                     //Delete an Appointment
-                        //                                 }
-                        //                                 if (ACTION_CODE == "U") {
-                        //                                     //Update an Appointment
-                        //                                     var appointment_sql =
-                        //                                         "Update  tbl_appointment SET appntmnt_date='" +
-                        //                                         APPOINTMENT_DATE +
-                        //                                         "' , app_type_1='" +
-                        //                                         APPOINTMENT_TYPE +
-                        //                                         "',reason='" +
-                        //                                         APPOINTMENT_NOTE +
-                        //                                         "',expln_app='" +
-                        //                                         APPOINTMENT_REASON +
-                        //                                         "'  (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,reason) VALUES ('" +
-                        //                                         client_id +
-                        //                                         "', '" +
-                        //                                         APPOINTMENT_DATE +
-                        //                                         "','" +
-                        //                                         APPOINTMENT_TYPE +
-                        //                                         "','" +
-                        //                                         APPOINTMENT_REASON +
-                        //                                         "','" +
-                        //                                         APP_STATUS +
-                        //                                         "','" +
-                        //                                         SENDING_APPLICATION +
-                        //                                         "','" +
-                        //                                         ACTIVE_APP +
-                        //                                         "','" +
-                        //                                         APPOINTMENT_NOTE +
-                        //                                         "')";
-                        //                                 }
+                        
+                            for (var res in results) {
+                                var client_id = results[res].id;
+                                var APP_STATUS = "Booked";
+                                var ACTIVE_APP = "1";
+                                var SENDING_APPLICATION =
+                                    jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
+                                if (ACTION_CODE == "A") {
+                                    //Add new Appointment
 
-                        //                                 // Use the connection
-                        //                                 console.log(appointment_sql);
-                        //                                 connection.query(appointment_sql, function(
-                        //                                     error,
-                        //                                     results,
-                        //                                     fields
-                        //                                 ) {
-                        //                                     if (error) {
-                        //                                         console.log(error);
-                        //                                     } else {
-                        //                                         console.log(results);
-                        //                                     }
-                        //                                     // And done with the connection.
-                        //                                     connection.release();
+				                    if(client_id === ''){consiole.log("not in ushauri")}
 
-                        //                                     // Don't use the connection here, it has been returned to the pool.
-                        //                                 });
-                        //                         }
-                        //                     }
-                        //                 })
-                        //             }
-                        //         })
-                        //     }
-                        for (var res in results) {
-                            var client_id = results[res].id;
-                            var APP_STATUS = "Booked";
-                            var ACTIVE_APP = "1";
-                            var SENDING_APPLICATION =
-                                jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
-                            if (ACTION_CODE == "A") {
-                                //Add new Appointment
-
-				if(client_id === ''){consiole.log("not in ushauri")}
-
-                                var appointment_sql =
-                                    "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason) VALUES ('" +
-                                    client_id +
-                                    "', '" +
-                                    APPOINTMENT_DATE +
-                                    "','" +
-                                    APPOINTMENT_TYPE +
-                                    "','" +
-                                    APPOINTMENT_REASON +
-                                    "','" +
-                                    APP_STATUS +
-                                    "','" +
-                                    SENDING_APPLICATION +
-                                    "','" +
-                                    ACTIVE_APP +
-                                    "','" +
-                                    APPOINTMENT_LOCATION +
-                                    "','" +
-                                    APPOINTMENT_NOTE +
-                                    "')";
-                            }
+                                        var appointment_sql =
+                                            "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason) VALUES ('" +
+                                            client_id +
+                                            "', '" +
+                                            APPOINTMENT_DATE +
+                                            "','" +
+                                            APPOINTMENT_TYPE +
+                                            "','" +
+                                            APPOINTMENT_REASON +
+                                            "','" +
+                                            APP_STATUS +
+                                            "','" +
+                                            SENDING_APPLICATION +
+                                            "','" +
+                                            ACTIVE_APP +
+                                            "','" +
+                                            APPOINTMENT_LOCATION +
+                                            "','" +
+                                            APPOINTMENT_NOTE +
+                                            "')";
+                                    }
 
                             if (ACTION_CODE == "D") {
                                 //Delete an Appointment
