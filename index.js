@@ -289,8 +289,6 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                 } else {
 
-                    console.log("NDANI");
-
                     var update_sql =
                         "update tbl_client SET f_name='" +
                         FIRST_NAME +
@@ -310,12 +308,12 @@ app.post("/hl7_message", (req, res) => {
                         PHONE_NUMBER +
                         "',group_id='" +
                         GROUP_ID +
+                        "',updated_at='" +
+                        TOD_DATE +
                         "',partner_id='(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ="+ SENDING_FACILITY 
                         +")' WHERE clinic_number='" +
                         CCC_NUMBER +
-                        "' WHERE updated_at='" +
-                         TOD_DATE+
-                        "'";
+                        "' ";
 
                     // Use the connection
                     connection.query(update_sql, function(error, results, fields) {
@@ -362,7 +360,7 @@ app.post("/hl7_message", (req, res) => {
                 } else if (key == "APPOINTMENT_LOCATION") {
                     APPOINTMENT_LOCATION = result[i].value;
                 } else if (key == "APPINTMENT_HONORED") {
-                    APPINTMENT_HONORED = result[i].value;
+                    APPOINTMENT_HONORED = result[i].value;
                 } else if (key == "APPOINTMENT_NOTE") {
                     APPOINTMENT_NOTE = result[i].value;
                 } else if (key == "ACTION_CODE") {
@@ -398,7 +396,7 @@ app.post("/hl7_message", (req, res) => {
             }
 
             if (!APPOINTMENT_TYPE) {
-                APPOINTMENT_TYPE = 2;
+                APPOINTMENT_TYPE = 1;
             }
             
             db.getConnection(function(err, connection) {
@@ -459,38 +457,43 @@ app.post("/hl7_message", (req, res) => {
                                             "')";
                                     }
 
-                            if (ACTION_CODE == "D") {
-                                //Delete an Appointment
-                            }
-                            if (ACTION_CODE == "U") {
-                                //Update an Appointment
-                                var appointment_sql =
-                                    "Update  tbl_appointment SET appntmnt_date='" +
-                                    APPOINTMENT_DATE +
-                                    "' , app_type_1='" +
-                                    APPOINTMENT_TYPE +
-                                    "',reason='" +
-                                    APPOINTMENT_NOTE +
-                                    "',expln_app='" +
-                                    APPOINTMENT_REASON +
-                                    "'  (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,reason) VALUES ('" +
-                                    client_id +
-                                    "', '" +
-                                    APPOINTMENT_DATE +
-                                    "','" +
-                                    APPOINTMENT_TYPE +
-                                    "','" +
-                                    APPOINTMENT_REASON +
-                                    "','" +
-                                    APP_STATUS +
-                                    "','" +
-                                    SENDING_APPLICATION +
-                                    "','" +
-                                    ACTIVE_APP +
-                                    "','" +
-                                    APPOINTMENT_NOTE +
-                                    "')";
-                            }
+                                if (ACTION_CODE == "D") {
+                                    //Delete an Appointment
+                                }
+                                if (ACTION_CODE == "U") {
+
+                                    var APP_PREV = "(SELECT MAX(appntmnt_date) FROM tbl_appointment WHERE client_id='" +
+                                                        client_id +
+                                                    "') ";
+                                                    
+                                    //Update an Appointment
+
+                                    var appointment_sql = 
+                                        "Update tbl_appointment pd JOIN tbl_appointment pd2 ON (pd.client_id=pd2.client_id AND pd2.MAX(appntmnt_date) AND pd.MAX(appntmnt_date) " +
+                                        "SET appntmnt_date='" +
+                                        APPOINTMENT_DATE +
+                                        "',app_type_1='" +
+                                        APPOINTMENT_TYPE +
+                                        "',reason='" +
+                                        APPOINTMENT_NOTE +
+                                        "',expln_app='" +
+                                        APPOINTMENT_REASON +
+                                        "',client_id='" +
+                                        client_id +
+                                        "',APPOINTMENT_REASON='" +
+                                        APPOINTMENT_REASON +
+                                        "',app_status='" +
+                                        APP_STATUS +
+                                        "',db_source='" +
+                                        SENDING_APPLICATION +
+                                        "',active_app='" +
+                                        ACTIVE_APP +
+                                        "',APPOINTMENT_LOCATION='" +
+                                        APPOINTMENT_LOCATION +
+                                        "' WHERE client_id='" +
+                                        client_id +
+                                        "' ";
+                                }
 
                             // Use the connection
                             console.log(appointment_sql);
