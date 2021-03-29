@@ -394,27 +394,12 @@ app.post("/hl7_message", (req, res) => {
                         CCC_NUMBER +
                         "'  LIMIT 1";
 
-                    // Get appointment type by id
-                    var get_app_type =
-                        "Select id from tbl_appointment_types WHERE UPPER(name)='" +
-                        APPOINTMENT_TYPE.toString().toUpperCase() +
-                        "'  LIMIT 1";
 
-                    connection.query(get_app_type, function(error, results, fields) {
-                        if (error) {
-                            //throw error;
-                            APPOINTMENT_TYPE = 2;
-                            //set default to clinical review on fail
-                        } else {
-                            for (var res in results) {
-                                APPOINTMENT_TYPE = results[res].id;
-                            }
-                        }
-                    });
-
-//                    if (!APPOINTMENT_TYPE) {
+                    if (APPOINTMENT_LOCATION == "PHARMACY" || APPOINTMENT_REASON == "REGIMEN REFILL") {
+                        APPOINTMENT_TYPE = 1;
+                    } else {
                         APPOINTMENT_TYPE = 2;
-  //                  }
+                    }
 
                     // Use the connection
                     connection.query(get_client_sql, function(error, results, fields) {
