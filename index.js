@@ -196,6 +196,9 @@ app.post("/hl7_message", (req, res) => {
             var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
             var SENDING_FACILITY;
             var GROUP_ID;
+            var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+            var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
+            var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
 
             var result = get_json(jsonObj);
 
@@ -204,11 +207,11 @@ app.post("/hl7_message", (req, res) => {
                 var value = result[i].value;
 
                 if (key == "FIRST_NAME") {
-                    FIRST_NAME = result[20].value;
+                    // FIRST_NAME = result[20].value;
                 } else if (key == "MIDDLE_NAME") {
-                    MIDDLE_NAME = result[21].value;
+                    // MIDDLE_NAME = result[21].value;
                 } else if (key == "LAST_NAME") {
-                    LAST_NAME = result[22].value;
+                    // LAST_NAME = result[22].value;
                 } else if (key == "DATE_OF_BIRTH") {
                     var DoB = DATE_OF_BIRTH;
 
@@ -283,7 +286,7 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                 } else {
                     var update_sql =
-                        "tbl_client SET f_name='" +
+                        "update tbl_client SET f_name='" +
                         FIRST_NAME +
                         "',m_name='" +
                         MIDDLE_NAME +
@@ -301,14 +304,20 @@ app.post("/hl7_message", (req, res) => {
                         PHONE_NUMBER +
                         "',group_id='" +
                         GROUP_ID +
-                        "' WHERE clinic_number='" +
+                        "',partner_id='(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ="+ SENDING_FACILITY 
+                        +")' WHERE clinic_number='" +
                         CCC_NUMBER +
                         "'";
 
                     // Use the connection
                     connection.query(update_sql, function(error, results, fields) {
-                        // And done with the connection.
-                        connection.release();
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log(results);
+                            // And done with the connection.
+                            connection.release();
+                        }
 
                         // Don't use the connection here, it has been returned to the pool.
                     });
