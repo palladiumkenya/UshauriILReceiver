@@ -485,7 +485,7 @@ app.post("/hl7_message", (req, res) => {
                                     ACTIVE_APP +
                                     "','" +
                                     APPOINTMENT_NOTE +
-                                    "')";
+                                    "') WHERE client_id = '"+client_id+"' ORDER BY appntmnt_date DESC LIMIT 1";
                             }
 
                             // Use the connection
