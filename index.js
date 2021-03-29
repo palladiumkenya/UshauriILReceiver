@@ -469,23 +469,12 @@ app.post("/hl7_message", (req, res) => {
                                     APPOINTMENT_NOTE +
                                     "',expln_app='" +
                                     APPOINTMENT_REASON +
-                                    "'  (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,reason) VALUES ('" +
-                                    client_id +
-                                    "', '" +
-                                    APPOINTMENT_DATE +
-                                    "','" +
-                                    APPOINTMENT_TYPE +
-                                    "','" +
-                                    APPOINTMENT_REASON +
-                                    "','" +
-                                    APP_STATUS +
-                                    "','" +
-                                    SENDING_APPLICATION +
-                                    "','" +
-                                    ACTIVE_APP +
-                                    "','" +
-                                    APPOINTMENT_NOTE +
-                                    "') WHERE client_id = '"+client_id+"' ORDER BY appntmnt_date DESC LIMIT 1";
+                                    "',client_id ='"+client_id+"' ,appntmnt_date='"+ APPOINTMENT_DATE+
+                                    "',app_type_1='"+APPOINTMENT_TYPE+
+                                    "',APPOINTMENT_REASON='"+APPOINTMENT_REASON+
+                                    "',app_status='"+APP_STATUS+"',db_source='"+SENDING_APPLICATION+
+                                    "',active_app='"+ACTIVE_APP+"',reason='"+APPOINTMENT_NOTE+
+                                    "' WHERE client_id = '"+client_id+"' ORDER BY appntmnt_date DESC LIMIT 1";
                             }
 
                             // Use the connection
