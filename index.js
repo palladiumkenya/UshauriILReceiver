@@ -132,7 +132,7 @@ app.post("/hl7_message", (req, res) => {
                     return;
                 } else {
                     var gateway_sql =
-                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type) VALUES ('" +
+                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type, partner_id) VALUES ('" +
                         FIRST_NAME +
                         "', '" +
                         MIDDLE_NAME +
@@ -162,7 +162,7 @@ app.post("/hl7_message", (req, res) => {
                         new_enroll_date +
                         "','" +
                         PATIENT_TYPE +
-                        "')";
+                        "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='"+ SENDING_FACILITY +"'))";
 
                     // Use the connection
                     connection.query(gateway_sql, function(error, results, fields) {
@@ -259,6 +259,8 @@ app.post("/hl7_message", (req, res) => {
                         MARITAL_STATUS = "4";
                     } else if (result[i].value == "C") {
                         MARITAL_STATUS = "5";
+                    } else {
+                        MARITAL_STATUS = "1";
                     }
                 }
                 if (key == "SENDING_FACILITY") {
@@ -304,8 +306,8 @@ app.post("/hl7_message", (req, res) => {
                         PHONE_NUMBER +
                         "',group_id='" +
                         GROUP_ID +
-                        "',partner_id='(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ="+ SENDING_FACILITY 
-                        +")' WHERE clinic_number='" +
+                        "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
+                        +"') WHERE clinic_number='" +
                         CCC_NUMBER +
                         "'";
 
