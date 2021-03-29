@@ -125,15 +125,20 @@ app.post("/hl7_message", (req, res) => {
                 console.log(response);
                 return;
             }
+                console.log("ndani 2");
 
             db.getConnection(function(err, connection) {
                 if (err) {
                     console.log(err);
                     return;
                 } else {
+<<<<<<< HEAD
 
+=======
+		console.log("ndani");
+>>>>>>> 0d210a05aac34c5d2feeba789670782ee4d03017
                     var gateway_sql =
-                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type) VALUES ('" +
+                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type, partner_id) VALUES ('" +
                         FIRST_NAME +
                         "', '" +
                         MIDDLE_NAME +
@@ -163,7 +168,7 @@ app.post("/hl7_message", (req, res) => {
                         new_enroll_date +
                         "','" +
                         PATIENT_TYPE +
-                        "')";
+                        "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='"+ SENDING_FACILITY +"'))";
 
                     // Use the connection
                     connection.query(gateway_sql, function(error, results, fields) {
@@ -262,6 +267,8 @@ app.post("/hl7_message", (req, res) => {
                         MARITAL_STATUS = "4";
                     } else if (result[i].value == "C") {
                         MARITAL_STATUS = "5";
+                    } else {
+                        MARITAL_STATUS = "1";
                     }
                 }
                 if (key == "SENDING_FACILITY") {
@@ -308,10 +315,15 @@ app.post("/hl7_message", (req, res) => {
                         PHONE_NUMBER +
                         "',group_id='" +
                         GROUP_ID +
+<<<<<<< HEAD
                         "',updated_at='" +
                         TOD_DATE +
                         "',partner_id='(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ="+ SENDING_FACILITY 
                         +")' WHERE clinic_number='" +
+=======
+                        "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
+                        +"') WHERE clinic_number='" +
+>>>>>>> 0d210a05aac34c5d2feeba789670782ee4d03017
                         CCC_NUMBER +
                         "' ";
 
@@ -457,43 +469,26 @@ app.post("/hl7_message", (req, res) => {
                                             "')";
                                     }
 
-                                if (ACTION_CODE == "D") {
-                                    //Delete an Appointment
-                                }
-                                if (ACTION_CODE == "U") {
-
-                                    var APP_PREV = "(SELECT MAX(appntmnt_date) FROM tbl_appointment WHERE client_id='" +
-                                                        client_id +
-                                                    "') ";
-                                                    
-                                    //Update an Appointment
-
-                                    var appointment_sql = 
-                                        "Update tbl_appointment pd JOIN tbl_appointment pd2 ON (pd.client_id=pd2.client_id AND pd2.MAX(appntmnt_date) AND pd.MAX(appntmnt_date) " +
-                                        "SET appntmnt_date='" +
-                                        APPOINTMENT_DATE +
-                                        "',app_type_1='" +
-                                        APPOINTMENT_TYPE +
-                                        "',reason='" +
-                                        APPOINTMENT_NOTE +
-                                        "',expln_app='" +
-                                        APPOINTMENT_REASON +
-                                        "',client_id='" +
-                                        client_id +
-                                        "',APPOINTMENT_REASON='" +
-                                        APPOINTMENT_REASON +
-                                        "',app_status='" +
-                                        APP_STATUS +
-                                        "',db_source='" +
-                                        SENDING_APPLICATION +
-                                        "',active_app='" +
-                                        ACTIVE_APP +
-                                        "',APPOINTMENT_LOCATION='" +
-                                        APPOINTMENT_LOCATION +
-                                        "' WHERE client_id='" +
-                                        client_id +
-                                        "' ";
-                                }
+                            if (ACTION_CODE == "D") {
+                                //Delete an Appointment
+                            }
+                            if (ACTION_CODE == "U") {
+                                //Update an Appointment
+                                var appointment_sql =
+                                    "Update  tbl_appointment SET appntmnt_date='" +
+                                    APPOINTMENT_DATE +
+                                    "' , app_type_1='" +
+                                    APPOINTMENT_TYPE +
+                                    "',reason='" +
+                                    APPOINTMENT_NOTE +
+                                    "',expln_app='" +
+                                    APPOINTMENT_REASON +
+                                    "',client_id ='"+client_id+"' ,APPOINTMENT_LOCATION ='"+ APPOINTMENT_LOCATION +
+                                    "',APPOINTMENT_REASON='"+APPOINTMENT_REASON+
+                                    "',app_status='"+APP_STATUS+"',db_source='"+SENDING_APPLICATION+
+                                    "',active_app='"+ACTIVE_APP+"',reason='"+APPOINTMENT_NOTE+
+                                    "' WHERE client_id = '"+client_id+"' ORDER BY appntmnt_date DESC LIMIT 1";
+                            }
 
                             // Use the connection
                             console.log(appointment_sql);
