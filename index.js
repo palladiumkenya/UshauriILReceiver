@@ -125,12 +125,14 @@ app.post("/hl7_message", (req, res) => {
                 console.log(response);
                 return;
             }
+                console.log("ndani 2");
 
             db.getConnection(function(err, connection) {
                 if (err) {
                     console.log(err);
                     return;
                 } else {
+		console.log("ndani");
                     var gateway_sql =
                         "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type) VALUES ('" +
                         FIRST_NAME +
@@ -173,7 +175,7 @@ app.post("/hl7_message", (req, res) => {
 
                         } else {
 
-                            console.lo(results);
+                            console.log(results);
                             connection.release();
 
                         }
