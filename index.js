@@ -132,11 +132,6 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                     return;
                 } else {
-<<<<<<< HEAD
-
-=======
-		console.log("ndani");
->>>>>>> 0d210a05aac34c5d2feeba789670782ee4d03017
                     var gateway_sql =
                         "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type, partner_id) VALUES ('" +
                         FIRST_NAME +
@@ -315,15 +310,8 @@ app.post("/hl7_message", (req, res) => {
                         PHONE_NUMBER +
                         "',group_id='" +
                         GROUP_ID +
-<<<<<<< HEAD
-                        "',updated_at='" +
-                        TOD_DATE +
-                        "',partner_id='(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ="+ SENDING_FACILITY 
-                        +")' WHERE clinic_number='" +
-=======
                         "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
                         +"') WHERE clinic_number='" +
->>>>>>> 0d210a05aac34c5d2feeba789670782ee4d03017
                         CCC_NUMBER +
                         "' ";
 
