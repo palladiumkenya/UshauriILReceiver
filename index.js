@@ -134,7 +134,7 @@ app.post("/hl7_message", (req, res) => {
                 } else {
 		console.log("ndani");
                     var gateway_sql =
-                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type) VALUES ('" +
+                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type, partner_id) VALUES ('" +
                         FIRST_NAME +
                         "', '" +
                         MIDDLE_NAME +
@@ -164,7 +164,7 @@ app.post("/hl7_message", (req, res) => {
                         new_enroll_date +
                         "','" +
                         PATIENT_TYPE +
-                        "')";
+                        "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='"+ SENDING_FACILITY +"'))";
 
                     // Use the connection
                     connection.query(gateway_sql, function(error, results, fields) {
@@ -198,6 +198,9 @@ app.post("/hl7_message", (req, res) => {
             var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
             var SENDING_FACILITY;
             var GROUP_ID;
+            var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+            var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
+            var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
 
             var result = get_json(jsonObj);
 
@@ -206,11 +209,11 @@ app.post("/hl7_message", (req, res) => {
                 var value = result[i].value;
 
                 if (key == "FIRST_NAME") {
-                    FIRST_NAME = result[20].value;
+                    // FIRST_NAME = result[20].value;
                 } else if (key == "MIDDLE_NAME") {
-                    MIDDLE_NAME = result[21].value;
+                    // MIDDLE_NAME = result[21].value;
                 } else if (key == "LAST_NAME") {
-                    LAST_NAME = result[22].value;
+                    // LAST_NAME = result[22].value;
                 } else if (key == "DATE_OF_BIRTH") {
                     var DoB = DATE_OF_BIRTH;
 
@@ -258,6 +261,8 @@ app.post("/hl7_message", (req, res) => {
                         MARITAL_STATUS = "4";
                     } else if (result[i].value == "C") {
                         MARITAL_STATUS = "5";
+                    } else {
+                        MARITAL_STATUS = "1";
                     }
                 }
                 if (key == "SENDING_FACILITY") {
@@ -285,7 +290,7 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                 } else {
                     var update_sql =
-                        "tbl_client SET f_name='" +
+                        "update tbl_client SET f_name='" +
                         FIRST_NAME +
                         "',m_name='" +
                         MIDDLE_NAME +
@@ -303,14 +308,20 @@ app.post("/hl7_message", (req, res) => {
                         PHONE_NUMBER +
                         "',group_id='" +
                         GROUP_ID +
-                        "' WHERE clinic_number='" +
+                        "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
+                        +"') WHERE clinic_number='" +
                         CCC_NUMBER +
                         "'";
 
                     // Use the connection
                     connection.query(update_sql, function(error, results, fields) {
-                        // And done with the connection.
-                        connection.release();
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log(results);
+                            // And done with the connection.
+                            connection.release();
+                        }
 
                         // Don't use the connection here, it has been returned to the pool.
                     });
@@ -396,27 +407,12 @@ app.post("/hl7_message", (req, res) => {
                         CCC_NUMBER +
                         "'  LIMIT 1";
 
-                    // Get appointment type by id
-                    var get_app_type =
-                        "Select id from tbl_appointment_types WHERE UPPER(name)='" +
-                        APPOINTMENT_TYPE.toString().toUpperCase() +
-                        "'  LIMIT 1";
 
-                    connection.query(get_app_type, function(error, results, fields) {
-                        if (error) {
-                            //throw error;
-                            APPOINTMENT_TYPE = 2;
-                            //set default to clinical review on fail
-                        } else {
-                            for (var res in results) {
-                                APPOINTMENT_TYPE = results[res].id;
-                            }
-                        }
-                    });
-
-//                    if (!APPOINTMENT_TYPE) {
+                    if (APPOINTMENT_LOCATION == "PHARMACY" || APPOINTMENT_REASON == "REGIMEN REFILL") {
+                        APPOINTMENT_TYPE = 1;
+                    } else {
                         APPOINTMENT_TYPE = 2;
-  //                  }
+                    }
 
                     // Use the connection
                     connection.query(get_client_sql, function(error, results, fields) {
