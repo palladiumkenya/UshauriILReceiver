@@ -32,9 +32,9 @@ app.post("/hl7_message", (req, res) => {
         if (message_type == "ADT^A04") {            
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
-            var FIRST_NAME;
-            var MIDDLE_NAME;
-            var LAST_NAME;
+            var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+            var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
+            var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
             var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
             var SEX;
             var PHONE_NUMBER;
@@ -47,17 +47,21 @@ app.post("/hl7_message", (req, res) => {
 
             var result = get_json(jsonObj);
 
+            console.log(result);
+
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;
                 var value = result[i].value;
 
-                if (key == "FIRST_NAME") {
-                    FIRST_NAME = result[i].value;
-                } else if (key == "MIDDLE_NAME") {
-                    MIDDLE_NAME = result[i].value;
-                } else if (key == "LAST_NAME") {
-                    LAST_NAME = result[i].value;
-                } else if (key == "DATE_OF_BIRTH") {
+                // if (key == "FIRST_NAME") {
+                //     FIRST_NAME = result[i].value;
+                // } else if (key == "MIDDLE_NAME") {
+                //     MIDDLE_NAME = result[i].value;
+                // } else if (key == "LAST_NAME") {
+                //     LAST_NAME = result[i].value;
+                // } else
+                
+                if (key == "DATE_OF_BIRTH") {
                     var DoB = DATE_OF_BIRTH;
 
                     var year = DoB.substring(0, 4);
@@ -186,9 +190,9 @@ app.post("/hl7_message", (req, res) => {
 
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
-            var FIRST_NAME;
-            var MIDDLE_NAME;
-            var LAST_NAME;
+            var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+            var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
+            var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
             var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
             var SEX;
             var PHONE_NUMBER;
@@ -209,13 +213,15 @@ app.post("/hl7_message", (req, res) => {
                 var key = result[i].key;                
                 var value = result[i].value;
 
-                if (key == "FIRST_NAME") {
-                    // FIRST_NAME = result[20].value;
-                } else if (key == "MIDDLE_NAME") {
-                    // MIDDLE_NAME = result[21].value;
-                } else if (key == "LAST_NAME") {
-                    // LAST_NAME = result[22].value;
-                } else if (key == "DATE_OF_BIRTH") {
+                // if (key == "FIRST_NAME") {
+                //     // FIRST_NAME = result[20].value;
+                // } else if (key == "MIDDLE_NAME") {
+                //     // MIDDLE_NAME = result[21].value;
+                // } else if (key == "LAST_NAME") {
+                //     // LAST_NAME = result[22].value;
+                // } else
+                
+                if (key == "DATE_OF_BIRTH") {
                     var DoB = DATE_OF_BIRTH;
 
                     var year = DoB.substring(0, 4);
