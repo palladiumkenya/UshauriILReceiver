@@ -202,9 +202,6 @@ app.post("/hl7_message", (req, res) => {
             var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
             var SENDING_FACILITY;
             var GROUP_ID;
-            var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
-            var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
-            var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
             var TOD_DATE = moment().format("YYYY-MM-DD");
 
             var result = get_json(jsonObj);
