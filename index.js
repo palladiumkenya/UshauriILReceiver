@@ -426,7 +426,7 @@ app.post("/hl7_message", (req, res) => {
                                 var ACTIVE_APP = "1";
                                 var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
 
-                                if (APPOINTMENT_PLACING_ENTITY !== "") {
+                                if (PLACER_APPOINTMENT_NUMBER !== "") {
                                     //Add new Appointment
 
                                     var appointment_sql =
