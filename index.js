@@ -332,7 +332,10 @@ app.post("/hl7_message", (req, res) => {
             var APPOINTMENT_TYPE;
             var APPOINTMENT_DATE;
             var APPOINTMENT_PLACING_ENTITY;
-            var PLACER_APPOINTMENT_NUMBER = hl7_message.APPOINTMENT_INFORMATION.PLACER_APPOINTMENT_NUMBER.NUMBER;
+            var PLACER_APPOINTMENT_NUMBER; 
+
+            console.log("im here",PLACER_APPOINTMENT_NUMBER);
+
             var APPOINTMENT_LOCATION;
             //var ACTION_CODE;
             var APPOINTMENT_NOTE;
@@ -344,9 +347,12 @@ app.post("/hl7_message", (req, res) => {
                 var key = result[i].key;
                 var key_value = result[i].value;
 
+
                 if (key == "SENDING_FACILITY") {
                     SENDING_FACILITY = result[i].value;
-                } else if (key == "GODS_NUMBER") {
+                }else if(key == "NUMBER") {
+                    PLACER_APPOINTMENT_NUMBER = result[i].value;
+                }else if (key == "GODS_NUMBER") {
                     //GODS_NUMBER = result[20].value;
                 } else if (key == "APPOINTMENT_REASON") {
                     APPOINTMENT_REASON = result[i].value;
