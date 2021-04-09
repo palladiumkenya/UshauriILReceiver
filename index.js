@@ -334,8 +334,6 @@ app.post("/hl7_message", (req, res) => {
             var APPOINTMENT_PLACING_ENTITY;
             var PLACER_APPOINTMENT_NUMBER; 
 
-            console.log("im here",PLACER_APPOINTMENT_NUMBER);
-
             var APPOINTMENT_LOCATION;
             //var ACTION_CODE;
             var APPOINTMENT_NOTE;
@@ -437,7 +435,7 @@ app.post("/hl7_message", (req, res) => {
                                     //Add new Appointment
 
                                     var appointment_sql =
-                                    "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason) VALUES ('" +
+                                    "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason, placer_appointment_number) VALUES ('" +
                                     client_id +
                                     "', '" +APPOINTMENT_DATE +
                                     "','" +APPOINTMENT_TYPE +
@@ -447,6 +445,7 @@ app.post("/hl7_message", (req, res) => {
                                     "','" +ACTIVE_APP +
                                     "','" +APPOINTMENT_LOCATION +
                                     "','" +APPOINTMENT_NOTE +
+                                    "','" +PLACER_APPOINTMENT_NUMBER +
                                     "')";
                                 } else {
                                     //Update an Appointment
