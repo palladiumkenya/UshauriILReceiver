@@ -552,6 +552,7 @@ app.post("/hl7_sync_client", (req, res) => {
 
     var client = req.body;
 
+    console.log(client);
     
         let partner_id = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.mfl_code, function (err,data) {
             if(err) { console.log(err)}
@@ -589,6 +590,7 @@ app.post("/hl7_sync_client", (req, res) => {
                     return console.error(err.message);
                 } else {
                     console.log(data);
+                    res.send(data)
 
                 }
             });
@@ -602,6 +604,7 @@ app.post("/hl7_sync_client", (req, res) => {
                     return console.error(err.message);
                 } else {
                     console.log(data);
+                    res.send(data);
 
                 }
             });
@@ -613,6 +616,7 @@ app.post("/hl7_sync_client", (req, res) => {
 app.post("/hl7_sync_appointment", (req, res) => {
 
     var appointment = req.body;
+    console.log(appointment);
 
 
     let client_id = connection.query('SELECT id FROM tbl_client WHERE clinic_number', appointment.CCC_NUMBER, function (err,data) {
@@ -639,13 +643,14 @@ app.post("/hl7_sync_appointment", (req, res) => {
     }
          
     //update if placer number already exsists
-    if(placer_number.length === 0) {
+    if(placer_number === "") {
 
         connection.query('INSERT INTO tbl_appointment SET ?', appt, function (err, data) {
             if (err) {
                 return console.error(err.message);
             } else {
                 console.log(data);
+                res.send(data);
 
             }
         });
@@ -659,6 +664,7 @@ app.post("/hl7_sync_appointment", (req, res) => {
                 return console.error(err.message);
             } else {
                 console.log(data);
+                res.send(data);
 
             }
         });
