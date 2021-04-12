@@ -550,9 +550,8 @@ app.post("/hl7_message", (req, res) => {
 
 app.post("/hl7_sync_client", (req, res) => {
 
-    var clients = req.body;
+    var client = req.body;
 
-    async.each(clients, function (client, asyncCallback) {
     
         let partner_id = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.mfl_code, function (err,data) {
             if(err) { console.log(err)}
@@ -564,7 +563,7 @@ app.post("/hl7_sync_client", (req, res) => {
             l_name: client.l_name,
             dob: client.dob,
             clinic_number: client.clinic_number,
-            mfl_code: client.clinic_number,
+            mfl_code: client.mfl_code,
             gender: client.gender,
             marital: client.marital,
             phone_no: client.phone_no,
@@ -586,88 +585,85 @@ app.post("/hl7_sync_client", (req, res) => {
         //if message code is ADT^A04 add new client else update client
         if(client.message_type === "ADT^A04") {
             connection.query('INSERT INTO tbl_client SET ?', cl, function (err, data) {
-                return asyncCallback(err, data);
-              });
+                if (err) {
+                    return console.error(err.message);
+                } else {
+                    console.log(data);
+
+                }
+            });
 
         } else if(client.message_type === "ADT^A08") {
  
             let clinic_number = client.clinic_number;
 
             connection.query('UPDATE tbl_client SET ? WHERE clinic_number = ?', cl, clinic_number, function (err, data) {
-                return asyncCallback(err, data);
-              });
+                if (err) {
+                    return console.error(err.message);
+                } else {
+                    console.log(data);
+
+                }
+            });
         }
 
-      }, function (err) {
-        if (err) {
-          // One of the iterations above produced an error.
-          // All processing will stop and we have to rollback.
-          return callback(err);
-        }
-    
-        // Return without errors
-        return callback();
-      });
 
 });
 
 app.post("/hl7_sync_appointment", (req, res) => {
 
-    var appointments = req.body;
+    var appointment = req.body;
 
-    async.each(appointments, function (appointment, asyncCallback) {
 
-        let client_id = connection.query('SELECT id FROM tbl_client WHERE clinic_number', appointment.CCC_NUMBER, function (err,data) {
-            if(err) { console.log(err)}
-            console.log(data);
+    let client_id = connection.query('SELECT id FROM tbl_client WHERE clinic_number', appointment.CCC_NUMBER, function (err,data) {
+        if(err) { console.log(err)}
+        console.log(data);
+    });
+
+    let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', appointment.placer_appointment_number, function (err,data) {
+        if(err) { console.log(err)}
+        console.log(data);
+    })
+
+    let appt = {
+        appntmnt_date: appointment.appntmnt_date,
+        app_type_1: appointment.app_type_1,
+        APPOINTMENT_REASON: appointment.APPOINTMENT_REASON,
+        app_status: appointment.app_status,
+        active_app: appointment.active_app,
+        APPOINTMENT_LOCATION: appointment.APPOINTMENT_LOCATION,
+        db_source: appointment.db_source,
+        reason: appointment.reason,
+        ENTITY_NUMBER: appointment.placer_appointment_number,
+        client_id: client_id
+    }
+         
+    //update if placer number already exsists
+    if(placer_number.length === 0) {
+
+        connection.query('INSERT INTO tbl_appointment SET ?', appt, function (err, data) {
+            if (err) {
+                return console.error(err.message);
+            } else {
+                console.log(data);
+
+            }
         });
 
-        let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', appointment.placer_appointment_number, function (err,data) {
-            if(err) { console.log(err)}
-            console.log(data);
-        })
+    } else {
 
-        let appt = {
-            appntmnt_date: appointment.appntmnt_date,
-            app_type_1: appointment.app_type_1,
-            APPOINTMENT_REASON: appointment.APPOINTMENT_REASON,
-            app_status: appointment.app_status,
-            active_app: appointment.active_app,
-            APPOINTMENT_LOCATION: appointment.APPOINTMENT_LOCATION,
-            db_source: appointment.db_source,
-            reason: appointment.reason,
-            ENTITY_NUMBER: appointment.placer_appointment_number,
-            client_id: client_id
-        }
-         
-        //update if placer number already exsists
-        if(placer_number.length === 0) {
+        //update latest appointment where client_id and placer number match
 
-            connection.query('INSERT INTO tbl_appointment SET ?', appt, function (err, data) {
-                return asyncCallback(err, data);
-            });
+        connection.query('UPDATE tbl_appointment SET ? WHERE client_id ? AND ENTITY_NUMBER ? ORDER BY appntmnt_date DESC LIMIT 1 ', appt, client_id, placer_number, function (err, data) {
+            if (err) {
+                return console.error(err.message);
+            } else {
+                console.log(data);
 
-        } else {
+            }
+        });
 
-            //update latest appointment where client_id and placer number match
-
-            connection.query('UPDATE tbl_appointment SET ? WHERE client_id ? AND ENTITY_NUMBER ? ', appt, client_id, placer_number, function (err, data) {
-                return asyncCallback(err, data);
-            });
-
-        }
-        
-
-      }, function (err) {
-        if (err) {
-          // One of the iterations above produced an error.
-          // All processing will stop and we have to rollback.
-          return callback(err);
-        }
-    
-        // Return without errors
-        return callback();
-      });
+    }
 
 });
 
