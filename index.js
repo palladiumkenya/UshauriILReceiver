@@ -408,6 +408,13 @@ app.post("/hl7_message", (req, res) => {
                         CCC_NUMBER +
                         "'  LIMIT 1";
 
+                    // search for placer appointment number (ENTITY NUMBER in db)    
+                    var get_placer_appointment_number =
+                        "Select * from tbl_appointment where ENTITY_NUMBER='" +
+                        PLACER_APPOINTMENT_NUMBER +
+                        "' ";  
+                        
+                    console.log(get_placer_appointment_number);    
 
                     if (APPOINTMENT_LOCATION == "PHARMACY" || APPOINTMENT_REASON == "REGIMEN REFILL") {
                         APPOINTMENT_TYPE = 1;
@@ -424,62 +431,104 @@ app.post("/hl7_message", (req, res) => {
                             //throw error;
                             console.log(error)
                         } else {
-                        
-                            for (var res in results) {
-                                var client_id = results[res].id;
-                                var APP_STATUS = "Booked";
-                                var ACTIVE_APP = "1";
-                                var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
 
-                                if (PLACER_APPOINTMENT_NUMBER !== "") {
-                                    //Add new Appointment
+                            connection.query(get_placer_appointment_number, function(error, results, fields) {
 
-                                    var appointment_sql =
-                                    "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason, placer_appointment_number) VALUES ('" +
-                                    client_id +
-                                    "', '" +APPOINTMENT_DATE +
-                                    "','" +APPOINTMENT_TYPE +
-                                    "','" +APPOINTMENT_REASON +
-                                    "','" +APP_STATUS +
-                                    "','" +SENDING_APPLICATION +
-                                    "','" +ACTIVE_APP +
-                                    "','" +APPOINTMENT_LOCATION +
-                                    "','" +APPOINTMENT_NOTE +
-                                    "','" +PLACER_APPOINTMENT_NUMBER +
-                                    "')";
-                                } else {
-                                    //Update an Appointment
-                                    var appointment_sql =
-                                    "Update  tbl_appointment SET appntmnt_date='" +
-                                    APPOINTMENT_DATE +
-                                    "' , app_type_1='" +APPOINTMENT_TYPE +
-                                    "',reason='" +APPOINTMENT_NOTE +
-                                    "',expln_app='" +APPOINTMENT_REASON +
-                                    "',client_id ='"+client_id+"' ,APPOINTMENT_LOCATION ='"+ APPOINTMENT_LOCATION +
-                                    "',APPOINTMENT_REASON='"+APPOINTMENT_REASON+
-                                    "',app_status='"+APP_STATUS+"',db_source='"+SENDING_APPLICATION+
-                                    "',active_app='"+ACTIVE_APP+"',reason='"+APPOINTMENT_NOTE+
-                                    "' WHERE client_id = '"+client_id+"' ORDER BY appntmnt_date DESC LIMIT 1";
-                                }
+                                if(error) {
+                                    console.log(error)
+                                } else if(results.length == 0) {
 
-                                // Use the connection
-                                console.log(appointment_sql);
-                                connection.query(appointment_sql, function(
-                                    error,
-                                    results,
-                                    fields
-                                ) {
-                                    if (error) {
-                                        console.log(error);
-                                    } else {
-                                        console.log(results);
+                                    //new appointment
+                                    for (var res in results) {
+                                        var client_id = results[res].id;
+                                        var APP_STATUS = "Booked";
+                                        var ACTIVE_APP = "1";
+                                        var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
+        
+                                            //Add new Appointment
+        
+                                            var appointment_sql =
+                                            "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason, ENTITY_NUMBER) VALUES ('" +
+                                            client_id +
+                                            "', '" +APPOINTMENT_DATE +
+                                            "','" +APPOINTMENT_TYPE +
+                                            "','" +APPOINTMENT_REASON +
+                                            "','" +APP_STATUS +
+                                            "','" +SENDING_APPLICATION +
+                                            "','" +ACTIVE_APP +
+                                            "','" +APPOINTMENT_LOCATION +
+                                            "','" +APPOINTMENT_NOTE +
+                                            "','" +PLACER_APPOINTMENT_NUMBER +
+                                            "')";
+        
+                                        // Use the connection
+                                        console.log(appointment_sql);
+                                        connection.query(appointment_sql, function(
+                                            error,
+                                            results,
+                                            fields
+                                        ) {
+                                            if (error) {
+                                                console.log(error);
+                                            } else {
+                                                console.log(results);
+                                            }
+                                            // And done with the connection.
+                                            connection.release();
+        
+                                            // Don't use the connection here, it has been returned to the pool.
+                                        });
                                     }
-                                    // And done with the connection.
-                                    connection.release();
 
-                                    // Don't use the connection here, it has been returned to the pool.
-                                });
-                        }
+                                } else if(results.length == 1) {
+
+                                    //update appointment
+                                    for (var res in results) {
+                                        var client_id = results[res].id;
+                                        var APP_STATUS = "Booked";
+                                        var ACTIVE_APP = "1";
+                                        var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
+
+                                        //Update an Appointment where client id and appointment placer number match
+                                        var appointment_sql =
+                                        "Update  tbl_appointment SET appntmnt_date='" +
+                                        APPOINTMENT_DATE +
+                                        "' , app_type_1='" +APPOINTMENT_TYPE +
+                                        "',reason='" +APPOINTMENT_NOTE +
+                                        "',expln_app='" +APPOINTMENT_REASON +
+                                        "',client_id ='"+client_id +
+                                        "' ,APPOINTMENT_LOCATION ='"+APPOINTMENT_LOCATION +
+                                        "',APPOINTMENT_REASON='"+APPOINTMENT_REASON+
+                                        "',app_status='"+APP_STATUS+
+                                        "',db_source='"+SENDING_APPLICATION+
+                                        "',active_app='"+ACTIVE_APP+
+                                        "',reason='"+APPOINTMENT_NOTE+
+                                        "' WHERE client_id = '"+client_id+"' AND ENTITY_NUMBER = '"+PLACER_APPOINTMENT_NUMBER+"' ";
+
+                                        // Use the connection
+                                        console.log(appointment_sql);
+                                        connection.query(appointment_sql, function(
+                                            error,
+                                            results,
+                                            fields
+                                        ) {
+                                            if (error) {
+                                                console.log(error);
+                                            } else {
+                                                console.log(results);
+                                            }
+                                            // And done with the connection.
+                                            connection.release();
+        
+                                            // Don't use the connection here, it has been returned to the pool.
+                                        });
+                                    }
+
+                                }
+                                
+                            })
+                        
+                            
                         } 
 
                         // Don't use the connection here, it has been returned to the pool.
@@ -574,7 +623,7 @@ app.post("/hl7_sync_appointment", (req, res) => {
             console.log(data);
         });
 
-        let placer_number = connection.query('SELECT placer_appointment_number FROM tbl_appointment WHERE placer_appointment_number ', appointment.placer_appointment_number, function (err,data) {
+        let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', appointment.placer_appointment_number, function (err,data) {
             if(err) { console.log(err)}
             console.log(data);
         })
@@ -588,12 +637,12 @@ app.post("/hl7_sync_appointment", (req, res) => {
             APPOINTMENT_LOCATION: appointment.APPOINTMENT_LOCATION,
             db_source: appointment.db_source,
             reason: appointment.reason,
-            placer_appointment_number: appointment.placer_appointment_number,
+            ENTITY_NUMBER: appointment.placer_appointment_number,
             client_id: client_id
         }
          
         //update if placer number already exsists
-        if(placer_number === "") {
+        if(placer_number.length === 0) {
 
             connection.query('INSERT INTO tbl_appointment SET ?', appt, function (err, data) {
                 return asyncCallback(err, data);
@@ -603,7 +652,7 @@ app.post("/hl7_sync_appointment", (req, res) => {
 
             //update latest appointment where client_id and placer number match
 
-            connection.query('UPDATE tbl_appointment SET ? WHERE client_id ? ORDER BY appntmnt_date DESC LIMIT 1', appt, client_id, function (err, data) {
+            connection.query('UPDATE tbl_appointment SET ? WHERE client_id ? AND ENTITY_NUMBER ? ', appt, client_id, placer_number, function (err, data) {
                 return asyncCallback(err, data);
             });
 
