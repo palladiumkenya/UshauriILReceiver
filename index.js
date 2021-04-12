@@ -554,7 +554,7 @@ app.post("/hl7_sync_client", (req, res) => {
 
     async.each(clients, function (client, asyncCallback) {
     
-        let partner_id = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.SENDING_FACILITY, function (err,data) {
+        let partner_id = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.mfl_code, function (err,data) {
             if(err) { console.log(err)}
         });
 
