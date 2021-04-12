@@ -556,7 +556,6 @@ app.post("/hl7_sync_client", (req, res) => {
     
         let partner_id = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.SENDING_FACILITY, function (err,data) {
             if(err) { console.log(err)}
-            console.log(data);
         });
 
         let cl = {
