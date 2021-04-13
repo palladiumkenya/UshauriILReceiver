@@ -357,7 +357,7 @@ app.post("/hl7_message", (req, res) => {
                     SENDING_FACILITY = result[i].value;
                 } else if (key == "GODS_NUMBER") {
                     //GODS_NUMBER = result[20].value;
-                } else if (key == "PLACER_APPOINTMENT_NUMBER") {
+                } else if (key == "NUMBER") {
                     PLACER_APPOINTMENT_NUMBER = result[i].value;
                 } else if (key == "APPOINTMENT_REASON") {
                     APPOINTMENT_REASON = result[i].value;
