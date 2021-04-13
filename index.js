@@ -37,7 +37,6 @@ app.post("/hl7_message", (req, res) => {
             var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
             var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
             var SEX;
-            var PLACER_APPOINTMENT_NUMBER;
             var PHONE_NUMBER;
             var MARITAL_STATUS;
             var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.SENDING_APPLICATION;
@@ -94,8 +93,6 @@ app.post("/hl7_message", (req, res) => {
                     }
                 } else if (key == "PHONE_NUMBER") {
                     PHONE_NUMBER = result[i].value;
-                } else if (key == 'PLACER_APPOINTMENT_NUMBER') {
-                    PLACER_APPOINTMENT_NUMBER = result[i].value;
                 } else if (key == "MARITAL_STATUS") {
                     if (result[i].value === "") {
                         MARITAL_STATUS = "1";
@@ -140,7 +137,7 @@ app.post("/hl7_message", (req, res) => {
                     return;
                 } else {
                     var gateway_sql =
-                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type,ENTITY_NUMBER, partner_id) VALUES ('" +
+                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type, partner_id) VALUES ('" +
                         FIRST_NAME +
                         "', '" +
                         MIDDLE_NAME +
@@ -170,8 +167,6 @@ app.post("/hl7_message", (req, res) => {
                         new_enroll_date +
                         "','" +
                         PATIENT_TYPE +
-                         "','" +
-                        PLACER_APPOINTMENT_NUMBER +
                         "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='"+ SENDING_FACILITY +"'))";
 
                     // Use the connection
@@ -200,7 +195,6 @@ app.post("/hl7_message", (req, res) => {
             var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
             var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
             var SEX;
-            var PLACER_APPOINTMENT_NUMBER;
             var PHONE_NUMBER;
             var MARITAL_STATUS;
             var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.PATIENT_SOURCE;
@@ -256,8 +250,6 @@ app.post("/hl7_message", (req, res) => {
                     }
                 } else if (key == "PHONE_NUMBER") {
                     PHONE_NUMBER = result[i].value;
-                } else if (key == "PLACER_APPOINTMENT_NUMBER") {
-                    PLACER_APPOINTMENT_NUMBER = result[i].value;
                 } else if (key == "MARITAL_STATUS") {
                     if (result[i].value === "") {
                         // do stuff
@@ -321,8 +313,6 @@ app.post("/hl7_message", (req, res) => {
                         PHONE_NUMBER +
                         "',group_id='" +
                         GROUP_ID +
-                        "',ENTITY_NUMBER='" +
-                        PLACER_APPOINTMENT_NUMBER +
                         "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
                         +"') WHERE clinic_number='" +
                         CCC_NUMBER +
@@ -353,6 +343,7 @@ app.post("/hl7_message", (req, res) => {
             var APPOINTMENT_PLACING_ENTITY;
             var APPOINTMENT_LOCATION;
             var ACTION_CODE;
+            var PLACER_APPOINTMENT_NUMBER;
             var APPOINTMENT_NOTE;
             var APPOINTMENT_HONORED;
 
@@ -366,6 +357,8 @@ app.post("/hl7_message", (req, res) => {
                     SENDING_FACILITY = result[i].value;
                 } else if (key == "GODS_NUMBER") {
                     //GODS_NUMBER = result[20].value;
+                } else if (key == "PLACER_APPOINTMENT_NUMBER") {
+                    PLACER_APPOINTMENT_NUMBER = result[i].value;
                 } else if (key == "APPOINTMENT_REASON") {
                     APPOINTMENT_REASON = result[i].value;
                 } else if (key == "APPOINTMENT_TYPE") {
@@ -449,7 +442,7 @@ app.post("/hl7_message", (req, res) => {
                                     //Add new Appointment
 
                                         var appointment_sql =
-                                            "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason) VALUES ('" +
+                                            "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason, ENTITY_NUMBER) VALUES ('" +
                                             client_id +
                                             "', '" +
                                             APPOINTMENT_DATE +
@@ -467,6 +460,8 @@ app.post("/hl7_message", (req, res) => {
                                             APPOINTMENT_LOCATION +
                                             "','" +
                                             APPOINTMENT_NOTE +
+                                            "','" +
+                                            PLACER_APPOINTMENT_NUMBER +
                                             "')";
                                     }
 
