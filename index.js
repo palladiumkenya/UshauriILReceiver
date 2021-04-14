@@ -677,7 +677,9 @@ app.post("/hl7_sync_appointment", (req, res) => {
             }
             
             //update if placer number already exsists
-            if(placer_number === "") {
+            if(placer_number.length == 0) {
+
+                console.log("in in empty placer")
 
                 connection.query('INSERT INTO tbl_appointment SET ?', appt, function (err, data) {
                     if (err) {
@@ -690,6 +692,8 @@ app.post("/hl7_sync_appointment", (req, res) => {
                 });
 
             } else {
+
+                console.log("in in present placer")
 
                 //update latest appointment where client_id and placer number match
 
