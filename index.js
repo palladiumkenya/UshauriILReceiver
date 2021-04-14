@@ -613,8 +613,11 @@ app.post("/hl7_sync_client", (req, res) => {
                 locator_county: client.locator_county,
                 locator_sub_county: client.locator_sub_county,
                 locator_ward: client.locator_ward,
+                date_deceased: client.date_deceased,
+                status: client.death_status,
                 locator_village: client.locator_village,
-                partner_id: partner_id
+                partner_id: partner_id,
+
             }
     
             //if message code is ADT^A04 add new client else update client
@@ -635,7 +638,7 @@ app.post("/hl7_sync_client", (req, res) => {
     
                 connection.query('UPDATE tbl_client SET ? WHERE clinic_number = ?', cl, clinic_number, function (err, data) {
                     if (err) {
-                        return console.error(err.message);
+                        console.log(err);
                     } else {
                         console.log(data);
                         res.send(data);
