@@ -656,15 +656,15 @@ app.post("/hl7_sync_client", (req, res) => {
 
 app.post("/hl7_sync_appointment", (req, res) => {
 
+    var appointment = req.body;
+
+    console.log(appointment);
+
     db.getConnection(function(err, connection) {
         if (err) { console.log("im here",err);
         } else { 
 
-            var appointment = req.body;
-            console.log(appointment);
-
-
-            let client = connection.query('SELECT id FROM tbl_client WHERE clinic_number', appointment.clinic_number, function (err,data) {
+            let client = connection.query('SELECT id FROM tbl_client WHERE clinic_number', [appointment.clinic_number], function (err,data) {
                 if(err) { console.log(err)}
             });
 
@@ -672,7 +672,7 @@ app.post("/hl7_sync_appointment", (req, res) => {
 
             let client_id = client[0];
 
-            let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', appointment.placer_appointment_number, function (err,data) {
+            let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', [appointment.placer_appointment_number], function (err,data) {
                 if(err) { console.log(err)}
             })
 
