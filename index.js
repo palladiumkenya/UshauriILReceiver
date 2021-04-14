@@ -668,11 +668,15 @@ app.post("/hl7_sync_appointment", (req, res) => {
                 if(err) { console.log(err)}
             });
 
+            console.log("client_id", client)
+
             let client_id = client[0];
 
             let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', appointment.placer_appointment_number, function (err,data) {
                 if(err) { console.log(err)}
             })
+
+            console.log("placer_number", placer_number)
 
             let appt = {
                 appntmnt_date: appointment.appntmnt_date,
