@@ -666,14 +666,12 @@ app.post("/hl7_sync_appointment", (req, res) => {
 
             let client = connection.query('SELECT id FROM tbl_client WHERE clinic_number', appointment.clinic_number, function (err,data) {
                 if(err) { console.log(err)}
-                console.log(data);
             });
 
             let client_id = client[0];
 
             let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', appointment.placer_appointment_number, function (err,data) {
                 if(err) { console.log(err)}
-                console.log(data);
             })
 
             let appt = {
@@ -688,7 +686,7 @@ app.post("/hl7_sync_appointment", (req, res) => {
                 ENTITY_NUMBER: appointment.placer_appointment_number,
                 client_id: client_id,
                 created_at: appointment.created_at,
-                ENTITY_NUMBER: appointment.placer_appointment_number
+                updated_at: appointment.created_at,
 
             }
             
@@ -703,7 +701,6 @@ app.post("/hl7_sync_appointment", (req, res) => {
                     if (err) {
                         return console.error(err.message);
                     } else {
-                        console.log(data);
                         res.send(data);
 
                     }
@@ -717,7 +714,6 @@ app.post("/hl7_sync_appointment", (req, res) => {
                     if (err) {
                         return console.error(err.message);
                     } else {
-                        console.log(data);
                         res.send(data);
 
                     }
