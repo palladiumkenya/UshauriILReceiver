@@ -586,9 +586,11 @@ app.post("/hl7_sync_client", (req, res) => {
         if (err) { console.log("im here",err);
         } else { 
             
-            let partner_id = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.mfl_code, function (err,data) {
+            let partner = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.mfl_code, function (err,data) {
                 if(err) { console.log(err)}
             });
+
+            let partner_id = partner[0];
 
             let cl = {
                 f_name: client.f_name,
