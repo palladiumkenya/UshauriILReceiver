@@ -358,6 +358,7 @@ app.post("/hl7_message", (req, res) => {
             //var ACTION_CODE;
             var APPOINTMENT_NOTE;
             var APPOINTMENT_HONORED;
+            var CREATED_AT;
 
             var result = get_json(jsonObj);
 
@@ -386,6 +387,19 @@ app.post("/hl7_message", (req, res) => {
                     ACTION_CODE = result[i].value;
                 } else if (key == "APPOINTMENT_PLACING_ENTITY") {
                     APPOINTMENT_PLACING_ENTITY = result[i].value;
+                } else if (key == "VISIT_DATE") {
+                    CREATED_AT = result[i].value;
+                    var year = CREATED_AT.substring(0, 4);
+                    var month = CREATED_AT.substring(4, 6);
+                    var day = CREATED_AT.substring(6, 8);
+
+                    var app_date = year + "-" + month + "-" + day;
+
+                    var current_date = moment(new Date());
+                    var today = current_date.format("YYYY-MM-DD");
+
+                    var BirthDate = moment(app_date);
+                    CREATED_AT = BirthDate.format("YYYY-MM-DD");
                 } else if (key == "APPOINTMENT_DATE") {
                     APPOINTMENT_DATE = result[i].value;
                     APPOINTMENT_DATE = APPOINTMENT_DATE;
@@ -468,7 +482,7 @@ app.post("/hl7_message", (req, res) => {
                                             //Add new Appointment
         
                                             var appointment_sql =
-                                            "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason, ENTITY_NUMBER) VALUES ('" +
+                                            "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason, ENTITY_NUMBER, created_at) VALUES ('" +
                                             client_id +
                                             "', '" +APPOINTMENT_DATE +
                                             "','" +APPOINTMENT_TYPE +
@@ -479,6 +493,7 @@ app.post("/hl7_message", (req, res) => {
                                             "','" +APPOINTMENT_LOCATION +
                                             "','" +APPOINTMENT_NOTE +
                                             "','" +PLACER_APPOINTMENT_NUMBER +
+                                            "','" +CREATED_AT +
                                             "')";
         
                                         // Use the connection
