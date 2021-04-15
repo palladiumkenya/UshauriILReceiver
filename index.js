@@ -472,20 +472,18 @@ app.post("/hl7_message", (req, res) => {
                     }
 
                     // Use the connection
-                    connection.query(get_client_sql, function(error, results, fields) {
+                    connection.query(get_placer_appointment_number, function(error, results, fields) {
                         // Handle error after the release.
                         if (error) {
                             //throw error;
-                            console.log("here 1",error, results.length)
-                        } else {
+                            console.log(error, results.length)
+                        } else if(results.length === 0) {
 
-                            connection.query(get_placer_appointment_number, function(error, results, fields) {
+                            connection.query(get_client_sql, function(error, results, fields) {
 
                                 if(error) {
-                                    console.log("here 2",error)
-                                } else if(results.length === 0) {
-
-                                    console.log("in insert",results)
+                                    console.log(error)
+                                } else {
                                     
                                     //new appointment
                                     for (var res in results) {
@@ -540,7 +538,17 @@ app.post("/hl7_message", (req, res) => {
                                         });
                                     }
 
-                                } else if(results.length == 1) {
+                                }
+                                
+                            });
+                            
+                        } else if(results.length == 1) {
+
+                            connection.query(get_client_sql, function(error, results, fields) {
+
+                                if(error) {
+                                    console.log(error)
+                                } else {
 
                                     //update appointment
                                     for (var res in results) {
@@ -579,15 +587,16 @@ app.post("/hl7_message", (req, res) => {
                                             }
                                             // And done with the connection.
                                             connection.release();
-        
+
                                             // Don't use the connection here, it has been returned to the pool.
                                         });
                                     }
 
                                 }
                                 
-                            })
-                        } 
+                            });    
+
+                        }
 
                         // Don't use the connection here, it has been returned to the pool.
                     });
