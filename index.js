@@ -476,13 +476,13 @@ app.post("/hl7_message", (req, res) => {
                         // Handle error after the release.
                         if (error) {
                             //throw error;
-                            console.log(error, results.length)
+                            console.log("here 1",error, results.length)
                         } else {
 
                             connection.query(get_placer_appointment_number, function(error, results, fields) {
 
                                 if(error) {
-                                    console.log(error)
+                                    console.log("here 2",error)
                                 } else if(results.length === 0) {
 
                                     console.log(results)
