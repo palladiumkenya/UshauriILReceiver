@@ -485,7 +485,7 @@ app.post("/hl7_message", (req, res) => {
                                     console.log("here 2",error)
                                 } else if(results.length === 0) {
 
-                                    console.log(results)
+                                    console.log("in insert",results)
                                     
                                     //new appointment
                                     for (var res in results) {
