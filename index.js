@@ -609,8 +609,6 @@ app.post("/hl7_message", (req, res) => {
 
             var result = get_json(jsonObj);
 
-            var hiv_disc;
-
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;                
                 var value = result[i].value;
