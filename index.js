@@ -16,7 +16,7 @@ app.post("/hl7_message", (req, res) => {
     let obj1 = req;
     jsonObj = obj1.body;
 
-    console.log(jsonObj);
+    //console.log(jsonObj);
 
     var DATE_TODAY = moment(new Date()).format("YYYY-MM-DD");
 
@@ -313,6 +313,7 @@ app.post("/hl7_message", (req, res) => {
                         "',l_name='" +LAST_NAME +
                         "',dob='" +DATE_OF_BIRTH +
                         "',mfl_code='" +SENDING_FACILITY +
+                        "',SENDING_APPLICATION'" +SENDING_APPLICATION +
                         "',gender='" +SEX +
                         "',marital='" +MARITAL_STATUS +
                         "',phone_no='" +PHONE_NUMBER +
@@ -563,6 +564,140 @@ app.post("/hl7_message", (req, res) => {
                     });
                 }
             });
+        } else if(message_type == "ORU^ROI") {
+
+            var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
+            var CCC_NUMBER;
+            var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+            var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
+            var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
+            var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
+            var SENDING_FACILITY = jsonObj.MESSAGE_HEADER.SENDING_FACILITY;
+            var OBSERVATION_VALUE;
+            var OBSERVATION_DATETIME;
+
+            var result = get_json(jsonObj);
+
+            var hiv_disc;
+
+            for (var i = 0; i < result.length; i++) {
+                var key = result[i].key;                
+                var value = result[i].value;
+
+                console.log(value)
+
+                if (key == "ID") {
+                    if (result[i + 1].value == "CCC_NUMBER") {
+                        CCC_NUMBER = result[i].value;
+                    }
+                } else if(key = "OBSERVATION_IDENTIFIER") {
+                    if (result[i - 5].value == "OBSERVATION_VALUE") {
+                        OBSERVATION_VALUE = result[i].value;
+                    }
+                } else if(key = "OBSERVATION_IDENTIFIER") {
+                    if (result[i + 7].value == "OBSERVATION_DATETIME") {
+                        OBSERVATION_DATETIME = result[i].value;
+                    }
+                }
+
+            }   
+            
+            if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+                console.log("Invalid CCC NUMBER");
+            }
+
+            var observation_year = OBSERVATION_DATETIME.substring(0, 4);
+            var observation_month = OBSERVATION_DATETIME.substring(4, 6);
+            var observation_day = OBSERVATION_DATETIME.substring(6, 8);
+            var observation_hour = OBSERVATION_DATETIME.substring(8, 10);
+            var observation_minute = OBSERVATION_DATETIME.substring(10, 12);
+            var observation_second = OBSERVATION_DATETIME.substring(12, 14);
+            var new_observation_date = observation_year + "-" + observation_month + "-" + observation_day + " " + observation_hour + ":" + observation_minute + ":" + observation_second;
+
+                //transfer out happends in client table
+
+            console.log("date", new_observation_date,"value",OBSERVATION_VALUE )    
+
+            db.getConnection(function(err, connection) {
+                if (err) {
+                    console.log(err);
+                } else {
+
+                    connection.query(get_client_sql, function(error, results, fields) {
+                        // Handle error after the release.
+                        if (error) {
+                            //throw error;
+                            console.log(error, results.length)
+                        } else {
+
+                            if(OBSERVATION_VALUE == "TRANSFER_OUT") {
+                                
+                                var update_sql =
+                                "update tbl_client SET f_name='" +
+                                FIRST_NAME +
+                                "',m_name='" +MIDDLE_NAME +
+                                "',l_name='" +LAST_NAME +
+                                "',client_type='" +OBSERVATION_VALUE +
+                                "',mfl_code='" +SENDING_FACILITY +
+                                "',SENDING_APPLICATION'" +SENDING_APPLICATION +
+                                "',updated_at'" +new_observation_date +
+                                "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
+                                +"') WHERE clinic_number='" +
+                                CCC_NUMBER +
+                                "' ";
+
+                                // Use the connection
+                                connection.query(update_sql, function(error, results, fields) {
+                                    if (error) {
+                                        console.log(error);
+                                    } else {
+                                        console.log(results);
+                                        // And done with the connection.
+                                        connection.release();
+                                    }
+                                
+                                });
+
+                            } else if(OBSERVATION_VALUE = "LOST_TO_FOLLOWUP") {
+                                var APP_STATUS = "LTFU";
+
+                                var update_sql =
+                                "update tbl_appointment SET f_name='" +
+                                FIRST_NAME +
+                                "',m_name='" +MIDDLE_NAME +
+                                "',l_name='" +LAST_NAME +
+                                "',client_type='" +OBSERVATION_VALUE +
+                                "',app_status='" +APP_STATUS +
+                                "',mfl_code='" +SENDING_FACILITY +
+                                "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                                "',updated_at='" +new_observation_date +
+                                "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
+                                +"') WHERE clinic_number='" +
+                                CCC_NUMBER +
+                                "' ";
+
+                                // Use the connection
+                                connection.query(update_sql, function(error, results, fields) {
+                                    if (error) {
+                                        console.log(error);
+                                    } else {
+                                        console.log(results);
+                                        // And done with the connection.
+                                        connection.release();
+                                    }
+
+                                });  
+                                
+                            }    
+
+                        }    
+                
+                    }); 
+                    
+                } 
+                
+            });    
+
         }
 
         console.log(true);
