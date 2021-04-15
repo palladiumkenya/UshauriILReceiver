@@ -32,6 +32,7 @@ app.post("/hl7_message", (req, res) => {
         if (message_type == "ADT^A04") {            
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
+            var PATIENT_CLINIC_NUMBER;
             var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
             var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
             var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
@@ -125,6 +126,12 @@ app.post("/hl7_message", (req, res) => {
                         CCC_NUMBER = result[i].value;
                     }
                 }
+
+                if (key == "ID") {
+                    if (result[i + 1].value == "PATIENT_CLINIC_NUMBER") {
+                        PATIENT_CLINIC_NUMBER = result[i].value;
+                    }
+                }
             }
 
             var enroll_year = ENROLLMENT_DATE.substring(0, 4);
@@ -145,12 +152,13 @@ app.post("/hl7_message", (req, res) => {
                     return;
                 } else {
                     var gateway_sql =
-                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
+                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
                         FIRST_NAME +
                         "', '" +MIDDLE_NAME +
                         "','" +LAST_NAME +
                         "','" +new_date +
                         "','" +CCC_NUMBER +
+                        "','" +PATIENT_CLINIC_NUMBER +
                         "','" +SENDING_FACILITY +
                         "','" +SEX +
                         "','" +MARITAL_STATUS +
@@ -188,6 +196,7 @@ app.post("/hl7_message", (req, res) => {
 
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
+            var PATIENT_CLINIC_NUMBER;
             var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
             var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
             var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
@@ -283,6 +292,12 @@ app.post("/hl7_message", (req, res) => {
                         CCC_NUMBER = result[i].value;
                     }
                 }
+
+                if (key == "ID") {
+                    if (result[i + 1].value == "PATIENT_CLINIC_NUMBER") {
+                        PATIENT_CLINIC_NUMBER = result[i].value;
+                    }
+                }
             }
 
             var death_year = DEATH_DATE.substring(0, 4);
@@ -313,6 +328,7 @@ app.post("/hl7_message", (req, res) => {
                         "',l_name='" +LAST_NAME +
                         "',dob='" +DATE_OF_BIRTH +
                         "',mfl_code='" +SENDING_FACILITY +
+                        "',file_no='" +PATIENT_CLINIC_NUMBER +
                         "',SENDING_APPLICATION'" +SENDING_APPLICATION +
                         "',gender='" +SEX +
                         "',marital='" +MARITAL_STATUS +
