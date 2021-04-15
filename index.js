@@ -601,11 +601,13 @@ app.post("/hl7_sync_client", (req, res) => {
         if (err) { console.log("im here",err);
         } else { 
             
-            console.log(connection);
-
-            let partner_id = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.mfl_code, function (err,data) {
+            let partner = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.mfl_code, function (err,data) {
                 if(err) { console.log(err)}
             });
+
+            let partner_id = partner[0];
+
+            let clinic_number = client.clinic_number;
 
             let cl = {
                 f_name: client.f_name,
@@ -628,8 +630,11 @@ app.post("/hl7_sync_client", (req, res) => {
                 locator_county: client.locator_county,
                 locator_sub_county: client.locator_sub_county,
                 locator_ward: client.locator_ward,
+                date_deceased: client.date_deceased,
+                status: client.death_status,
                 locator_village: client.locator_village,
-                partner_id: partner_id
+                partner_id: partner_id,
+
             }
     
             //if message code is ADT^A04 add new client else update client
@@ -645,12 +650,10 @@ app.post("/hl7_sync_client", (req, res) => {
                 });
     
             } else if(client.message_type === "ADT^A08") {
-     
-                let clinic_number = client.clinic_number;
-    
-                connection.query('UPDATE tbl_client SET ? WHERE clinic_number = ?', cl, clinic_number, function (err, data) {
+         
+                connection.query('UPDATE tbl_client SET ? WHERE clinic_number = ?', [cl, clinic_number], function (err, data) {
                     if (err) {
-                        return console.error(err.message);
+                        console.log(err);
                     } else {
                         console.log(data);
                         res.send(data);
@@ -668,23 +671,27 @@ app.post("/hl7_sync_client", (req, res) => {
 
 app.post("/hl7_sync_appointment", (req, res) => {
 
+    var appointment = req.body;
+
+    console.log(appointment);
+
     db.getConnection(function(err, connection) {
         if (err) { console.log("im here",err);
         } else { 
 
-            var appointment = req.body;
-            console.log(appointment);
-
-
-            let client_id = connection.query('SELECT id FROM tbl_client WHERE clinic_number', appointment.CCC_NUMBER, function (err,data) {
+            let client = connection.query('SELECT id FROM tbl_client WHERE clinic_number', [appointment.clinic_number], function (err,data) {
                 if(err) { console.log(err)}
-                console.log(data);
             });
 
-            let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', appointment.placer_appointment_number, function (err,data) {
+            console.log("client_id", client)
+
+            let client_id = client[0];
+
+            let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', [appointment.placer_appointment_number], function (err,data) {
                 if(err) { console.log(err)}
-                console.log(data);
             })
+
+            console.log("placer_number", placer_number)
 
             let appt = {
                 appntmnt_date: appointment.appntmnt_date,
@@ -696,23 +703,16 @@ app.post("/hl7_sync_appointment", (req, res) => {
                 db_source: appointment.db_source,
                 reason: appointment.reason,
                 ENTITY_NUMBER: appointment.placer_appointment_number,
-                client_id: client_id
+                client_id: client_id,
+                created_at: appointment.created_at,
+                updated_at: appointment.created_at,
+
             }
             
             //update if placer number already exsists
-            if(placer_number === "") {
+            if(placer_number.length >= 1 ) {
 
-                connection.query('INSERT INTO tbl_appointment SET ?', appt, function (err, data) {
-                    if (err) {
-                        return console.error(err.message);
-                    } else {
-                        console.log(data);
-                        res.send(data);
-
-                    }
-                });
-
-            } else {
+                console.log("in in present placer")
 
                 //update latest appointment where client_id and placer number match
 
@@ -720,7 +720,19 @@ app.post("/hl7_sync_appointment", (req, res) => {
                     if (err) {
                         return console.error(err.message);
                     } else {
-                        console.log(data);
+                        res.send(data);
+
+                    }
+                });
+
+            } else {
+
+                console.log("in in empty placer")
+
+                connection.query('INSERT INTO tbl_appointment SET ?', appt, function (err, data) {
+                    if (err) {
+                        return console.error(err.message);
+                    } else {
                         res.send(data);
 
                     }
