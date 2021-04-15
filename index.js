@@ -465,8 +465,6 @@ app.post("/hl7_message", (req, res) => {
                         PLACER_APPOINTMENT_NUMBER +
                         "' ";
                     
-                    console.log(get_placer_appointment_number);    
-
                     if (APPOINTMENT_LOCATION == "PHARMACY" || APPOINTMENT_REASON == "REGIMEN REFILL") {
                         APPOINTMENT_TYPE = 1;
                     } else {
@@ -478,14 +476,14 @@ app.post("/hl7_message", (req, res) => {
                         // Handle error after the release.
                         if (error) {
                             //throw error;
-                            console.log("im here 0", error, results.length)
+                            console.log(error, results.length)
                         } else {
 
                             connection.query(get_placer_appointment_number, function(error, results, fields) {
 
                                 if(error) {
-                                    console.log("im here 1", error)
-                                } else if(results.length == 0) {
+                                    console.log(error)
+                                } else if(results.length === 0) {
 
                                     console.log(results)
                                     
