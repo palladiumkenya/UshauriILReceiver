@@ -215,6 +215,7 @@ app.post("/hl7_message", (req, res) => {
             var VILLAGE = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.VILLAGE;
             var DEATH_DATE = jsonObj.PATIENT_IDENTIFICATION.DEATH_DATE;
             var DEATH_INDICATOR = jsonObj.PATIENT_IDENTIFICATION.DEATH_INDICATOR;
+            var ART_DATE;
             var TOD_DATE = moment().format("YYYY-MM-DD");
 
             var result = get_json(jsonObj);
@@ -298,12 +299,31 @@ app.post("/hl7_message", (req, res) => {
                         PATIENT_CLINIC_NUMBER = result[i].value;
                     }
                 }
+
+                if(key == "OBSERVATION_DATETIME") {
+                    if (result[i + 5].value == "CURRENT_REGIMEN") {
+                        ART_DATE = result[i].value;
+                    }
+                }
             }
 
-            var death_year = DEATH_DATE.substring(0, 4);
-            var death_month = DEATH_DATE.substring(4, 6);
-            var death_day = DEATH_DATE.substring(6, 8);
-            var new_death_date = death_year + "-" + death_month + "-" + death_day;
+            var art_year = ART_DATE.substring(0, 4);
+            var art_month = ART_DATE.substring(4, 6);
+            var art_day = ART_DATE.substring(6, 8);
+            var new_art_date = art_year + "-" + art_month + "-" + art_day;
+
+
+            if(DEATH_DATE === ""){
+                new_death_date = null;
+
+            } else {
+
+                var death_year = DEATH_DATE.substring(0, 4);
+                var death_month = DEATH_DATE.substring(4, 6);
+                var death_day = DEATH_DATE.substring(6, 8);
+                var new_death_date = death_year + "-" + death_month + "-" + death_day;
+
+            }
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
                 console.log("Invalid CCC NUMBER");
@@ -321,7 +341,9 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                 } else {
 
-                    var update_sql =
+                    if(new_death_date === null) {
+
+                        var update_sql =
                         "update tbl_client SET f_name='" +
                         FIRST_NAME +
                         "',m_name='" +MIDDLE_NAME +
@@ -330,6 +352,35 @@ app.post("/hl7_message", (req, res) => {
                         "',mfl_code='" +SENDING_FACILITY +
                         "',file_no='" +PATIENT_CLINIC_NUMBER +
                         "',SENDING_APPLICATION'" +SENDING_APPLICATION +
+                        "',art_date='" +new_art_date +
+                        "',gender='" +SEX +
+                        "',marital='" +MARITAL_STATUS +
+                        "',phone_no='" +PHONE_NUMBER +
+                        "',group_id='" +GROUP_ID +
+                        "',client_type='" +PATIENT_TYPE +
+                        "',locator_county='" +COUNTY +
+                        "',locator_sub_county='" +SUB_COUNTY + 
+                        "',locator_ward='" +WARD +
+                        "',locator_village='" +VILLAGE + 
+                        "',date_deceased=" +new_death_date + 
+                        ",status='" +DEATH_INDICATOR + 
+                        "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
+                        +"') WHERE clinic_number='" +
+                        CCC_NUMBER +
+                        "' ";
+
+                    } else {
+
+                        var update_sql =
+                        "update tbl_client SET f_name='" +
+                        FIRST_NAME +
+                        "',m_name='" +MIDDLE_NAME +
+                        "',l_name='" +LAST_NAME +
+                        "',dob='" +DATE_OF_BIRTH +
+                        "',mfl_code='" +SENDING_FACILITY +
+                        "',file_no='" +PATIENT_CLINIC_NUMBER +
+                        "',SENDING_APPLICATION'" +SENDING_APPLICATION +
+                        "',art_date='" +new_art_date +
                         "',gender='" +SEX +
                         "',marital='" +MARITAL_STATUS +
                         "',phone_no='" +PHONE_NUMBER +
@@ -345,6 +396,10 @@ app.post("/hl7_message", (req, res) => {
                         +"') WHERE clinic_number='" +
                         CCC_NUMBER +
                         "' ";
+
+                    }
+
+                    
 
                     // Use the connection
                     connection.query(update_sql, function(error, results, fields) {
@@ -541,7 +596,7 @@ app.post("/hl7_message", (req, res) => {
                                 }
                                 
                             });
-                            
+
                         } else if(results.length == 1) {
 
                             connection.query(get_client_sql, function(error, results, fields) {
@@ -602,7 +657,8 @@ app.post("/hl7_message", (req, res) => {
                     });
                 }
             });
-        } else if(message_type == "ORU^ROI") {
+
+        } else if(message_type == "ORU^R01") {
 
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
@@ -620,18 +676,16 @@ app.post("/hl7_message", (req, res) => {
                 var key = result[i].key;                
                 var value = result[i].value;
 
-                console.log(value)
-
                 if (key == "ID") {
                     if (result[i + 1].value == "CCC_NUMBER") {
                         CCC_NUMBER = result[i].value;
                     }
                 } else if(key = "OBSERVATION_IDENTIFIER") {
-                    if (result[i - 5].value == "OBSERVATION_VALUE") {
+                    if (result[i].value == "OBSERVATION_VALUE") {
                         OBSERVATION_VALUE = result[i].value;
                     }
                 } else if(key = "OBSERVATION_IDENTIFIER") {
-                    if (result[i + 7].value == "OBSERVATION_DATETIME") {
+                    if (result[i].value == "OBSERVATION_DATETIME") {
                         OBSERVATION_DATETIME = result[i].value;
                     }
                 }
@@ -847,8 +901,6 @@ app.post("/hl7_sync_appointment", (req, res) => {
                 if(err) { console.log(err)}
             })
 
-            console.log("placer_number", placer_number)
-
             let appt = {
                 appntmnt_date: appointment.appntmnt_date,
                 app_type_1: appointment.app_type_1,
@@ -867,8 +919,6 @@ app.post("/hl7_sync_appointment", (req, res) => {
             
             //update if placer number already exsists
             if(placer_number.length >= 1 ) {
-
-                console.log("in in present placer")
 
                 //update latest appointment where client_id and placer number match
 
