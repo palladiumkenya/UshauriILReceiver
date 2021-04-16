@@ -680,11 +680,11 @@ app.post("/hl7_message", (req, res) => {
                     if (result[i + 1].value == "CCC_NUMBER") {
                         CCC_NUMBER = result[i].value;
                     }
-                } else if(key = "OBSERVATION_IDENTIFIER") {
+                } else if(key == "OBSERVATION_IDENTIFIER") {
                     if (result[i].value == "OBSERVATION_VALUE") {
                         OBSERVATION_VALUE = result[i].value;
                     }
-                } else if(key = "OBSERVATION_IDENTIFIER") {
+                } else if(key == "OBSERVATION_IDENTIFIER") {
                     if (result[i].value == "OBSERVATION_DATETIME") {
                         OBSERVATION_DATETIME = result[i].value;
                     }
@@ -721,6 +721,8 @@ app.post("/hl7_message", (req, res) => {
                         } else {
 
                             if(OBSERVATION_VALUE == "TRANSFER_OUT") {
+
+                                var OBSERVATION_VALUE = "Transfer Out";
                                 
                                 var update_sql =
                                 "update tbl_client SET f_name='" +
