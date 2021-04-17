@@ -700,7 +700,7 @@ app.post("/hl7_message", (req, res) => {
                                 var new_value = "Transfer Out";
                             
                                 var update_sql =
-                                "update clients SET client_type='" +new_value +
+                                "update tbl_client SET client_type='" +new_value +
                                 "',mfl_code='" +SENDING_FACILITY +
                                 "',SENDING_APPLICATION='" +SENDING_APPLICATION +
                                 "',updated_at='" +new_observation_date +
@@ -724,7 +724,7 @@ app.post("/hl7_message", (req, res) => {
                                 var new_app_status = "LTFU";
 
                                 var update_sql =
-                                "update appointments SET app_status='" +new_app_status +
+                                "update tbl_appointment SET app_status='" +new_app_status +
                                 "',mfl_code='" +SENDING_FACILITY +
                                 "',SENDING_APPLICATION='" +SENDING_APPLICATION +
                                 "',updated_at='" +new_observation_date +
