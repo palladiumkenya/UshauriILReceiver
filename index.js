@@ -907,6 +907,7 @@ app.post("/hl7_sync_client", (req, res) => {
                 PATIENT_SOURCE: client.PATIENT_SOURCE,
                 db_source: client.db_source,
                 enrollment_date: client.enrollment_date,
+                art_date: client.art_date,
                 client_type: client.client_type,
                 file_no: client.file_no,
                 locator_county: client.locator_county,
