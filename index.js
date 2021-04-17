@@ -322,7 +322,7 @@ app.post("/hl7_message", (req, res) => {
 
             if(ART_DATE === "" || ART_DATE === undefined){
 
-                new_art_date = null;
+                var new_art_date = null;
 
             } else {
 
