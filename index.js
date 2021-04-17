@@ -49,6 +49,7 @@ app.post("/hl7_message", (req, res) => {
             var SUB_COUNTY = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.SUB_COUNTY;
             var WARD = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.WARD;
             var VILLAGE = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.VILLAGE;
+            var ART_DATE;
 
             var result = get_json(jsonObj);
 
@@ -132,12 +133,31 @@ app.post("/hl7_message", (req, res) => {
                         PATIENT_CLINIC_NUMBER = result[i].value;
                     }
                 }
+
+                if(key == "OBSERVATION_DATETIME") {
+                    if (result[i + 5].value == "CURRENT_REGIMEN") {
+                        ART_DATE = result[i].value;
+                    }
+                }
             }
 
             var enroll_year = ENROLLMENT_DATE.substring(0, 4);
             var enroll_month = ENROLLMENT_DATE.substring(4, 6);
             var enroll_day = ENROLLMENT_DATE.substring(6, 8);
             var new_enroll_date = enroll_year + "-" + enroll_month + "-" + enroll_day;
+
+            if(ART_DATE === "" ||ART_DATE === undefined ) {
+
+                var new_art_date = null;
+
+            } else {
+
+                var art_year = ART_DATE.substring(0, 4);
+                var art_month = ART_DATE.substring(4, 6);
+                var art_day = ART_DATE.substring(6, 8);
+                var new_art_date = art_year + "-" + art_month + "-" + art_day;
+                
+            }
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
                 response = `Invalid CCC Number: ${CCC_NUMBER}`;
@@ -151,8 +171,11 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                     return;
                 } else {
-                    var gateway_sql =
-                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
+
+                    if(new_art_date == null) {
+
+                        var gateway_sql =
+                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
                         FIRST_NAME +
                         "', '" +MIDDLE_NAME +
                         "','" +LAST_NAME +
@@ -168,12 +191,43 @@ app.post("/hl7_message", (req, res) => {
                         "','" +SENDING_APPLICATION +
                         "','" +PATIENT_SOURCE +
                         "','" +new_enroll_date +
+                        "'," +new_art_date +
+                        ",'" +PATIENT_TYPE +
+                        "','" +COUNTY +
+                        "','" +SUB_COUNTY +
+                        "','" +WARD +
+                        "','" +VILLAGE +
+                        "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='"+ SENDING_FACILITY +"'))";
+
+                    } else {
+
+                        var gateway_sql =
+                        "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
+                        FIRST_NAME +
+                        "', '" +MIDDLE_NAME +
+                        "','" +LAST_NAME +
+                        "','" +new_date +
+                        "','" +CCC_NUMBER +
+                        "','" +PATIENT_CLINIC_NUMBER +
+                        "','" +SENDING_FACILITY +
+                        "','" +SEX +
+                        "','" +MARITAL_STATUS +
+                        "','" +PHONE_NUMBER +
+                        "','" +GODS_NUMBER +
+                        "','" +parseInt(GROUP_ID) +
+                        "','" +SENDING_APPLICATION +
+                        "','" +PATIENT_SOURCE +
+                        "','" +new_enroll_date +
+                        "','" +new_art_date +
                         "','" +PATIENT_TYPE +
                         "','" +COUNTY +
                         "','" +SUB_COUNTY +
                         "','" +WARD +
                         "','" +VILLAGE +
                         "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='"+ SENDING_FACILITY +"'))";
+
+                    }
+                    
 
                     // Use the connection
                     connection.query(gateway_sql, function(error, results, fields) {
