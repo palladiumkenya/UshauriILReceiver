@@ -29,7 +29,9 @@ app.post("/hl7_message", (req, res) => {
 
     if (SENDING_APPLICATION === 'KENYAEMR' || SENDING_APPLICATION === 'ADT') {
 
-        if (message_type == "ADT^A04") {            
+        if (message_type == "ADT^A04") { 
+            
+            //this message is triggered when a new client is created
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
             var PATIENT_CLINIC_NUMBER;
@@ -248,28 +250,18 @@ app.post("/hl7_message", (req, res) => {
             });
         } else if (message_type == "ADT^A08") {
 
+            //this message is triggered by creating an art start date or death
+
+            var SENDING_FACILITY;
+            var PATIENT_CLINIC_NUMBER; 
+            var ART_DATE;
+            var GROUP_ID;
+            var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
-            var PATIENT_CLINIC_NUMBER;
-            var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
-            var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
-            var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
-            var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
-            var SEX;
-            var PHONE_NUMBER;
-            var MARITAL_STATUS;
-            var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.PATIENT_SOURCE;
-            var ENROLLMENT_DATE = jsonObj.PATIENT_VISIT.HIV_CARE_ENROLLMENT_DATE;
-            var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
-            var SENDING_FACILITY;
-            var GROUP_ID;
-            var COUNTY = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.COUNTY;
-            var SUB_COUNTY = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.SUB_COUNTY;
-            var WARD = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.WARD;
-            var VILLAGE = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.VILLAGE;
             var DEATH_DATE = jsonObj.PATIENT_IDENTIFICATION.DEATH_DATE;
             var DEATH_INDICATOR = jsonObj.PATIENT_IDENTIFICATION.DEATH_INDICATOR;
-            var ART_DATE;
+            
             var TOD_DATE = moment().format("YYYY-MM-DD");
 
             var result = get_json(jsonObj);
@@ -278,67 +270,7 @@ app.post("/hl7_message", (req, res) => {
                 var key = result[i].key;                
                 var value = result[i].value;
                 
-                if (key == "DATE_OF_BIRTH") {
-                    var DoB = DATE_OF_BIRTH;
-
-                    var year = DoB.substring(0, 4);
-                    var month = DoB.substring(4, 6);
-                    var day = DoB.substring(6, 8);
-
-                    var today = DATE_TODAY;
-
-                    var new_date = year + "-" + month + "-" + day;
-                    var date_diff = moment(today).diff(
-                        moment(new_date).format("YYYY-MM-DD"),
-                        "days"
-                    );
-
-                    if (date_diff >= 5475 && date_diff <= 6935) {
-                        GROUP_ID = "2";
-                    }
-                    if (date_diff >= 7300) {
-                        GROUP_ID = "1";
-                    }
-                    if (date_diff <= 5110) {
-                        GROUP_ID = "6";
-                    }
-                } else if (key == "SEX") {
-                    if (result[i].value == "F") {
-                        SEX = "1";
-                    } else {
-                        SEX = "2";
-                    }
-                } else if (key == "PHONE_NUMBER") {
-                    PHONE_NUMBER = result[i].value;
-                } else if (key == "MARITAL_STATUS") {
-                    if (result[i].value === "") {
-                        // do stuff
-                        MARITAL_STATUS = "1";
-                    }
-                    if (result[i].value == "D") {
-                        MARITAL_STATUS = "3";
-                    } else if (result[i].value == "M") {
-                        MARITAL_STATUS = "2";
-                    } else if (result[i].value == "S") {
-                        MARITAL_STATUS = "1";
-                    } else if (result[i].value == "W") {
-                        MARITAL_STATUS = "4";
-                    } else if (result[i].value == "C") {
-                        MARITAL_STATUS = "5";
-                    } else if (result[i].value == "1") {
-                        MARITAL_STATUS = "1";
-                    } else if (result[i].value == "2") {
-                        MARITAL_STATUS = "2";
-                    } else if (result[i].value == "3") {
-                        MARITAL_STATUS = "3";
-                    } else if (result[i].value == "4") {
-                        MARITAL_STATUS = "4";
-                    } else if (result[i].value == "5") {
-                        MARITAL_STATUS = "5";
-                    } else {
-                        MARITAL_STATUS = "1";
-                    }
-                }
+               
                 if (key == "SENDING_FACILITY") {
                     SENDING_FACILITY = result[i].value;
                 }
@@ -361,13 +293,21 @@ app.post("/hl7_message", (req, res) => {
                 }
             }
 
+            if(ART_DATE === "" || ART_DATE === undefined){
+
+                new_death_date = null;
+
+            } else {
+
             var art_year = ART_DATE.substring(0, 4);
             var art_month = ART_DATE.substring(4, 6);
             var art_day = ART_DATE.substring(6, 8);
             var new_art_date = art_year + "-" + art_month + "-" + art_day;
 
+            }
 
-            if(DEATH_DATE === ""){
+
+            if(DEATH_DATE === "" || DEATH_DATE === undefined){
                 new_death_date = null;
 
             } else {
@@ -395,7 +335,7 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                 } else {
 
-                    if(new_death_date === null || new_art_date) {
+                    if(new_death_date === null || new_art_date === null) {
 
                         var update_sql =
                             "update tbl_client SET mfl_code='" +SENDING_FACILITY +
@@ -406,7 +346,6 @@ app.post("/hl7_message", (req, res) => {
                             "',client_type='" +PATIENT_TYPE +
                             "',date_deceased=" +new_death_date + 
                             ",status='" +DEATH_INDICATOR +
-                            ",processed='" +PROCESSED + 
                             "' WHERE clinic_number='" +
                             CCC_NUMBER +
                             "'; ";
@@ -423,7 +362,6 @@ app.post("/hl7_message", (req, res) => {
                             "',client_type='" +PATIENT_TYPE + 
                             "',date_deceased='" +new_death_date + 
                             "',status='" +DEATH_INDICATOR +
-                            "',processed='" +PROCESSED + 
                             +"' WHERE clinic_number='" +
                             CCC_NUMBER +
                             "'; ";
