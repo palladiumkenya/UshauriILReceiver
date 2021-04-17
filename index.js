@@ -322,7 +322,7 @@ app.post("/hl7_message", (req, res) => {
 
             if(ART_DATE === "" || ART_DATE === undefined){
 
-                new_death_date = null;
+                new_art_date = null;
 
             } else {
 
@@ -389,23 +389,7 @@ app.post("/hl7_message", (req, res) => {
                             CCC_NUMBER +
                             "'; ";
 
-                    } else {
-
-                        var update_sql =
-                            "update tbl_client SET mfl_code='" +SENDING_FACILITY +
-                            "',file_no='" +PATIENT_CLINIC_NUMBER +
-                            "',SENDING_APPLICATION='" +SENDING_APPLICATION +
-                            "',art_date='" +new_art_date +
-                            "',phone_no='" +PHONE_NUMBER +
-                            "',group_id='" +GROUP_ID +
-                            "',client_type='" +PATIENT_TYPE + 
-                            "',date_deceased='" +new_death_date + 
-                            "',status='" +DEATH_INDICATOR +
-                            +"' WHERE clinic_number='" +
-                            CCC_NUMBER +
-                            "'; ";
-
-                    }
+                    } 
 
                     // Use the connection
                     connection.query(update_sql, function(error, results, fields) {
