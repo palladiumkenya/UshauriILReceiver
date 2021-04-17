@@ -341,65 +341,40 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                 } else {
 
-                    if(new_death_date === null) {
+                    if(new_death_date === null || new_art_date) {
 
                         var update_sql =
-                        "update tbl_client SET f_name='" +
-                        FIRST_NAME +
-                        "',m_name='" +MIDDLE_NAME +
-                        "',l_name='" +LAST_NAME +
-                        "',dob='" +DATE_OF_BIRTH +
-                        "',mfl_code='" +SENDING_FACILITY +
-                        "',file_no='" +PATIENT_CLINIC_NUMBER +
-                        "',SENDING_APPLICATION'" +SENDING_APPLICATION +
-                        "',art_date='" +new_art_date +
-                        "',gender='" +SEX +
-                        "',marital='" +MARITAL_STATUS +
-                        "',phone_no='" +PHONE_NUMBER +
-                        "',group_id='" +GROUP_ID +
-                        "',client_type='" +PATIENT_TYPE +
-                        "',locator_county='" +COUNTY +
-                        "',locator_sub_county='" +SUB_COUNTY + 
-                        "',locator_ward='" +WARD +
-                        "',locator_village='" +VILLAGE + 
-                        "',date_deceased=" +new_death_date + 
-                        ",status='" +DEATH_INDICATOR + 
-                        "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
-                        +"') WHERE clinic_number='" +
-                        CCC_NUMBER +
-                        "' ";
+                            "update tbl_client SET mfl_code='" +SENDING_FACILITY +
+                            "',file_no='" +PATIENT_CLINIC_NUMBER +
+                            "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                            "',art_date=" +new_art_date +
+                            ",group_id='" +GROUP_ID +
+                            "',client_type='" +PATIENT_TYPE +
+                            "',date_deceased=" +new_death_date + 
+                            ",status='" +DEATH_INDICATOR +
+                            ",processed='" +PROCESSED + 
+                            "' WHERE clinic_number='" +
+                            CCC_NUMBER +
+                            "'; ";
 
                     } else {
 
                         var update_sql =
-                        "update tbl_client SET f_name='" +
-                        FIRST_NAME +
-                        "',m_name='" +MIDDLE_NAME +
-                        "',l_name='" +LAST_NAME +
-                        "',dob='" +DATE_OF_BIRTH +
-                        "',mfl_code='" +SENDING_FACILITY +
-                        "',file_no='" +PATIENT_CLINIC_NUMBER +
-                        "',SENDING_APPLICATION'" +SENDING_APPLICATION +
-                        "',art_date='" +new_art_date +
-                        "',gender='" +SEX +
-                        "',marital='" +MARITAL_STATUS +
-                        "',phone_no='" +PHONE_NUMBER +
-                        "',group_id='" +GROUP_ID +
-                        "',client_type='" +PATIENT_TYPE +
-                        "',locator_county='" +COUNTY +
-                        "',locator_sub_county='" +SUB_COUNTY + 
-                        "',locator_ward='" +WARD +
-                        "',locator_village='" +VILLAGE + 
-                        "',date_deceased='" +new_death_date + 
-                        "',status='" +DEATH_INDICATOR + 
-                        "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
-                        +"') WHERE clinic_number='" +
-                        CCC_NUMBER +
-                        "' ";
+                            "update tbl_client SET mfl_code='" +SENDING_FACILITY +
+                            "',file_no='" +PATIENT_CLINIC_NUMBER +
+                            "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                            "',art_date='" +new_art_date +
+                            "',phone_no='" +PHONE_NUMBER +
+                            "',group_id='" +GROUP_ID +
+                            "',client_type='" +PATIENT_TYPE + 
+                            "',date_deceased='" +new_death_date + 
+                            "',status='" +DEATH_INDICATOR +
+                            "',processed='" +PROCESSED + 
+                            +"' WHERE clinic_number='" +
+                            CCC_NUMBER +
+                            "'; ";
 
                     }
-
-                    
 
                     // Use the connection
                     connection.query(update_sql, function(error, results, fields) {
@@ -722,21 +697,16 @@ app.post("/hl7_message", (req, res) => {
 
                             if(OBSERVATION_VALUE == "TRANSFER_OUT") {
 
-                                var OBSERVATION_VALUE = "Transfer Out";
-                                
+                                var new_value = "Transfer Out";
+                            
                                 var update_sql =
-                                "update tbl_client SET f_name='" +
-                                FIRST_NAME +
-                                "',m_name='" +MIDDLE_NAME +
-                                "',l_name='" +LAST_NAME +
-                                "',client_type='" +OBSERVATION_VALUE +
+                                "update clients SET client_type='" +new_value +
                                 "',mfl_code='" +SENDING_FACILITY +
-                                "',SENDING_APPLICATION'" +SENDING_APPLICATION +
-                                "',updated_at'" +new_observation_date +
-                                "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
-                                +"') WHERE clinic_number='" +
+                                "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                                "',updated_at='" +new_observation_date +
+                                "' WHERE clinic_number='" +
                                 CCC_NUMBER +
-                                "' ";
+                                "'; ";
 
                                 // Use the connection
                                 connection.query(update_sql, function(error, results, fields) {
@@ -750,23 +720,17 @@ app.post("/hl7_message", (req, res) => {
                                 
                                 });
 
-                            } else if(OBSERVATION_VALUE = "LOST_TO_FOLLOWUP") {
-                                var APP_STATUS = "LTFU";
+                            } else if(OBSERVATION_VALUE == "LOST_TO_FOLLOWUP") {
+                                var new_app_status = "LTFU";
 
                                 var update_sql =
-                                "update tbl_appointment SET f_name='" +
-                                FIRST_NAME +
-                                "',m_name='" +MIDDLE_NAME +
-                                "',l_name='" +LAST_NAME +
-                                "',client_type='" +OBSERVATION_VALUE +
-                                "',app_status='" +APP_STATUS +
+                                "update appointments SET app_status='" +new_app_status +
                                 "',mfl_code='" +SENDING_FACILITY +
                                 "',SENDING_APPLICATION='" +SENDING_APPLICATION +
                                 "',updated_at='" +new_observation_date +
-                                "',partner_id=(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code =' "+ SENDING_FACILITY 
-                                +"') WHERE clinic_number='" +
-                                CCC_NUMBER +
-                                "' ";
+                                "' WHERE clinic_number='" +
+                                CCC_NUMBER + "' ORDER BY appntmnt_date DESC LIMIT 1"
+                                "'; ";
 
                                 // Use the connection
                                 connection.query(update_sql, function(error, results, fields) {
