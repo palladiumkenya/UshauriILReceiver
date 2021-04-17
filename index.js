@@ -256,6 +256,7 @@ app.post("/hl7_message", (req, res) => {
             var PATIENT_CLINIC_NUMBER; 
             var ART_DATE;
             var GROUP_ID;
+            var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
             var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
@@ -269,6 +270,32 @@ app.post("/hl7_message", (req, res) => {
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;                
                 var value = result[i].value;
+
+                if (key == "DATE_OF_BIRTH") {
+                    var DoB = DATE_OF_BIRTH;
+
+                    var year = DoB.substring(0, 4);
+                    var month = DoB.substring(4, 6);
+                    var day = DoB.substring(6, 8);
+
+                    var today = DATE_TODAY;
+
+                    var new_date = year + "-" + month + "-" + day;
+                    var date_diff = moment(today).diff(
+                        moment(new_date).format("YYYY-MM-DD"),
+                        "days"
+                    );
+
+                    if (date_diff >= 5475 && date_diff <= 6935) {
+                        GROUP_ID = "2";
+                    }
+                    if (date_diff >= 7300) {
+                        GROUP_ID = "1";
+                    }
+                    if (date_diff <= 5110) {
+                        GROUP_ID = "6";
+                    }
+                }
                 
                
                 if (key == "SENDING_FACILITY") {
@@ -335,13 +362,25 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                 } else {
 
-                    if(new_death_date === null || new_art_date === null) {
+                    if(new_death_date === null) {
 
                         var update_sql =
                             "update tbl_client SET mfl_code='" +SENDING_FACILITY +
                             "',file_no='" +PATIENT_CLINIC_NUMBER +
                             "',SENDING_APPLICATION='" +SENDING_APPLICATION +
                             "',art_date=" +new_art_date +
+                            ",group_id='" +GROUP_ID +
+                            "',client_type='" +PATIENT_TYPE +
+                            "' WHERE clinic_number='" +
+                            CCC_NUMBER +
+                            "'; ";
+
+                    } else if(new_art_date === null) {
+
+                        var update_sql =
+                            "update tbl_client SET mfl_code='" +SENDING_FACILITY +
+                            "',file_no='" +PATIENT_CLINIC_NUMBER +
+                            "',SENDING_APPLICATION='" +SENDING_APPLICATION +
                             ",group_id='" +GROUP_ID +
                             "',client_type='" +PATIENT_TYPE +
                             "',date_deceased=" +new_death_date + 
