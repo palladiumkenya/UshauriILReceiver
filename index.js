@@ -320,17 +320,17 @@ app.post("/hl7_message", (req, res) => {
                 }
             }
 
-            if(ART_DATE === "" || ART_DATE === undefined){
+            if(ART_DATE === "" ||ART_DATE === undefined ) {
 
                 var new_art_date = null;
 
             } else {
 
-            var art_year = ART_DATE.substring(0, 4);
-            var art_month = ART_DATE.substring(4, 6);
-            var art_day = ART_DATE.substring(6, 8);
-            var new_art_date = art_year + "-" + art_month + "-" + art_day;
-
+                var art_year = ART_DATE.substring(0, 4);
+                var art_month = ART_DATE.substring(4, 6);
+                var art_day = ART_DATE.substring(6, 8);
+                var new_art_date = art_year + "-" + art_month + "-" + art_day;
+                
             }
 
 
@@ -368,8 +368,8 @@ app.post("/hl7_message", (req, res) => {
                             "update tbl_client SET mfl_code='" +SENDING_FACILITY +
                             "',file_no='" +PATIENT_CLINIC_NUMBER +
                             "',SENDING_APPLICATION='" +SENDING_APPLICATION +
-                            "',art_date=" +new_art_date +
-                            ",group_id='" +GROUP_ID +
+                            "',art_date='" +new_art_date +
+                            "',group_id='" +GROUP_ID +
                             "',client_type='" +PATIENT_TYPE +
                             "' WHERE clinic_number='" +
                             CCC_NUMBER +
@@ -383,8 +383,8 @@ app.post("/hl7_message", (req, res) => {
                             "',SENDING_APPLICATION='" +SENDING_APPLICATION +
                             ",group_id='" +GROUP_ID +
                             "',client_type='" +PATIENT_TYPE +
-                            "',date_deceased=" +new_death_date + 
-                            ",status='" +DEATH_INDICATOR +
+                            "',date_deceased='" +new_death_date + 
+                            "',status='" +DEATH_INDICATOR +
                             "' WHERE clinic_number='" +
                             CCC_NUMBER +
                             "'; ";
