@@ -252,6 +252,19 @@ app.post("/hl7_message", (req, res) => {
 
             //this message is triggered by creating an art start date or death
 
+            var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+            var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
+            var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
+            var SEX;
+            var PHONE_NUMBER;
+            var MARITAL_STATUS;
+            var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.SENDING_APPLICATION;
+            var ENROLLMENT_DATE = jsonObj.PATIENT_VISIT.HIV_CARE_ENROLLMENT_DATE;
+            var COUNTY = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.COUNTY;
+            var SUB_COUNTY = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.SUB_COUNTY;
+            var WARD = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.WARD;
+            var VILLAGE = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.VILLAGE;
+
             var SENDING_FACILITY;
             var PATIENT_CLINIC_NUMBER; 
             var ART_DATE;
@@ -259,10 +272,7 @@ app.post("/hl7_message", (req, res) => {
             var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
             var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
-            var CCC_NUMBER;
-            var DEATH_DATE = jsonObj.PATIENT_IDENTIFICATION.DEATH_DATE;
-            var DEATH_INDICATOR = jsonObj.PATIENT_IDENTIFICATION.DEATH_INDICATOR;
-            
+            var CCC_NUMBER;            
             var TOD_DATE = moment().format("YYYY-MM-DD");
 
             var result = get_json(jsonObj);
@@ -295,6 +305,41 @@ app.post("/hl7_message", (req, res) => {
                     if (date_diff <= 5110) {
                         GROUP_ID = "6";
                     }
+                } else if (key == "SEX") {
+                    if (result[i].value == "F") {
+                        SEX = "1";
+                    } else {
+                        SEX = "2";
+                    }
+                } else if (key == "PHONE_NUMBER") {
+                    PHONE_NUMBER = result[i].value;
+                } else if (key == "MARITAL_STATUS") {
+                    if (result[i].value === "") {
+                        MARITAL_STATUS = "1";
+                    }
+                    if (result[i].value == "D") {
+                        MARITAL_STATUS = "3";
+                    } else if (result[i].value == "M") {
+                        MARITAL_STATUS = "2";
+                    } else if (result[i].value == "S") {
+                        MARITAL_STATUS = "1";
+                    } else if (result[i].value == "W") {
+                        MARITAL_STATUS = "4";
+                    } else if (result[i].value == "C") {
+                        MARITAL_STATUS = "5";
+                    } else if (result[i].value == "1") {
+                        MARITAL_STATUS = "1";
+                    } else if (result[i].value == "2") {
+                        MARITAL_STATUS = "2";
+                    } else if (result[i].value == "3") {
+                        MARITAL_STATUS = "3";
+                    } else if (result[i].value == "4") {
+                        MARITAL_STATUS = "4";
+                    } else if (result[i].value == "5") {
+                        MARITAL_STATUS = "5";
+                    } else {
+                        MARITAL_STATUS = "1";
+                    }
                 }
                 
                
@@ -320,9 +365,14 @@ app.post("/hl7_message", (req, res) => {
                 }
             }
 
+            var enroll_year = ENROLLMENT_DATE.substring(0, 4);
+            var enroll_month = ENROLLMENT_DATE.substring(4, 6);
+            var enroll_day = ENROLLMENT_DATE.substring(6, 8);
+            var new_enroll_date = enroll_year + "-" + enroll_month + "-" + enroll_day;
+
             if(ART_DATE === "" ||ART_DATE === undefined ) {
 
-                var new_art_date = null;
+                var new_art_date = '0000-00-00';
 
             } else {
 
@@ -333,28 +383,9 @@ app.post("/hl7_message", (req, res) => {
                 
             }
 
-
-            if(DEATH_DATE === "" || DEATH_DATE === undefined){
-                new_death_date = null;
-
-            } else {
-
-                var death_year = DEATH_DATE.substring(0, 4);
-                var death_month = DEATH_DATE.substring(4, 6);
-                var death_day = DEATH_DATE.substring(6, 8);
-                var new_death_date = death_year + "-" + death_month + "-" + death_day;
-
-            }
-
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
                 console.log("Invalid CCC NUMBER");
                 return;
-            }
-
-            if (DEATH_DATE !== "" && DEATH_INDICATOR === "Y") {
-                DEATH_INDICATOR = "Deceased";
-            } else if (DEATH_INDICATOR === "N") {
-                DEATH_INDICATOR = "Active";
             }
 
             db.getConnection(function(err, connection) {
@@ -362,47 +393,80 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                 } else {
 
-                    if(new_death_date === null) {
+                    var get_client_sql =
+                        "Select * from tbl_client where clinic_number='" +
+                        CCC_NUMBER +
+                        "'  LIMIT 1";
 
-                        var update_sql =
-                            "update tbl_client SET mfl_code='" +SENDING_FACILITY +
-                            "',file_no='" +PATIENT_CLINIC_NUMBER +
-                            "',SENDING_APPLICATION='" +SENDING_APPLICATION +
-                            "',art_date='" +new_art_date +
-                            "',group_id='" +GROUP_ID +
-                            "',client_type='" +PATIENT_TYPE +
-                            "' WHERE clinic_number='" +
-                            CCC_NUMBER +
-                            "'; ";
+                    connection.query(get_client_sql, function(error, results, fields) {
 
-                    } else if(new_art_date === null) {
-
-                        var update_sql =
-                            "update tbl_client SET mfl_code='" +SENDING_FACILITY +
-                            "',file_no='" +PATIENT_CLINIC_NUMBER +
-                            "',SENDING_APPLICATION='" +SENDING_APPLICATION +
-                            ",group_id='" +GROUP_ID +
-                            "',client_type='" +PATIENT_TYPE +
-                            "',date_deceased='" +new_death_date + 
-                            "',status='" +DEATH_INDICATOR +
-                            "' WHERE clinic_number='" +
-                            CCC_NUMBER +
-                            "'; ";
-
-                    } 
-
-                    // Use the connection
-                    connection.query(update_sql, function(error, results, fields) {
-                        if (error) {
-                            console.log(error);
+                        if(error) {
+                            console.log(error)
                         } else {
-                            console.log(results);
-                            // And done with the connection.
-                            connection.release();
+
+                            if(results.length === 0) {
+
+                                var update_sql =
+                                "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, date_deceased, status, partner_id) VALUES ('" +
+                                FIRST_NAME +
+                                "', '" +MIDDLE_NAME +
+                                "','" +LAST_NAME +
+                                "','" +new_date +
+                                "','" +CCC_NUMBER +
+                                "','" +PATIENT_CLINIC_NUMBER +
+                                "','" +SENDING_FACILITY +
+                                "','" +SEX +
+                                "','" +MARITAL_STATUS +
+                                "','" +PHONE_NUMBER +
+                                "','" +GODS_NUMBER +
+                                "','" +parseInt(GROUP_ID) +
+                                "','" +SENDING_APPLICATION +
+                                "','" +PATIENT_SOURCE +
+                                "','" +new_enroll_date +
+                                "','" +new_art_date +
+                                ",'" +PATIENT_TYPE +
+                                "','" +COUNTY +
+                                "','" +SUB_COUNTY +
+                                "','" +WARD +
+                                "','" +VILLAGE +
+                                "','" +new_death_date +
+                                "','" +DEATH_INDICATOR +
+                                "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='"+ SENDING_FACILITY +"'))";
+
+
+                            } else if(results.length === 1) {
+            
+                                var update_sql =
+                                    "update tbl_client SET mfl_code='" +SENDING_FACILITY +
+                                    "',file_no='" +PATIENT_CLINIC_NUMBER +
+                                    "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                                    ",group_id='" +GROUP_ID +
+                                    "',client_type='" +PATIENT_TYPE +
+                                    "',art_date='" +new_art_date + 
+                                    "' WHERE clinic_number='" +
+                                    CCC_NUMBER +
+                                    "'; ";
+        
+                            }
+   
+        
+                            // Use the connection
+                            connection.query(update_sql, function(error, results, fields) {
+                                if (error) {
+                                    console.log(error);
+                                } else {
+                                    console.log(results);
+                                    // And done with the connection.
+                                    connection.release();
+                                }
+        
+                                // Don't use the connection here, it has been returned to the pool.
+                            });
+
                         }
 
-                        // Don't use the connection here, it has been returned to the pool.
-                    });
+                    });    
+                    
                 }
             });
         } else if (message_type == "SIU^S12") {
@@ -423,6 +487,8 @@ app.post("/hl7_message", (req, res) => {
             var CREATED_AT;
 
             var result = get_json(jsonObj);
+
+            console.log(result);
 
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;
@@ -573,7 +639,6 @@ app.post("/hl7_message", (req, res) => {
                                                     } else {
                                                         console.log(res_up);
                                                     }
-                                                    connection.release();
                                                 });
                                             }
                                             // And done with the connection.
@@ -718,6 +783,32 @@ app.post("/hl7_message", (req, res) => {
                                 "update tbl_client SET client_type='" +new_value +
                                 "',mfl_code='" +SENDING_FACILITY +
                                 "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                                "',updated_at='" +new_observation_date +
+                                "' WHERE clinic_number='" +
+                                CCC_NUMBER +
+                                "'; ";
+
+                                // Use the connection
+                                connection.query(update_sql, function(error, results, fields) {
+                                    if (error) {
+                                        console.log(error);
+                                    } else {
+                                        console.log(results);
+                                        // And done with the connection.
+                                        connection.release();
+                                    }
+                                
+                                });
+
+                            } else if(OBSERVATION_VALUE == "DIED") {
+
+                                var new_value = "Dead";
+                            
+                                var update_sql =
+                                "update tbl_client SET status='" +new_value +
+                                "',mfl_code='" +SENDING_FACILITY +
+                                "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                                "',date_deceased='" +new_observation_date +
                                 "',updated_at='" +new_observation_date +
                                 "' WHERE clinic_number='" +
                                 CCC_NUMBER +
