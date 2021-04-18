@@ -767,96 +767,86 @@ app.post("/hl7_message", (req, res) => {
                     console.log(err);
                 } else {
 
-                    connection.query(get_client_sql, function(error, results, fields) {
-                        // Handle error after the release.
-                        if (error) {
-                            //throw error;
-                            console.log(error, results.length)
-                        } else {
+                    if(OBSERVATION_VALUE == "TRANSFER_OUT") {
 
-                            if(OBSERVATION_VALUE == "TRANSFER_OUT") {
-
-                                var new_value = "Transfer Out";
-                            
-                                var update_sql =
-                                "update tbl_client SET client_type='" +new_value +
-                                "',mfl_code='" +SENDING_FACILITY +
-                                "',SENDING_APPLICATION='" +SENDING_APPLICATION +
-                                "',updated_at='" +new_observation_date +
-                                "' WHERE clinic_number='" +
-                                CCC_NUMBER +
-                                "'; ";
-
-                                // Use the connection
-                                connection.query(update_sql, function(error, results, fields) {
-                                    if (error) {
-                                        console.log(error);
-                                    } else {
-                                        console.log(update_sql,results);
-                                        // And done with the connection.
-                                        connection.release();
-                                    }
-                                
-                                });
-
-                            } else if(OBSERVATION_VALUE == "DIED") {
-
-                                var new_value = "Deceased";
-                            
-                                var update_sql =
-                                "update tbl_client SET status='" +new_value +
-                                "',mfl_code='" +SENDING_FACILITY +
-                                "',SENDING_APPLICATION='" +SENDING_APPLICATION +
-                                "',date_deceased='" +new_observation_date +
-                                "',updated_at='" +new_observation_date +
-                                "' WHERE clinic_number='" +
-                                CCC_NUMBER +
-                                "'; ";
-
-                                // Use the connection
-                                connection.query(update_sql, function(error, results, fields) {
-                                    if (error) {
-                                        console.log(error);
-                                    } else {
-                                        console.log(update_sql,results);
-                                        // And done with the connection.
-                                        connection.release();
-                                    }
-                                
-                                });
-
-                            } else if(OBSERVATION_VALUE == "LOST_TO_FOLLOWUP") {
-                                var new_app_status = "LTFU";
-
-                                var update_sql =
-                                "update tbl_appointment SET app_status='" +new_app_status +
-                                "',mfl_code='" +SENDING_FACILITY +
-                                "',SENDING_APPLICATION='" +SENDING_APPLICATION +
-                                "',updated_at='" +new_observation_date +
-                                "' WHERE clinic_number='" +
-                                CCC_NUMBER + "' ORDER BY appntmnt_date DESC LIMIT 1"
-                                "'; ";
-
-                                // Use the connection
-                                connection.query(update_sql, function(error, results, fields) {
-                                    if (error) {
-                                        console.log(error);
-                                    } else {
-                                        console.log(update_sql,results);
-                                        // And done with the connection.
-                                        connection.release();
-                                    }
-
-                                });  
-                                
-                            }    
-
-                        }    
-                
-                    }); 
+                        var new_value = "Transfer Out";
                     
-                } 
-                
+                        var update_sql =
+                        "update tbl_client SET client_type='" +new_value +
+                        "',mfl_code='" +SENDING_FACILITY +
+                        "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                        "',updated_at='" +new_observation_date +
+                        "' WHERE clinic_number='" +
+                        CCC_NUMBER +
+                        "'; ";
+
+                        // Use the connection
+                        connection.query(update_sql, function(error, results, fields) {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log(update_sql,results);
+                                // And done with the connection.
+                                connection.release();
+                            }
+                        
+                        });
+
+                    } else if(OBSERVATION_VALUE == "DIED") {
+
+                        var new_value = "Deceased";
+                    
+                        var update_sql =
+                        "update tbl_client SET status='" +new_value +
+                        "',mfl_code='" +SENDING_FACILITY +
+                        "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                        "',date_deceased='" +new_observation_date +
+                        "',updated_at='" +new_observation_date +
+                        "' WHERE clinic_number='" +
+                        CCC_NUMBER +
+                        "'; ";
+
+                        // Use the connection
+                        connection.query(update_sql, function(error, results, fields) {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log(update_sql,results);
+                                // And done with the connection.
+                                connection.release();
+                            }
+                        
+                        });
+
+                    } else if(OBSERVATION_VALUE == "LOST_TO_FOLLOWUP") {
+                        var new_app_status = "LTFU";
+
+                        var update_sql =
+                        "update tbl_appointment SET app_status='" +new_app_status +
+                        "',mfl_code='" +SENDING_FACILITY +
+                        "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                        "',updated_at='" +new_observation_date +
+                        "' WHERE clinic_number='" +
+                        CCC_NUMBER + "' ORDER BY appntmnt_date DESC LIMIT 1"
+                        "'; ";
+
+                        // Use the connection
+                        connection.query(update_sql, function(error, results, fields) {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log(update_sql,results);
+                                // And done with the connection.
+                                connection.release();
+                            }
+
+                        });  
+                        
+                    }    
+
+                }    
+        
+                                    
             });    
 
         }
