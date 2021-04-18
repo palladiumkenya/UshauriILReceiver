@@ -838,8 +838,7 @@ app.post("/hl7_message", (req, res) => {
             
                                     var update_sql =
                                     "update tbl_appointment SET app_status='" +new_app_status +
-                                    "',mfl_code='" +SENDING_FACILITY +
-                                    "',SENDING_APPLICATION='" +SENDING_APPLICATION +
+                                    "',db_source='" +SENDING_APPLICATION +
                                     "',updated_at='" +new_observation_date +
                                     "' WHERE client_id='" +
                                     client_id + "' ORDER BY appntmnt_date DESC LIMIT 1"
