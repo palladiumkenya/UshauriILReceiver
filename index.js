@@ -802,7 +802,7 @@ app.post("/hl7_message", (req, res) => {
 
                             } else if(OBSERVATION_VALUE == "DIED") {
 
-                                var new_value = "Dead";
+                                var new_value = "Deceased";
                             
                                 var update_sql =
                                 "update tbl_client SET status='" +new_value +
