@@ -407,7 +407,7 @@ app.post("/hl7_message", (req, res) => {
                             if(results.length === 0) {
 
                                 var update_sql =
-                                "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, date_deceased, status, partner_id) VALUES ('" +
+                                "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
                                 FIRST_NAME +
                                 "', '" +MIDDLE_NAME +
                                 "','" +LAST_NAME +
@@ -429,8 +429,6 @@ app.post("/hl7_message", (req, res) => {
                                 "','" +SUB_COUNTY +
                                 "','" +WARD +
                                 "','" +VILLAGE +
-                                "','" +new_death_date +
-                                "','" +DEATH_INDICATOR +
                                 "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='"+ SENDING_FACILITY +"'))";
 
 
@@ -455,7 +453,7 @@ app.post("/hl7_message", (req, res) => {
                                 if (error) {
                                     console.log(error);
                                 } else {
-                                    console.log(results);
+                                    console.log(update_sql,results);
                                     // And done with the connection.
                                     connection.release();
                                 }
