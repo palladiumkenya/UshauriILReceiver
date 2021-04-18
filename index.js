@@ -882,7 +882,7 @@ app.post("/hl7_message", (req, res) => {
 
 });
 
-app.post("/hl7_sync_client", (req, res) => {
+app.post("/hl7-sync-client", (req, res) => {
 
     var client = req.body;
 
@@ -961,7 +961,7 @@ app.post("/hl7_sync_client", (req, res) => {
 
 });
 
-app.post("/hl7_sync_appointment", (req, res) => {
+app.post("/hl7-sync-appointment", (req, res) => {
 
     var appointment = req.body;
 
