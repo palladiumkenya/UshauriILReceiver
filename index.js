@@ -727,6 +727,8 @@ app.post("/hl7_message", (req, res) => {
 
             var result = get_json(jsonObj);
 
+            //console.log(result);
+
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;                
                 var value = result[i].value;
@@ -735,17 +737,14 @@ app.post("/hl7_message", (req, res) => {
                     if (result[i + 1].value == "CCC_NUMBER") {
                         CCC_NUMBER = result[i].value;
                     }
-                } else if(key == "OBSERVATION_IDENTIFIER") {
-                    if (result[i].value == "OBSERVATION_VALUE") {
-                        OBSERVATION_VALUE = result[i].value;
-                    }
-                } else if(key == "OBSERVATION_IDENTIFIER") {
-                    if (result[i].value == "OBSERVATION_DATETIME") {
-                        OBSERVATION_DATETIME = result[i].value;
-                    }
+                } else if(key == "OBSERVATION_VALUE") {
+                    OBSERVATION_VALUE = result[i].value;
+                } else if(key == "OBSERVATION_DATETIME") {
+                    OBSERVATION_DATETIME = result[i].value;
                 }
 
             }   
+
             
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
                 console.log("Invalid CCC NUMBER");
@@ -793,7 +792,7 @@ app.post("/hl7_message", (req, res) => {
                                     if (error) {
                                         console.log(error);
                                     } else {
-                                        console.log(results);
+                                        console.log(update_sql,results);
                                         // And done with the connection.
                                         connection.release();
                                     }
@@ -819,7 +818,7 @@ app.post("/hl7_message", (req, res) => {
                                     if (error) {
                                         console.log(error);
                                     } else {
-                                        console.log(results);
+                                        console.log(update_sql,results);
                                         // And done with the connection.
                                         connection.release();
                                     }
@@ -843,7 +842,7 @@ app.post("/hl7_message", (req, res) => {
                                     if (error) {
                                         console.log(error);
                                     } else {
-                                        console.log(results);
+                                        console.log(update_sql,results);
                                         // And done with the connection.
                                         connection.release();
                                     }
