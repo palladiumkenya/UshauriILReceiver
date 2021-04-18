@@ -424,7 +424,7 @@ app.post("/hl7_message", (req, res) => {
                                 "','" +PATIENT_SOURCE +
                                 "','" +new_enroll_date +
                                 "','" +new_art_date +
-                                ",'" +PATIENT_TYPE +
+                                "','" +PATIENT_TYPE +
                                 "','" +COUNTY +
                                 "','" +SUB_COUNTY +
                                 "','" +WARD +
