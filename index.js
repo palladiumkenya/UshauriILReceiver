@@ -1032,6 +1032,102 @@ app.post("/hl7-sync-appointment", (req, res) => {
 
 });
 
+app.post("/hl7-sync-observation", (req, res) => {
+
+    var observation = req.body;
+
+    console.log(appointment);
+
+    db.getConnection(function(err, connection) {
+        if (err) { console.log("im here",err);
+        } else { 
+
+            let client = connection.query('SELECT id FROM tbl_client WHERE clinic_number', [appointment.clinic_number], function (err,data) {
+                if(err) { console.log(err)}
+            });
+
+            console.log("client_id", client)
+
+            let client_id = client[0];
+
+            let clinic_number = observation.clinic_number;
+
+            let obs_cl_transfer = {
+                client_type: observation.observation_value,
+                mfl_code: observation.mfl_code,
+                SENDING_APPLICATION: observation.db_source,
+                updated_at: observation.observation_datetime,
+                clinic_number: observation.clinic_number
+            }
+
+            let obs_cl_dead = {
+                mfl_code: observation.mfl_code,
+                active_app: observation.active_app,
+                SENDING_APPLICATION: observation.db_source,
+                status: observation.death_status,
+                clinic_number: observation.clinic_number,
+                updated_at: observation.observation_datetime
+
+            }
+
+            let obs_appmt = {
+                active_app: observation.active_app,
+                db_source: observation.db_source,
+                app_status: observation.observation_value,
+                client_id: client_id,
+                updated_at: observation.observation_datetime,
+
+            }
+
+            if(obs_cl_transfer.client_type == "Transfer Out") {
+
+                // Use the connection
+                connection.query('UPDATE tbl_client SET ? WHERE clinic_number', obs_cl_transfer, clinic_number , function(error, results, fields) {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.log(update_sql,results);
+                        // And done with the connection.
+                        connection.release();
+                    }
+                
+                });
+
+            } else if(obs_cl_dead.status == "Deceased") {
+
+                // Use the connection
+                connection.query('UPDATE tbl_client SET ? WHERE clinic_number', obs_cl_dead, clinic_number , function(error, results, fields) {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.log(update_sql,results);
+                        // And done with the connection.
+                        connection.release();
+                    }
+                
+                });
+
+            } else if(obs_appmt.app_status == "TFU") {
+
+                // Use the connection
+                connection.query('UPDATE tbl_appointment SET ? WHERE client_id ? ORDER BY appntmnt_date DESC LIMIT 1 ', obs_appmt, client_id, function (err, data) {
+                    if (err) {
+                        return console.error(err.message);
+                    } else {
+                        res.send(data);
+
+                    }
+                }); 
+                
+            } 
+            
+            
+        }    
+
+    });
+
+});
+
 app.listen(1440, () => {
     console.log("Ushauri IL listening on port 1440");
 });
