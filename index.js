@@ -916,12 +916,10 @@ app.post("/hl7-sync-client", (req, res) => {
                 enrollment_date: client.enrollment_date,
                 art_date: client.art_date,
                 client_type: client.client_type,
-                file_no: client.file_no,
+                file_no: client.patient_clinic_number,
                 locator_county: client.locator_county,
                 locator_sub_county: client.locator_sub_county,
                 locator_ward: client.locator_ward,
-                date_deceased: client.date_deceased,
-                status: client.death_status,
                 locator_village: client.locator_village,
                 partner_id: partner_id,
 
@@ -1066,13 +1064,14 @@ app.post("/hl7-sync-observation", (req, res) => {
                 SENDING_APPLICATION: observation.db_source,
                 status: observation.death_status,
                 clinic_number: observation.clinic_number,
-                updated_at: observation.observation_datetime
+                updated_at: observation.observation_datetime,
+                date_deceased: observation.observation_datetime
 
             }
 
             let obs_appmt = {
                 active_app: observation.active_app,
-                db_source: observation.db_source,
+                db_source: observation.SENDING_APPLICATION,
                 app_status: observation.observation_value,
                 client_id: client_id,
                 updated_at: observation.observation_datetime,
@@ -1107,7 +1106,7 @@ app.post("/hl7-sync-observation", (req, res) => {
                 
                 });
 
-            } else if(obs_appmt.app_status == "TFU") {
+            } else if(obs_appmt.app_status == "LTFU") {
 
                 // Use the connection
                 connection.query('UPDATE tbl_appointment SET ? WHERE client_id ? ORDER BY appntmnt_date DESC LIMIT 1 ', obs_appmt, client_id, function (err, data) {
