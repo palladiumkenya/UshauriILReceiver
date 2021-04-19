@@ -629,18 +629,18 @@ app.post("/hl7_message", (req, res) => {
                                                 console.log("im here 2", error);
                                             } else {
                                                 console.log(results);
-                                                let update_app_status = "UPDATE tbl_appointment set active_app = 0 where client_id = '"+client_id+"' AND ENTITY_NUMBER <> '"+PLACER_APPOINTMENT_NUMBER+"'";
+                                                let update_app_status = "UPDATE tbl_appointment set active_app = '0' where client_id = '"+client_id+"' AND (ENTITY_NUMBER <> '"+PLACER_APPOINTMENT_NUMBER+"' OR ENTITY_NUMBER IS NULL)";
                                                 
                                                 connection.query(update_app_status, function(err_up, res_up, fields_up) {
                                                     if (error) {
                                                         console.log(err_up);
                                                     } else {
                                                         console.log(res_up);
+                                                        connection.release();
                                                     }
                                                 });
                                             }
                                             // And done with the connection.
-                                            connection.release();
         
                                             // Don't use the connection here, it has been returned to the pool.
                                         });
@@ -1017,6 +1017,16 @@ app.post("/hl7-sync-appointment", (req, res) => {
                     if (err) {
                         return console.error(err.message);
                     } else {
+                        let update_app_status = "UPDATE tbl_appointment set active_app = 0 where client_id = '"+client_id+"' AND ENTITY_NUMBER <> '"+PLACER_APPOINTMENT_NUMBER+"'";
+                        
+                        connection.query(update_app_status, function(err_up, res_up, fields_up) {
+                            if (error) {
+                                return console.error(err_up.message);
+                            } else {
+                                console.log(res_up);
+                                connection.release();
+                            }
+                        });
                         res.send(data);
 
                     }
