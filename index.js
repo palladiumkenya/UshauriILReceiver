@@ -636,6 +636,7 @@ app.post("/hl7_message", (req, res) => {
                                                         console.log(err_up);
                                                     } else {
                                                         console.log(res_up);
+                                                        connection.release();
                                                     }
                                                 });
                                             }
@@ -1019,6 +1020,16 @@ app.post("/hl7-sync-appointment", (req, res) => {
                     if (err) {
                         return console.error(err.message);
                     } else {
+                        let update_app_status = "UPDATE tbl_appointment set active_app = 0 where client_id = '"+client_id+"' AND ENTITY_NUMBER <> '"+PLACER_APPOINTMENT_NUMBER+"'";
+                        
+                        connection.query(update_app_status, function(err_up, res_up, fields_up) {
+                            if (error) {
+                                return console.error(err_up.message);
+                            } else {
+                                console.log(res_up);
+                                connection.release();
+                            }
+                        });
                         res.send(data);
 
                     }
