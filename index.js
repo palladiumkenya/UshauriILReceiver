@@ -604,7 +604,7 @@ app.post("/hl7_message", (req, res) => {
                                             //Add new Appointment
         
                                             var appointment_sql =
-                                            "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason, ENTITY_NUMBER, created_at) VALUES ('" +
+                                            "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason, ENTITY_NUMBER) VALUES ('" +
                                             client_id +
                                             "', '" +APPOINTMENT_DATE +
                                             "','" +APPOINTMENT_TYPE +
@@ -615,7 +615,6 @@ app.post("/hl7_message", (req, res) => {
                                             "','" +APPOINTMENT_LOCATION +
                                             "','" +APPOINTMENT_NOTE +
                                             "','" +PLACER_APPOINTMENT_NUMBER +
-                                            "','" +CREATED_AT +
                                             "')";
         
                                         // Use the connection
