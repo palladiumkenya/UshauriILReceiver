@@ -974,271 +974,345 @@ app.post("/hl7_message", async (req, res) => {
 
 });
 
-app.post("/hl7-sync-client", (req, res) => {
+app.post("/hl7-sync-client", async (req, res) => {
 
-    var client = req.body;
+    var cl = req.body;
 
     console.log(client);
+    if (cl.message_type === "ADT^A04") {
+        let client = await Client.findOne({
+            where: {
+                phone_no: cl.phone_no
+            }
+        });
 
-    db.getConnection(function (err, connection) {
-        if (err) {
-            console.log("im here", err);
-        } else {
+        if (!_.isEmpty(client))
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message: `Phone number: ${cl.phone_no} already exists in the system.`
+                });
 
-            let partner = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.mfl_code, function (err, data) {
-                if (err) {
-                    console.log(err)
-                }
+        let partner = await Partner.findOne({
+            where: {
+                mfl_code: cl.mfl_code
+            }
+        });
+
+        if (_.isEmpty(partner))
+            return res
+                .status(404)
+                .json({
+                    status: false,
+                    message: `MFL CODE: ${cl.mfl_code} does not exist in system.`
+                });
+
+        client = {
+            group_id: parseInt(cl.group_id),
+            clinic_number: cl.clinic_number,
+            f_name: cl.f_name,
+            m_name: cl.m_name,
+            l_name: cl.l_name,
+            dob: cl.dob,
+            phone_no: cl.phone_no,
+            partner_id: partner.partner_id,
+            mfl_code: parseInt(cl.mfl_code),
+            gender: parseInt(cl.gender),
+            marital: cl.marital,
+            enrollment_date: cl.enrollment_date,
+            art_date: cl.art_date,
+            client_type: cl.client_type,
+            gods_number: cl.GODS_NUMBER,
+            patient_source: cl.PATIENT_SOURCE,
+            file_no: cl.file_no,
+            locator_county: cl.locator_county,
+            locator_sub_county: cl.locator_sub_county,
+            locator_ward: cl.locator_ward,
+            locator_village: cl.locator_village,
+            sending_application: cl.db_source
+        }
+        console.log(client);
+
+        await Client.create(client)
+            .then(function (model) {
+                message = "OK";
+                response = "Client successfully added.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        client: _.pick(client, [
+                            "id",
+                            "f_name",
+                            "m_name",
+                            "l_name",
+                            "dob",
+                            "phone_no",
+                            "email",
+                            "partner_id",
+                            "facility_id",
+                            "status",
+                            "clinic_id",
+                            "createdAt"
+                        ])
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                console.error(err);
+
+                return res.status(400).json({
+                    response: {
+                        msg: response,
+                        errors: err.errors
+                    }
+                });
             });
 
-            let partner_id = partner[0];
+    } else if (cl.message_type === "ADT^A08") {
 
-            let clinic_number = client.clinic_number;
-
-            let cl = {
-                f_name: client.f_name,
-                m_name: client.m_name,
-                l_name: client.l_name,
-                dob: client.dob,
-                clinic_number: client.clinic_number,
-                mfl_code: client.mfl_code,
-                gender: client.gender,
-                marital: client.marital,
-                phone_no: client.phone_no,
-                GODS_NUMBER: client.GODS_NUMBER,
-                group_id: client.group_id,
-                SENDING_APPLICATION: client.SENDING_APPLICATION,
-                PATIENT_SOURCE: client.PATIENT_SOURCE,
-                db_source: client.db_source,
-                enrollment_date: client.enrollment_date,
-                art_date: client.art_date,
-                client_type: client.client_type,
-                file_no: client.patient_clinic_number,
-                locator_county: client.locator_county,
-                locator_sub_county: client.locator_sub_county,
-                locator_ward: client.locator_ward,
-                locator_village: client.locator_village,
-                partner_id: partner_id,
-
-            }
-
-            //if message code is ADT^A04 add new client else update client
-            if (client.message_type === "ADT^A04") {
-                connection.query('INSERT INTO tbl_client SET ?', cl, function (err, data) {
-                    if (err) {
-                        return console.error(err.message);
-                    } else {
-                        console.log(data);
-                        res.send(data)
-
-                    }
-                });
-
-            } else if (client.message_type === "ADT^A08") {
-
-                connection.query('UPDATE tbl_client SET ? WHERE clinic_number = ?', [cl, clinic_number], function (err, data) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log(data);
-                        res.send(data);
-
-                    }
-                });
-            }
-
-        }
-
-
-    });
+    }
 
 });
 
-app.post("/hl7-sync-appointment", (req, res) => {
+app.post("/hl7-sync-appointment", async (req, res) => {
 
     var appointment = req.body;
 
-    console.log(appointment);
+    let appt = {
+        appntmnt_date: appointment.appntmnt_date,
+        app_type_1: appointment.app_type_1,
+        appointment_reason: appointment.APPOINTMENT_REASON,
+        app_status: appointment.app_status,
+        active_app: appointment.active_app,
+        appointment_location: appointment.APPOINTMENT_LOCATION,
+        db_source: appointment.db_source,
+        reason: appointment.reason,
+        entity_number: appointment.placer_appointment_number,
+        client_id: appointment.clinic_number,
+        created_at: appointment.created_at,
+        updated_at: appointment.created_at,
+    }
 
-    db.getConnection(function (err, connection) {
-        if (err) {
-            console.log("im here", err);
-        } else {
-
-            let client = connection.query('SELECT id FROM tbl_client WHERE clinic_number', [appointment.clinic_number], function (err, data) {
-                if (err) {
-                    console.log(err)
-                }
-            });
-
-            console.log("client_id", client)
-
-            let client_id = client[0];
-
-            let placer_number = connection.query('SELECT ENTITY_NUMBER FROM tbl_appointment WHERE ENTITY_NUMBER ', [appointment.placer_appointment_number], function (err, data) {
-                if (err) {
-                    console.log(err)
-                }
-            })
-
-            let appt = {
-                appntmnt_date: appointment.appntmnt_date,
-                app_type_1: appointment.app_type_1,
-                APPOINTMENT_REASON: appointment.APPOINTMENT_REASON,
-                app_status: appointment.app_status,
-                active_app: appointment.active_app,
-                APPOINTMENT_LOCATION: appointment.APPOINTMENT_LOCATION,
-                db_source: appointment.db_source,
-                reason: appointment.reason,
-                ENTITY_NUMBER: appointment.placer_appointment_number,
-                client_id: client_id,
-                created_at: appointment.created_at,
-                updated_at: appointment.created_at,
-
-            }
-
-            //update if placer number already exsists
-            if (placer_number.length >= 1) {
-
-                //update latest appointment where client_id and placer number match
-
-                connection.query('UPDATE tbl_appointment SET ? WHERE client_id ? AND ENTITY_NUMBER ? ORDER BY appntmnt_date DESC LIMIT 1 ', appt, client_id, placer_number, function (err, data) {
-                    if (err) {
-                        return console.error(err.message);
-                    } else {
-                        res.send(data);
-
-                    }
-                });
-
-            } else {
-
-                console.log("in in empty placer")
-
-                connection.query('INSERT INTO tbl_appointment SET ?', appt, function (err, data) {
-                    if (err) {
-                        return console.error(err.message);
-                    } else {
-                        let update_app_status = "UPDATE tbl_appointment set active_app = 0 where client_id = '" + client_id + "' AND ENTITY_NUMBER <> '" + PLACER_APPOINTMENT_NUMBER + "'";
-
-                        connection.query(update_app_status, function (err_up, res_up, fields_up) {
-                            if (error) {
-                                return console.error(err_up.message);
-                            } else {
-                                console.log(res_up);
-                                connection.release();
-                            }
-                        });
-                        res.send(data);
-
-                    }
-                });
-
-            }
-
+    let client = await Client.findOne({
+        where: {
+            clinic_number: appointment.clinic_number
         }
+    })
 
-    });
+    if (_.isEmpty(client))
+        return res
+            .status(400)
+            .json({
+                success: false,
+                message: `Client: ${appointment.clinic_number} does not exists in the system.`
+            });
+    let isAppointment = await Appointment.findOne({
+        where: {
+            entity_number: appointment.placer_appointment_number
+        }
+    })
+
+    if (_.isEmpty(isAppointment)) {
+
+        await Appointment.create(appt)
+            .then(async function (data) {
+                await Appointment.update({active_app: '0'}, {
+                    returning: true,
+                    where: {
+                        client_id: client.id,
+                        entity_number: {
+                            [Op.not]: appointment.placer_appointment_number
+                        }
+                    }
+                });
+                message = "OK";
+                response = "Appointment successfully created.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        appointment: appointment
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                return res.json({
+                    response: {
+                        msg: response,
+                        error: err.errors
+                    }
+                });
+            });
+    }else {
+
+        await Appointment.update(appt, {
+            returning: true,
+            where: {
+                client_id: client.id,
+                entity_number: appointment.placer_appointment_number
+            }
+        })
+            .then(function (data) {
+                message = "OK";
+                response = "Appointment successfully updated.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        appointment: appointment
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                return res.json({
+                    response: {
+                        msg: response,
+                        error: err.errors
+                    }
+                });
+            });
+    }
 
 });
 
-app.post("/hl7-sync-observation", (req, res) => {
+app.post("/hl7-sync-observation", async (req, res) => {
 
     var observation = req.body;
 
-    console.log(appointment);
+    let client = await Client.findOne({
+        where: {
+            clinic_number: observation.clinic_number
+        }
+    })
 
-    db.getConnection(function (err, connection) {
-        if (err) {
-            console.log("im here", err);
-        } else {
+    if (_.isEmpty(client))
+        return res
+            .status(400)
+            .json({
+                success: false,
+                message: `Client: ${observation.clinic_number} does not exists in the system.`
+            });
+    let oru = {}
+    if (observation.observation_value == "Transfer Out") {
+        oru.client_type = observation.observation_value
+        oru.mfl_code = observation.mfl_code
+        oru.sending_application = observation.db_source
+        oru.updated_at = observation.observation_datetime
 
-            let client = connection.query('SELECT id FROM tbl_client WHERE clinic_number', [appointment.clinic_number], function (err, data) {
-                if (err) {
-                    console.log(err)
-                }
+        await Client.update(oru, {returning: true, where: {id: observation.client_number}})
+            .then(function (model) {
+                message = "OK";
+                response = "ORU successfully updated.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        client: oru
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                console.error(err);
+
+                return res.json({
+                    response: {
+                        msg: response,
+                        errors: err.errors
+                    }
+                });
+            });
+    } else if (observation.death_status == "Deceased") {
+        oru.status = observation.death_status
+        oru.mfl_code =  observation.mfl_code
+        oru.date_deceased = observation.observation_datetime
+        oru.sending_application = observation.db_source
+        oru.updated_at = observation.observation_datetime
+
+
+        await Client.update(oru, {returning: true, where: {id: client.id}})
+            .then(function (model) {
+                message = "OK";
+                response = "ORU successfully updated.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        client: oru
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                console.error(err);
+
+                return res.json({
+                    response: {
+                        msg: response,
+                        errors: err.errors
+                    }
+                });
+            });
+    } else if (observation.observation_value == "LTFU") {
+        oru.app_status = observation.observation_value
+        oru.db_source = observation.SENDING_APPLICATION
+        oru.updated_at =  observation.observation_datetime
+        oru.active_app = observation.active_app
+
+        let l_app = await Appointment.findAll({
+            limit: 1,
+            where: {
+                client_id: client.id
+            },
+            order: [['appntmnt_date', 'DESC']]
+        })
+
+        await Appointment.update(oru, {
+            returning: true, where: {
+                id: l_app[0].id
+            }
+        })
+            .then(function (model) {
+                message = "OK";
+                response = "ORU successfully added.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        client: oru
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                console.error(err);
+
+                return res.status(400).json({
+                    response: {
+                        msg: response,
+                        errors: err.errors
+                    }
+                });
             });
 
-            console.log("client_id", client)
-
-            let client_id = client[0];
-
-            let clinic_number = observation.clinic_number;
-
-            let obs_cl_transfer = {
-                client_type: observation.observation_value,
-                mfl_code: observation.mfl_code,
-                SENDING_APPLICATION: observation.db_source,
-                updated_at: observation.observation_datetime,
-                clinic_number: observation.clinic_number
-            }
-
-            let obs_cl_dead = {
-                mfl_code: observation.mfl_code,
-                active_app: observation.active_app,
-                SENDING_APPLICATION: observation.db_source,
-                status: observation.death_status,
-                clinic_number: observation.clinic_number,
-                updated_at: observation.observation_datetime,
-                date_deceased: observation.observation_datetime
-
-            }
-
-            let obs_appmt = {
-                active_app: observation.active_app,
-                db_source: observation.SENDING_APPLICATION,
-                app_status: observation.observation_value,
-                client_id: client_id,
-                updated_at: observation.observation_datetime,
-
-            }
-
-            if (obs_cl_transfer.client_type == "Transfer Out") {
-
-                // Use the connection
-                connection.query('UPDATE tbl_client SET ? WHERE clinic_number', obs_cl_transfer, clinic_number, function (error, results, fields) {
-                    if (error) {
-                        console.log(error);
-                    } else {
-                        console.log(update_sql, results);
-                        // And done with the connection.
-                        connection.release();
-                    }
-
-                });
-
-            } else if (obs_cl_dead.status == "Deceased") {
-
-                // Use the connection
-                connection.query('UPDATE tbl_client SET ? WHERE clinic_number', obs_cl_dead, clinic_number, function (error, results, fields) {
-                    if (error) {
-                        console.log(error);
-                    } else {
-                        console.log(update_sql, results);
-                        // And done with the connection.
-                        connection.release();
-                    }
-
-                });
-
-            } else if (obs_appmt.app_status == "LTFU") {
-
-                // Use the connection
-                connection.query('UPDATE tbl_appointment SET ? WHERE client_id ? ORDER BY appntmnt_date DESC LIMIT 1 ', obs_appmt, client_id, function (err, data) {
-                    if (err) {
-                        return console.error(err.message);
-                    } else {
-                        res.send(data);
-
-                    }
-                });
-
-            }
-
-
-        }
-
-    });
+    }
 
 });
 
