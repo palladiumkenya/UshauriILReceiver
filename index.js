@@ -265,7 +265,7 @@ app.post("/hl7_message", async (req, res) => {
                     response = err.message;
                     console.error(err);
 
-                    return res.json({
+                    return res.status(400).json({
                         response: {
                             msg: response,
                             errors: err.errors
@@ -362,7 +362,7 @@ app.post("/hl7_message", async (req, res) => {
             var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
             var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
             var SEX;
-            var PHONE_NUMBER;
+            var PHONE_NUMBER = jsonObj.PATIENT_IDENTIFICATION.PHONE_NUMBER;
             var MARITAL_STATUS;
             var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.SENDING_APPLICATION;
             var ENROLLMENT_DATE = jsonObj.PATIENT_VISIT.HIV_CARE_ENROLLMENT_DATE;
@@ -417,8 +417,6 @@ app.post("/hl7_message", async (req, res) => {
                     } else {
                         SEX = "2";
                     }
-                } else if (key == "PHONE_NUMBER") {
-                    PHONE_NUMBER = result[i].value;
                 } else if (key == "MARITAL_STATUS") {
                     if (result[i].value === "") {
                         MARITAL_STATUS = "1";
@@ -494,85 +492,232 @@ app.post("/hl7_message", async (req, res) => {
                 return;
             }
 
-            db.getConnection(function (err, connection) {
-                if (err) {
-                    console.log(err);
-                } else {
-
-                    var get_client_sql =
-                        "Select * from tbl_client where clinic_number='" +
-                        CCC_NUMBER +
-                        "'  LIMIT 1";
-
-                    connection.query(get_client_sql, function (error, results, fields) {
-
-                        if (error) {
-                            console.log(error)
-                        } else {
-
-                            if (results.length === 0) {
-
-                                var update_sql =
-                                    "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
-                                    FIRST_NAME +
-                                    "', '" + MIDDLE_NAME +
-                                    "','" + LAST_NAME +
-                                    "','" + new_date +
-                                    "','" + CCC_NUMBER +
-                                    "','" + PATIENT_CLINIC_NUMBER +
-                                    "','" + SENDING_FACILITY +
-                                    "','" + SEX +
-                                    "','" + MARITAL_STATUS +
-                                    "','" + PHONE_NUMBER +
-                                    "','" + GODS_NUMBER +
-                                    "','" + parseInt(GROUP_ID) +
-                                    "','" + SENDING_APPLICATION +
-                                    "','" + PATIENT_SOURCE +
-                                    "','" + new_enroll_date +
-                                    "','" + new_art_date +
-                                    "','" + PATIENT_TYPE +
-                                    "','" + COUNTY +
-                                    "','" + SUB_COUNTY +
-                                    "','" + WARD +
-                                    "','" + VILLAGE +
-                                    "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='" + SENDING_FACILITY + "'))";
-
-
-                            } else if (results.length === 1) {
-
-                                var update_sql =
-                                    "update tbl_client SET mfl_code='" + SENDING_FACILITY +
-                                    "',file_no='" + PATIENT_CLINIC_NUMBER +
-                                    "',SENDING_APPLICATION='" + SENDING_APPLICATION +
-                                    ",group_id='" + GROUP_ID +
-                                    "',client_type='" + PATIENT_TYPE +
-                                    "',art_date='" + new_art_date +
-                                    "' WHERE clinic_number='" +
-                                    CCC_NUMBER +
-                                    "'; ";
-
-                            }
-
-
-                            // Use the connection
-                            connection.query(update_sql, function (error, results, fields) {
-                                if (error) {
-                                    console.log(error);
-                                } else {
-                                    console.log(update_sql, results);
-                                    // And done with the connection.
-                                    connection.release();
-                                }
-
-                                // Don't use the connection here, it has been returned to the pool.
-                            });
-
-                        }
-
-                    });
-
+            let isClient = await Client.findOne({
+                where: {
+                    clinic_number: CCC_NUMBER
                 }
             });
+
+            if (_.isEmpty(isClient)) {
+                let client = await Client.findOne({
+                    where: {
+                        phone_no: PHONE_NUMBER
+                    }
+                });
+
+                if (!_.isEmpty(client))
+                    return res
+                        .status(400)
+                        .json({
+                            success: false,
+                            message: `Phone number: ${PHONE_NUMBER} already exists in the system.`
+                        });
+
+                let partner = await Partner.findOne({
+                    where: {
+                        mfl_code: SENDING_FACILITY
+                    }
+                });
+
+                if (_.isEmpty(partner))
+                    return res
+                        .status(404)
+                        .json({
+                            status: false,
+                            message: `MFL CODE: ${SENDING_FACILITY} does not exist in system.`
+                        });
+
+                client = {
+                    group_id: parseInt(GROUP_ID),
+                    clinic_number: CCC_NUMBER,
+                    f_name: FIRST_NAME,
+                    m_name: MIDDLE_NAME,
+                    l_name: LAST_NAME,
+                    dob: new_date,
+                    phone_no: PHONE_NUMBER,
+                    partner_id: partner.partner_id,
+                    mfl_code: parseInt(SENDING_FACILITY),
+                    // status: ,
+                    // client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
+                    gender: parseInt(SEX),
+                    marital: MARITAL_STATUS,
+                    enrollment_date: new_enroll_date,
+                    art_date: new_art_date,
+                    client_type: PATIENT_TYPE,
+                    gods_number: GODS_NUMBER,
+                    patient_source: PATIENT_SOURCE,
+                    file_no: PATIENT_CLINIC_NUMBER,
+                    locator_county: COUNTY,
+                    locator_sub_county: SUB_COUNTY,
+                    locator_ward: WARD,
+                    locator_village: VILLAGE,
+                    sending_application: SENDING_APPLICATION
+                }
+                console.log(client);
+
+                await Client.create(client)
+                    .then(function (model) {
+                        message = "OK";
+                        response = "Client successfully added.";
+
+                        return res.json({
+                            message: message,
+                            response: {
+                                msg: response,
+                                client: _.pick(client, [
+                                    "id",
+                                    "f_name",
+                                    "m_name",
+                                    "l_name",
+                                    "dob",
+                                    "phone_no",
+                                    "email",
+                                    "partner_id",
+                                    "facility_id",
+                                    "status",
+                                    "clinic_id",
+                                    "createdAt"
+                                ])
+                            }
+                        });
+                    })
+                    .catch(function (err) {
+                        code = 500;
+                        response = err.message;
+                        console.error(err);
+
+                        return res.json({
+                            response: {
+                                msg: response,
+                                errors: err.errors
+                            }
+                        });
+                    });
+
+
+            } else {
+                let client = {
+                    group_id: parseInt(GROUP_ID),
+                    mfl_code: parseInt(SENDING_FACILITY),
+                    art_date: new_art_date,
+                    client_type: PATIENT_TYPE,
+                    file_no: PATIENT_CLINIC_NUMBER,
+                    sending_application: SENDING_APPLICATION
+                }
+                await Client.update(client, {returning: true, where: {clinic_number: CCC_NUMBER}})
+                    .then(function (model) {
+                        message = "OK";
+                        response = "Client successfully updated.";
+
+                        return res.json({
+                            message: message,
+                            response: {
+                                msg: response,
+                                client: _.pick(client, [
+                                    "group_id",
+                                    "art_date",
+                                    "client_type",
+                                    "file_no",
+                                    "sending_application",
+                                    "mfl_code",
+                                    "updatedAt"
+                                ])
+                            }
+                        });
+                    })
+                    .catch(function (err) {
+                        code = 500;
+                        response = err.message;
+                        console.error(err);
+
+                        return res.json({
+                            response: {
+                                msg: response,
+                                errors: err.errors
+                            }
+                        });
+                    });
+
+            }
+
+            // db.getConnection(function (err, connection) {
+            //     if (err) {
+            //         console.log(err);
+            //     } else {
+            //
+            //         var get_client_sql =
+            //             "Select * from tbl_client where clinic_number='" +
+            //             CCC_NUMBER +
+            //             "'  LIMIT 1";
+            //
+            //         connection.query(get_client_sql, function (error, results, fields) {
+            //
+            //             if (error) {
+            //                 console.log(error)
+            //             } else {
+            //
+            //                 if (results.length === 0) {
+            //
+            //                     var update_sql =
+            //                         "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
+            //                         FIRST_NAME +
+            //                         "', '" + MIDDLE_NAME +
+            //                         "','" + LAST_NAME +
+            //                         "','" + new_date +
+            //                         "','" + CCC_NUMBER +
+            //                         "','" + PATIENT_CLINIC_NUMBER +
+            //                         "','" + SENDING_FACILITY +
+            //                         "','" + SEX +
+            //                         "','" + MARITAL_STATUS +
+            //                         "','" + PHONE_NUMBER +
+            //                         "','" + GODS_NUMBER +
+            //                         "','" + parseInt(GROUP_ID) +
+            //                         "','" + SENDING_APPLICATION +
+            //                         "','" + PATIENT_SOURCE +
+            //                         "','" + new_enroll_date +
+            //                         "','" + new_art_date +
+            //                         "','" + PATIENT_TYPE +
+            //                         "','" + COUNTY +
+            //                         "','" + SUB_COUNTY +
+            //                         "','" + WARD +
+            //                         "','" + VILLAGE +
+            //                         "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='" + SENDING_FACILITY + "'))";
+            //
+            //
+            //                 } else if (results.length === 1) {
+            //
+            //                     var update_sql =
+            //                         "update tbl_client SET mfl_code='" + SENDING_FACILITY +
+            //                         "',file_no='" + PATIENT_CLINIC_NUMBER +
+            //                         "',SENDING_APPLICATION='" + SENDING_APPLICATION +
+            //                         ",group_id='" + GROUP_ID +
+            //                         "',client_type='" + PATIENT_TYPE +
+            //                         "',art_date='" + new_art_date +
+            //                         "' WHERE clinic_number='" +
+            //                         CCC_NUMBER +
+            //                         "'; ";
+            //                 }
+            //
+            //
+            //                  // Use the connection
+            // connection.query(update_sql, function (error, results, fields) {
+            //     if (error) {
+            //         console.log(error);
+            //     } else {
+            //         console.log(update_sql, results);
+            //         // And done with the connection.
+            //         connection.release();
+            //     }
+            //
+            //     // Don't use the connection here, it has been returned to the pool.
+            // });
+            //
+            //             }
+            //
+            //         });
+            //
+            //     }
+            // });
         } else if (message_type == "SIU^S12") {
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var SENDING_FACILITY;
