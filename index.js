@@ -137,7 +137,7 @@ app.post("/hl7_message", (req, res) => {
                 }
 
                 if(key == "OBSERVATION_DATETIME") {
-                    if (result[i + 5].value == "CURRENT_REGIMEN") {
+                    if (result[i + 3].value == "CURRENT_REGIMEN") {
                         ART_DATE = result[i].value;
                     }
                 }
@@ -276,6 +276,7 @@ app.post("/hl7_message", (req, res) => {
             var TOD_DATE = moment().format("YYYY-MM-DD");
 
             var result = get_json(jsonObj);
+            console.log(result)
 
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;                
@@ -358,11 +359,25 @@ app.post("/hl7_message", (req, res) => {
                     }
                 }
 
-                if(key == "OBSERVATION_DATETIME") {
-                    if (result[i + 5].value == "CURRENT_REGIMEN") {
-                        ART_DATE = result[i].value;
+                if(key == "SENDING_APPLICATION" && value === "ADT") {
+
+                    if(key == "OBSERVATION_IDENTIFIER") {
+                        if (result[i + 3].value == "OBSERVATION_VALUE") {
+                            ART_DATE = result[i].value;
+                        }
                     }
+
+                } else if(key == "SENDING_APPLICATION" && value === "KENYAEMR") {
+
+                    if(key == "OBSERVATION_DATETIME") {
+                        if (result[i + 5].value == "OBSERVATION_VALUE") {
+                            ART_DATE = result[i].value;
+                        }
+                    }
+
                 }
+
+                
             }
 
             var enroll_year = ENROLLMENT_DATE.substring(0, 4);
