@@ -41,6 +41,10 @@ const Appointment = sequelize.sequelize.define(
         visit_type: Sequelize.STRING,
         unscheduled_date: Sequelize.DATEONLY,
         tracer_name: Sequelize.STRING,
+        entity_number: Sequelize.STRING,
+        appointment_reason: Sequelize.STRING,
+        appointment_location: Sequelize.STRING,
+        db_source: Sequelize.STRING,
         date_attended: Sequelize.DATEONLY,
         created_by: Sequelize.INTEGER,
         updated_by: Sequelize.INTEGER
@@ -56,5 +60,9 @@ Appointment.belongsTo(AppointmentType, {
     as: "app_type",
     foreignKey: "app_type_1",
 });
+// Appointment.belongsTo(Client, {
+//     as: "client_id",
+//     foreignKey: "client_id",
+// });
 
 exports.Appointment = Appointment;

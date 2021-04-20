@@ -12,6 +12,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 const _ = require("lodash");
 
 //Importing models
+const Op = require('sequelize').Op;
 const {
     Client
 } = require("./models/client");
@@ -804,162 +805,124 @@ app.post("/hl7_message", async (req, res) => {
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
                 console.log("Invalid CCC NUMBER");
             }
-
-            if (!APPOINTMENT_TYPE) {
+            if (APPOINTMENT_LOCATION == "PHARMACY" || APPOINTMENT_REASON == "REGIMEN REFILL") {
                 APPOINTMENT_TYPE = 1;
+            } else {
+                APPOINTMENT_TYPE = 2;
             }
 
-            db.getConnection(function (err, connection) {
-                if (err) {
-                    console.log("im here", err)
-                } else {
+            var APP_STATUS = "Booked";
+            var ACTIVE_APP = "1";
+            var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
 
-                    var get_client_sql =
-                        "Select * from tbl_client where clinic_number='" +
-                        CCC_NUMBER +
-                        "'  LIMIT 1";
-
-                    // search for placer appointment number (ENTITY NUMBER in db)    
-                    var get_placer_appointment_number =
-                        "Select * from tbl_appointment where ENTITY_NUMBER='" +
-                        PLACER_APPOINTMENT_NUMBER +
-                        "' ";
-
-                    if (APPOINTMENT_LOCATION == "PHARMACY" || APPOINTMENT_REASON == "REGIMEN REFILL") {
-                        APPOINTMENT_TYPE = 1;
-                    } else {
-                        APPOINTMENT_TYPE = 2;
-                    }
-
-                    // Use the connection
-                    connection.query(get_placer_appointment_number, function (error, results, fields) {
-                        // Handle error after the release.
-                        if (error) {
-                            //throw error;
-                            console.log(error, results.length)
-                        } else if (results.length === 0) {
-
-                            connection.query(get_client_sql, function (error, results, fields) {
-
-                                if (error) {
-                                    console.log(error)
-                                } else {
-
-                                    //new appointment
-                                    for (var res in results) {
-                                        var client_id = results[res].id;
-                                        var APP_STATUS = "Booked";
-                                        var ACTIVE_APP = "1";
-                                        var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
-
-                                        //Add new Appointment
-
-                                        var appointment_sql =
-                                            "Insert into tbl_appointment (client_id,appntmnt_date,app_type_1,APPOINTMENT_REASON,app_status,db_source,active_app,APPOINTMENT_LOCATION,reason, ENTITY_NUMBER) VALUES ('" +
-                                            client_id +
-                                            "', '" + APPOINTMENT_DATE +
-                                            "','" + APPOINTMENT_TYPE +
-                                            "','" + APPOINTMENT_REASON +
-                                            "','" + APP_STATUS +
-                                            "','" + SENDING_APPLICATION +
-                                            "','" + ACTIVE_APP +
-                                            "','" + APPOINTMENT_LOCATION +
-                                            "','" + APPOINTMENT_NOTE +
-                                            "','" + PLACER_APPOINTMENT_NUMBER +
-                                            "')";
-
-                                        // Use the connection
-                                        console.log(appointment_sql);
-                                        connection.query(appointment_sql, function (
-                                            error,
-                                            results,
-                                            fields
-                                        ) {
-                                            if (error) {
-                                                console.log("im here 2", error);
-                                            } else {
-                                                console.log(results);
-                                                let update_app_status = "UPDATE tbl_appointment set active_app = '0' where client_id = '" + client_id + "' AND (ENTITY_NUMBER <> '" + PLACER_APPOINTMENT_NUMBER + "' OR ENTITY_NUMBER IS NULL)";
-
-                                                connection.query(update_app_status, function (err_up, res_up, fields_up) {
-                                                    if (error) {
-                                                        console.log(err_up);
-                                                    } else {
-                                                        console.log(res_up);
-                                                        connection.release();
-                                                    }
-                                                });
-                                            }
-                                            // And done with the connection.
-
-                                            // Don't use the connection here, it has been returned to the pool.
-                                        });
-                                    }
-
-                                }
-
-                            });
-
-                        } else if (results.length == 1) {
-
-                            connection.query(get_client_sql, function (error, results, fields) {
-
-                                if (error) {
-                                    console.log(error)
-                                } else {
-
-                                    //update appointment
-                                    for (var res in results) {
-                                        var client_id = results[res].id;
-                                        var APP_STATUS = "Booked";
-                                        var ACTIVE_APP = "1";
-                                        var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
-
-                                        //Update an Appointment where client id and appointment placer number match
-                                        var appointment_sql =
-                                            "Update  tbl_appointment SET appntmnt_date='" +
-                                            APPOINTMENT_DATE +
-                                            "' , app_type_1='" + APPOINTMENT_TYPE +
-                                            "',reason='" + APPOINTMENT_NOTE +
-                                            "',expln_app='" + APPOINTMENT_REASON +
-                                            "',client_id ='" + client_id +
-                                            "' ,APPOINTMENT_LOCATION ='" + APPOINTMENT_LOCATION +
-                                            "',APPOINTMENT_REASON='" + APPOINTMENT_REASON +
-                                            "',app_status='" + APP_STATUS +
-                                            "',db_source='" + SENDING_APPLICATION +
-                                            "',active_app='" + ACTIVE_APP +
-                                            "',reason='" + APPOINTMENT_NOTE +
-                                            "' WHERE client_id = '" + client_id + "' AND ENTITY_NUMBER = '" + PLACER_APPOINTMENT_NUMBER + "' ";
-
-                                        // Use the connection
-                                        console.log(appointment_sql);
-                                        connection.query(appointment_sql, function (
-                                            error,
-                                            results,
-                                            fields
-                                        ) {
-                                            if (error) {
-                                                console.log(error);
-                                            } else {
-                                                console.log(results);
-                                            }
-                                            // And done with the connection.
-                                            connection.release();
-
-                                            // Don't use the connection here, it has been returned to the pool.
-                                        });
-                                    }
-
-                                }
-
-                            });
-
-                        }
-
-                        // Don't use the connection here, it has been returned to the pool.
-                    });
+            let client = await Client.findOne({
+                where: {
+                    clinic_number: CCC_NUMBER
                 }
-            });
+            })
+            if (_.isEmpty(client))
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message: `Client: ${CCC_NUMBER} does not exists in the system.`
+                    });
+            let isAppointment = await Appointment.findOne({
+                where: {
+                    entity_number: PLACER_APPOINTMENT_NUMBER
+                }
+            })
+
+            if (_.isEmpty(isAppointment)) {
+
+                let appointment = {
+                    client_id: client.id,
+                    appntmnt_date: APPOINTMENT_DATE,
+                    app_type_1: APPOINTMENT_TYPE,
+                    appointment_reason: APPOINTMENT_REASON,
+                    app_status: APP_STATUS,
+                    db_source: SENDING_APPLICATION,
+                    active_app: ACTIVE_APP,
+                    appointment_location: APPOINTMENT_LOCATION,
+                    reason: APPOINTMENT_NOTE,
+                    entity_number: PLACER_APPOINTMENT_NUMBER
+                }
+
+                await Appointment.create(appointment)
+                    .then(async function (data) {
+                        console.log(data)
+                        await Appointment.update({active_app: '0'}, {
+                            returning: true,
+                            where: {
+                                client_id: client.id,
+                                entity_number: {
+                                    [Op.not]: PLACER_APPOINTMENT_NUMBER
+                                }
+                            }
+                        });
+                        message = "OK";
+                        response = "Appointment successfully created.";
+
+                        return res.json({
+                            message: message,
+                            response: {
+                                msg: response,
+                                appointment: appointment
+                            }
+                        });
+                    })
+                    .catch(function (err) {
+                        code = 500;
+                        response = err.message;
+                        return res.json({
+                            response: {
+                                msg: response,
+                                error: err.errors
+                            }
+                        });
+                    });
+            } else {
+                let appointment = {
+                    appntmnt_date: APPOINTMENT_DATE,
+                    app_type_1: APPOINTMENT_TYPE,
+                    appointment_reason: APPOINTMENT_REASON,
+                    app_status: APP_STATUS,
+                    db_source: SENDING_APPLICATION,
+                    active_app: ACTIVE_APP,
+                    appointment_location: APPOINTMENT_LOCATION,
+                    reason: APPOINTMENT_NOTE
+                }
+
+                await Appointment.update(appointment, {
+                    returning: true,
+                    where: {
+                        client_id: client.id,
+                        entity_number: PLACER_APPOINTMENT_NUMBER
+                    }
+                })
+                    .then(function(data) {
+                        message = "OK";
+                        response = "Appointment successfully updated.";
+
+                        return res.json({
+                            message: message,
+                            response: {
+                                msg: response,
+                                appointment: appointment
+                            }
+                        });
+                    })
+                    .catch(function (err) {
+                        code = 500;
+                        response = err.message;
+                        return res.json({
+                            response: {
+                                msg: response,
+                                error: err.errors
+                            }
+                        });
+                    });
+            }
 
         } else if (message_type == "ORU^R01") {
 
