@@ -1,4 +1,4 @@
-const sequelize = require("../db_config");
+const sequelize = require("../dbconnection");
 const Sequelize = require("sequelize");
 const masterFacility = sequelize.sequelize.define(
     'tbl_master_facility', {

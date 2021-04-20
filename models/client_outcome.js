@@ -1,4 +1,4 @@
-const sequelize = require("../db_config");
+const sequelize = require("../dbconnection");
 const Sequelize = require("sequelize");
 const clientOutcome = sequelize.sequelize.define(
   "tbl_clnt_outcome",

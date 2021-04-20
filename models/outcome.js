@@ -1,4 +1,4 @@
-const sequelize = require("../db_config");
+const sequelize = require("../dbconnection");
 const Sequelize = require("sequelize");
 
 const Outcome = sequelize.sequelize.define(
