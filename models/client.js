@@ -79,7 +79,8 @@ const Client = sequelize.sequelize.define(
         locator_location: Sequelize.STRING,
         created_by: Sequelize.INTEGER,
         updated_by: Sequelize.INTEGER,
-        hei_no: Sequelize.STRING
+        hei_no: Sequelize.STRING,
+        sending_application: Sequelize.STRING
     }, {
         timestamps: true,
         paranoid: true,
