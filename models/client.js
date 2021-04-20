@@ -76,7 +76,6 @@ const Client = sequelize.sequelize.define(
         locator_ward: Sequelize.STRING,
         locator_location: Sequelize.STRING,
         locator_village: Sequelize.STRING,
-        locator_location: Sequelize.STRING,
         created_by: Sequelize.INTEGER,
         updated_by: Sequelize.INTEGER,
         hei_no: Sequelize.STRING,
