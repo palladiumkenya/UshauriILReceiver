@@ -274,87 +274,6 @@ app.post("/hl7_message", async (req, res) => {
                     });
                 });
 
-
-            // db.getConnection(function (err, connection) {
-            //     if (err) {
-            //         console.log(err);
-            //         return;
-            //     } else {
-
-            //         if (new_art_date == null) {
-
-            //             var gateway_sql =
-            //                 "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
-            //                 FIRST_NAME +
-            //                 "', '" + MIDDLE_NAME +
-            //                 "','" + LAST_NAME +
-            //                 "','" + new_date +
-            //                 "','" + CCC_NUMBER +
-            //                 "','" + PATIENT_CLINIC_NUMBER +
-            //                 "','" + SENDING_FACILITY +
-            //                 "','" + SEX +
-            //                 "','" + MARITAL_STATUS +
-            //                 "','" + PHONE_NUMBER +
-            //                 "','" + GODS_NUMBER +
-            //                 "','" + parseInt(GROUP_ID) +
-            //                 "','" + SENDING_APPLICATION +
-            //                 "','" + PATIENT_SOURCE +
-            //                 "','" + new_enroll_date +
-            //                 "'," + new_art_date +
-            //                 ",'" + PATIENT_TYPE +
-            //                 "','" + COUNTY +
-            //                 "','" + SUB_COUNTY +
-            //                 "','" + WARD +
-            //                 "','" + VILLAGE +
-            //                 "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='" + SENDING_FACILITY + "'))";
-
-            //         } else {
-
-            //             var gateway_sql =
-            //                 "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
-            //                 FIRST_NAME +
-            //                 "', '" + MIDDLE_NAME +
-            //                 "','" + LAST_NAME +
-            //                 "','" + new_date +
-            //                 "','" + CCC_NUMBER +
-            //                 "','" + PATIENT_CLINIC_NUMBER +
-            //                 "','" + SENDING_FACILITY +
-            //                 "','" + SEX +
-            //                 "','" + MARITAL_STATUS +
-            //                 "','" + PHONE_NUMBER +
-            //                 "','" + GODS_NUMBER +
-            //                 "','" + parseInt(GROUP_ID) +
-            //                 "','" + SENDING_APPLICATION +
-            //                 "','" + PATIENT_SOURCE +
-            //                 "','" + new_enroll_date +
-            //                 "','" + new_art_date +
-            //                 "','" + PATIENT_TYPE +
-            //                 "','" + COUNTY +
-            //                 "','" + SUB_COUNTY +
-            //                 "','" + WARD +
-            //                 "','" + VILLAGE +
-            //                 "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='" + SENDING_FACILITY + "'))";
-
-            //         }
-
-
-            //         // Use the connection
-            //         connection.query(gateway_sql, function (error, results, fields) {
-            //             // And done with the connection.
-            //             if (error) {
-
-            //                 console.log(error);
-
-            //             } else {
-
-            //                 console.log(results);
-            //                 connection.release();
-
-            //             }
-            //             // Don't use the connection here, it has been returned to the pool.
-            //         });
-            //     }
-            // });
         } else if (message_type == "ADT^A08") {
 
             //this message is triggered by creating an art start date or death
@@ -641,84 +560,6 @@ app.post("/hl7_message", async (req, res) => {
 
             }
 
-            // db.getConnection(function (err, connection) {
-            //     if (err) {
-            //         console.log(err);
-            //     } else {
-            //
-            //         var get_client_sql =
-            //             "Select * from tbl_client where clinic_number='" +
-            //             CCC_NUMBER +
-            //             "'  LIMIT 1";
-            //
-            //         connection.query(get_client_sql, function (error, results, fields) {
-            //
-            //             if (error) {
-            //                 console.log(error)
-            //             } else {
-            //
-            //                 if (results.length === 0) {
-            //
-            //                     var update_sql =
-            //                         "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
-            //                         FIRST_NAME +
-            //                         "', '" + MIDDLE_NAME +
-            //                         "','" + LAST_NAME +
-            //                         "','" + new_date +
-            //                         "','" + CCC_NUMBER +
-            //                         "','" + PATIENT_CLINIC_NUMBER +
-            //                         "','" + SENDING_FACILITY +
-            //                         "','" + SEX +
-            //                         "','" + MARITAL_STATUS +
-            //                         "','" + PHONE_NUMBER +
-            //                         "','" + GODS_NUMBER +
-            //                         "','" + parseInt(GROUP_ID) +
-            //                         "','" + SENDING_APPLICATION +
-            //                         "','" + PATIENT_SOURCE +
-            //                         "','" + new_enroll_date +
-            //                         "','" + new_art_date +
-            //                         "','" + PATIENT_TYPE +
-            //                         "','" + COUNTY +
-            //                         "','" + SUB_COUNTY +
-            //                         "','" + WARD +
-            //                         "','" + VILLAGE +
-            //                         "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='" + SENDING_FACILITY + "'))";
-            //
-            //
-            //                 } else if (results.length === 1) {
-            //
-            //                     var update_sql =
-            //                         "update tbl_client SET mfl_code='" + SENDING_FACILITY +
-            //                         "',file_no='" + PATIENT_CLINIC_NUMBER +
-            //                         "',SENDING_APPLICATION='" + SENDING_APPLICATION +
-            //                         ",group_id='" + GROUP_ID +
-            //                         "',client_type='" + PATIENT_TYPE +
-            //                         "',art_date='" + new_art_date +
-            //                         "' WHERE clinic_number='" +
-            //                         CCC_NUMBER +
-            //                         "'; ";
-            //                 }
-            //
-            //
-            //                  // Use the connection
-            // connection.query(update_sql, function (error, results, fields) {
-            //     if (error) {
-            //         console.log(error);
-            //     } else {
-            //         console.log(update_sql, results);
-            //         // And done with the connection.
-            //         connection.release();
-            //     }
-            //
-            //     // Don't use the connection here, it has been returned to the pool.
-            // });
-            //
-            //             }
-            //
-            //         });
-            //
-            //     }
-            // });
         } else if (message_type == "SIU^S12") {
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var SENDING_FACILITY;
@@ -900,7 +741,7 @@ app.post("/hl7_message", async (req, res) => {
                         entity_number: PLACER_APPOINTMENT_NUMBER
                     }
                 })
-                    .then(function(data) {
+                    .then(function (data) {
                         message = "OK";
                         response = "Appointment successfully updated.";
 
@@ -973,118 +814,132 @@ app.post("/hl7_message", async (req, res) => {
 
             console.log("date", new_observation_date, "value", OBSERVATION_VALUE)
 
-            db.getConnection(function (err, connection) {
-                if (err) {
-                    console.log(err);
-                } else {
+            let client = await Client.findOne({
+                where: {
+                    clinic_number: CCC_NUMBER
+                }
+            })
 
-                    var get_client_sql =
-                        "Select * from tbl_client where clinic_number='" +
-                        CCC_NUMBER +
-                        "'  LIMIT 1";
+            if (_.isEmpty(client))
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message: `Client: ${CCC_NUMBER} does not exists in the system.`
+                    });
+            let oru = {}
+            if (OBSERVATION_VALUE == "TRANSFER_OUT") {
+                oru.client_type = "Transfer Out"
+                oru.mfl_code = SENDING_FACILITY
+                oru.sending_application = SENDING_FACILITY
+                oru.updated_at = new_observation_date
 
-                    connection.query(get_client_sql, function (error, results, fields) {
+                await Client.update(oru, {returning: true, where: {id: client.id}})
+                    .then(function (model) {
+                        message = "OK";
+                        response = "ORU successfully updated.";
 
-                        if (error) {
-                            console.log(error)
-                        } else {
-
-                            //new appointment
-                            for (var res in results) {
-                                var client_id = results[res].id;
-
-                                if (OBSERVATION_VALUE == "TRANSFER_OUT") {
-
-                                    var new_value = "Transfer Out";
-
-                                    var update_sql =
-                                        "update tbl_client SET client_type='" + new_value +
-                                        "',mfl_code='" + SENDING_FACILITY +
-                                        "',SENDING_APPLICATION='" + SENDING_APPLICATION +
-                                        "',updated_at='" + new_observation_date +
-                                        "' WHERE clinic_number='" +
-                                        CCC_NUMBER +
-                                        "'; ";
-
-                                    // Use the connection
-                                    connection.query(update_sql, function (error, results, fields) {
-                                        if (error) {
-                                            console.log(error);
-                                        } else {
-                                            console.log(update_sql, results);
-                                            // And done with the connection.
-                                            connection.release();
-                                        }
-
-                                    });
-
-                                } else if (OBSERVATION_VALUE == "DIED") {
-
-                                    var new_value = "Deceased";
-
-                                    var update_sql =
-                                        "update tbl_client SET status='" + new_value +
-                                        "',mfl_code='" + SENDING_FACILITY +
-                                        "',SENDING_APPLICATION='" + SENDING_APPLICATION +
-                                        "',date_deceased='" + new_observation_date +
-                                        "',updated_at='" + new_observation_date +
-                                        "' WHERE clinic_number='" +
-                                        CCC_NUMBER +
-                                        "'; ";
-
-                                    // Use the connection
-                                    connection.query(update_sql, function (error, results, fields) {
-                                        if (error) {
-                                            console.log(error);
-                                        } else {
-                                            console.log(update_sql, results);
-                                            // And done with the connection.
-                                            connection.release();
-                                        }
-
-                                    });
-
-                                } else if (OBSERVATION_VALUE == "LOST_TO_FOLLOWUP") {
-                                    var new_app_status = "LTFU";
-
-                                    var update_sql =
-                                        "update tbl_appointment SET app_status='" + new_app_status +
-                                        "',db_source='" + SENDING_APPLICATION +
-                                        "',updated_at='" + new_observation_date +
-                                        "' WHERE client_id='" +
-                                        client_id + "' ORDER BY appntmnt_date DESC LIMIT 1"
-                                    "'; ";
-
-                                    // Use the connection
-                                    connection.query(update_sql, function (error, results, fields) {
-                                        if (error) {
-                                            console.log(error);
-                                        } else {
-                                            console.log(update_sql, results);
-                                            // And done with the connection.
-                                            connection.release();
-                                        }
-
-                                    });
-
-                                }
-
+                        return res.json({
+                            message: message,
+                            response: {
+                                msg: response,
+                                client: oru
                             }
+                        });
+                    })
+                    .catch(function (err) {
+                        code = 500;
+                        response = err.message;
+                        console.error(err);
 
-                        }
+                        return res.json({
+                            response: {
+                                msg: response,
+                                errors: err.errors
+                            }
+                        });
+                    });
+            } else if (OBSERVATION_VALUE == "DIED") {
+                oru.status = "Deceased"
+                oru.mfl_code = SENDING_FACILITY
+                oru.date_deceased = new_observation_date
+                oru.sending_application = SENDING_FACILITY
+                oru.updated_at = new_observation_date
 
+
+                await Client.update(oru, {returning: true, where: {id: client.id}})
+                    .then(function (model) {
+                        message = "OK";
+                        response = "ORU successfully updated.";
+
+                        return res.json({
+                            message: message,
+                            response: {
+                                msg: response,
+                                client: oru
+                            }
+                        });
+                    })
+                    .catch(function (err) {
+                        code = 500;
+                        response = err.message;
+                        console.error(err);
+
+                        return res.json({
+                            response: {
+                                msg: response,
+                                errors: err.errors
+                            }
+                        });
+                    });
+            } else if (OBSERVATION_VALUE == "LOST_TO_FOLLOWUP") {
+                oru.app_status = "LTFU"
+                oru.db_source = SENDING_APPLICATION
+                oru.updated_at = new_observation_date
+
+                let l_app = await Appointment.findAll({
+                    limit: 1,
+                    where: {
+                        client_id: client.id
+                    },
+                    order: [['appntmnt_date', 'DESC']]
+                })
+
+                await Appointment.update(oru, {
+                    returning: true, where: {
+                        id: l_app[0].id
+                    }
+                })
+                    .then(function (model) {
+                        message = "OK";
+                        response = "ORU successfully added.";
+
+                        return res.json({
+                            message: message,
+                            response: {
+                                msg: response,
+                                client: oru
+                            }
+                        });
+                    })
+                    .catch(function (err) {
+                        code = 500;
+                        response = err.message;
+                        console.error(err);
+
+                        return res.status(400).json({
+                            response: {
+                                msg: response,
+                                errors: err.errors
+                            }
+                        });
                     });
 
-                }
-
-
-            });
+            }
 
         }
-
         console.log(true);
         // res.send(true);
-
     } else {
 
         console.log("IQCare Message, skip")
