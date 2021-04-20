@@ -108,7 +108,7 @@ function validateClient(client) {
         marital: Joi.number().required(),
         client_status: Joi.string().required(),
         enrollment_date: Joi.date().required(),
-        art_date: Joi.date().required(),
+        art_date: Joi.date(),
         enable_sms: Joi.string().required(),
         status: Joi.string().required(),
         f_name: Joi.string()

@@ -9,10 +9,15 @@ const app = express();
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({extended: true}));
 
+const _ = require("lodash");
+
 //Importing models
 const {
     Client
 } = require("./models/client");
+const {
+    Partner
+} = require("./models/partner");
 const {
     Appointment
 } = require("./models/appointment");
@@ -48,7 +53,7 @@ app.post("/hl7_message", async (req, res) => {
             var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
             var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
             var SEX;
-            var PHONE_NUMBER;
+            var PHONE_NUMBER = jsonObj.PATIENT_IDENTIFICATION.PHONE_NUMBER;
             var MARITAL_STATUS;
             var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.SENDING_APPLICATION;
             var ENROLLMENT_DATE = jsonObj.PATIENT_VISIT.HIV_CARE_ENROLLMENT_DATE;
@@ -99,8 +104,6 @@ app.post("/hl7_message", async (req, res) => {
                     } else {
                         SEX = "2";
                     }
-                } else if (key == "PHONE_NUMBER") {
-                    PHONE_NUMBER = result[i].value;
                 } else if (key == "MARITAL_STATUS") {
                     if (result[i].value === "") {
                         MARITAL_STATUS = "1";
@@ -175,12 +178,68 @@ app.post("/hl7_message", async (req, res) => {
                 return;
             }
             console.log("ndani 2");
-            Client.create(client)
+            let client = await Client.findOne({
+                where: {
+                    phone_no: PHONE_NUMBER
+                }
+            });
+
+            if (!_.isEmpty(client))
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        message: `Phone number: ${PHONE_NUMBER} already exists in the system.`
+                    });
+
+            let partner = await Partner.findOne({
+                where: {
+                    mfl_code: SENDING_FACILITY
+                }
+            });
+
+            if (_.isEmpty(partner))
+                return res
+                    .status(404)
+                    .json({
+                        status: false,
+                        message: `MFL CODE: ${SENDING_FACILITY} does not exist in system.`
+                    });
+
+            client = {
+                group_id: parseInt(GROUP_ID),
+                clinic_number: CCC_NUMBER,
+                f_name: FIRST_NAME,
+                m_name: MIDDLE_NAME,
+                l_name: LAST_NAME,
+                dob: new_date,
+                phone_no: PHONE_NUMBER,
+                partner_id: partner.partner_id,
+                mfl_code: parseInt(SENDING_FACILITY),
+                // status: ,
+                // client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
+                gender: parseInt(SEX),
+                marital: MARITAL_STATUS,
+                enrollment_date: new_enroll_date,
+                art_date: new_art_date,
+                client_type: PATIENT_TYPE,
+                gods_number: GODS_NUMBER,
+                patient_source: PATIENT_SOURCE,
+                file_no: PATIENT_CLINIC_NUMBER,
+                locator_county: COUNTY,
+                locator_sub_county: SUB_COUNTY,
+                locator_ward: WARD,
+                locator_village: VILLAGE,
+                sending_application: SENDING_APPLICATION
+            }
+            console.log(client);
+
+            await Client.create(client)
                 .then(function (model) {
                     message = "OK";
                     response = "Client successfully added.";
 
-                    res.json({
+                    return res.json({
                         message: message,
                         response: {
                             msg: response,
@@ -204,100 +263,97 @@ app.post("/hl7_message", async (req, res) => {
                 .catch(function (err) {
                     code = 500;
                     response = err.message;
+                    console.error(err);
 
-                    res.json({
+                    return res.json({
                         response: {
                             msg: response,
-                            error: err
+                            errors: err.errors
                         }
                     });
                 });
 
-            let client = await Client.findOne({
-                where: {
-                    phone_no: req.body.phone_no
-                }
-            });
-            db.getConnection(function (err, connection) {
-                if (err) {
-                    console.log(err);
-                    return;
-                } else {
 
-                    if (new_art_date == null) {
+            // db.getConnection(function (err, connection) {
+            //     if (err) {
+            //         console.log(err);
+            //         return;
+            //     } else {
 
-                        var gateway_sql =
-                            "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
-                            FIRST_NAME +
-                            "', '" + MIDDLE_NAME +
-                            "','" + LAST_NAME +
-                            "','" + new_date +
-                            "','" + CCC_NUMBER +
-                            "','" + PATIENT_CLINIC_NUMBER +
-                            "','" + SENDING_FACILITY +
-                            "','" + SEX +
-                            "','" + MARITAL_STATUS +
-                            "','" + PHONE_NUMBER +
-                            "','" + GODS_NUMBER +
-                            "','" + parseInt(GROUP_ID) +
-                            "','" + SENDING_APPLICATION +
-                            "','" + PATIENT_SOURCE +
-                            "','" + new_enroll_date +
-                            "'," + new_art_date +
-                            ",'" + PATIENT_TYPE +
-                            "','" + COUNTY +
-                            "','" + SUB_COUNTY +
-                            "','" + WARD +
-                            "','" + VILLAGE +
-                            "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='" + SENDING_FACILITY + "'))";
+            //         if (new_art_date == null) {
 
-                    } else {
+            //             var gateway_sql =
+            //                 "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
+            //                 FIRST_NAME +
+            //                 "', '" + MIDDLE_NAME +
+            //                 "','" + LAST_NAME +
+            //                 "','" + new_date +
+            //                 "','" + CCC_NUMBER +
+            //                 "','" + PATIENT_CLINIC_NUMBER +
+            //                 "','" + SENDING_FACILITY +
+            //                 "','" + SEX +
+            //                 "','" + MARITAL_STATUS +
+            //                 "','" + PHONE_NUMBER +
+            //                 "','" + GODS_NUMBER +
+            //                 "','" + parseInt(GROUP_ID) +
+            //                 "','" + SENDING_APPLICATION +
+            //                 "','" + PATIENT_SOURCE +
+            //                 "','" + new_enroll_date +
+            //                 "'," + new_art_date +
+            //                 ",'" + PATIENT_TYPE +
+            //                 "','" + COUNTY +
+            //                 "','" + SUB_COUNTY +
+            //                 "','" + WARD +
+            //                 "','" + VILLAGE +
+            //                 "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='" + SENDING_FACILITY + "'))";
 
-                        var gateway_sql =
-                            "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
-                            FIRST_NAME +
-                            "', '" + MIDDLE_NAME +
-                            "','" + LAST_NAME +
-                            "','" + new_date +
-                            "','" + CCC_NUMBER +
-                            "','" + PATIENT_CLINIC_NUMBER +
-                            "','" + SENDING_FACILITY +
-                            "','" + SEX +
-                            "','" + MARITAL_STATUS +
-                            "','" + PHONE_NUMBER +
-                            "','" + GODS_NUMBER +
-                            "','" + parseInt(GROUP_ID) +
-                            "','" + SENDING_APPLICATION +
-                            "','" + PATIENT_SOURCE +
-                            "','" + new_enroll_date +
-                            "','" + new_art_date +
-                            "','" + PATIENT_TYPE +
-                            "','" + COUNTY +
-                            "','" + SUB_COUNTY +
-                            "','" + WARD +
-                            "','" + VILLAGE +
-                            "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='" + SENDING_FACILITY + "'))";
+            //         } else {
 
-                    }
+            //             var gateway_sql =
+            //                 "Insert into tbl_client (f_name,m_name,l_name,dob,clinic_number,file_no,mfl_code,gender,marital,phone_no,GODS_NUMBER,group_id, SENDING_APPLICATION, PATIENT_SOURCE, enrollment_date, art_date, client_type, locator_county, locator_sub_county, locator_ward, locator_village, partner_id) VALUES ('" +
+            //                 FIRST_NAME +
+            //                 "', '" + MIDDLE_NAME +
+            //                 "','" + LAST_NAME +
+            //                 "','" + new_date +
+            //                 "','" + CCC_NUMBER +
+            //                 "','" + PATIENT_CLINIC_NUMBER +
+            //                 "','" + SENDING_FACILITY +
+            //                 "','" + SEX +
+            //                 "','" + MARITAL_STATUS +
+            //                 "','" + PHONE_NUMBER +
+            //                 "','" + GODS_NUMBER +
+            //                 "','" + parseInt(GROUP_ID) +
+            //                 "','" + SENDING_APPLICATION +
+            //                 "','" + PATIENT_SOURCE +
+            //                 "','" + new_enroll_date +
+            //                 "','" + new_art_date +
+            //                 "','" + PATIENT_TYPE +
+            //                 "','" + COUNTY +
+            //                 "','" + SUB_COUNTY +
+            //                 "','" + WARD +
+            //                 "','" + VILLAGE +
+            //                 "',(SELECT  partner_id FROM tbl_partner_facility WHERE mfl_code ='" + SENDING_FACILITY + "'))";
+
+            //         }
 
 
-                    // Use the connection
-                    connection.query(gateway_sql, function (error, results, fields) {
-                        // And done with the connection.
-                        if (error) {
+            //         // Use the connection
+            //         connection.query(gateway_sql, function (error, results, fields) {
+            //             // And done with the connection.
+            //             if (error) {
 
-                            console.log(error);
+            //                 console.log(error);
 
-                        } else {
+            //             } else {
 
-                            console.log(results);
-                            connection.release();
+            //                 console.log(results);
+            //                 connection.release();
 
-                        }
-                        // Don't use the connection here, it has been returned to the pool.
-                    });
-                }
-            });
+            //             }
+            //             // Don't use the connection here, it has been returned to the pool.
+            //         });
+            //     }
+            // });
         } else if (message_type == "ADT^A08") {
 
             //this message is triggered by creating an art start date or death
@@ -919,7 +975,7 @@ app.post("/hl7_message", async (req, res) => {
         }
 
         console.log(true);
-        res.send(true);
+        // res.send(true);
 
     } else {
 
