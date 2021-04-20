@@ -178,7 +178,7 @@ app.post("/hl7_message", async (req, res) => {
                 console.log(response);
                 return;
             }
-            console.log("ndani 2");
+
             let client = await Client.findOne({
                 where: {
                     phone_no: PHONE_NUMBER
@@ -424,14 +424,6 @@ app.post("/hl7_message", async (req, res) => {
                         phone_no: PHONE_NUMBER
                     }
                 });
-
-                if (!_.isEmpty(client))
-                    return res
-                        .status(400)
-                        .json({
-                            success: false,
-                            message: `Phone number: ${PHONE_NUMBER} already exists in the system.`
-                        });
 
                 let partner = await Partner.findOne({
                     where: {
@@ -948,83 +940,108 @@ app.post("/hl7_message", async (req, res) => {
 
 });
 
-app.post("/hl7-sync-client", (req, res) => {
+app.post("/hl7-sync-client", async (req, res) => {
 
-    var client = req.body;
+    var cl = req.body;
 
     console.log(client);
+    if (cl.message_type === "ADT^A04") {
+        let client = await Client.findOne({
+            where: {
+                phone_no: cl.phone_no
+            }
+        });
 
-    db.getConnection(function (err, connection) {
-        if (err) {
-            console.log("im here", err);
-        } else {
+        if (!_.isEmpty(client))
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    message: `Phone number: ${cl.phone_no} already exists in the system.`
+                });
 
-            let partner = connection.query('SELECT partner_id FROM tbl_partner_facility WHERE mfl_code', client.mfl_code, function (err, data) {
-                if (err) {
-                    console.log(err)
-                }
+        let partner = await Partner.findOne({
+            where: {
+                mfl_code: cl.mfl_code
+            }
+        });
+
+        if (_.isEmpty(partner))
+            return res
+                .status(404)
+                .json({
+                    status: false,
+                    message: `MFL CODE: ${cl.mfl_code} does not exist in system.`
+                });
+
+        client = {
+            group_id: parseInt(cl.group_id),
+            clinic_number: cl.clinic_number,
+            f_name: cl.f_name,
+            m_name: cl.m_name,
+            l_name: cl.l_name,
+            dob: cl.dob,
+            phone_no: cl.phone_no,
+            partner_id: partner.partner_id,
+            mfl_code: parseInt(cl.mfl_code),
+            gender: parseInt(cl.gender),
+            marital: cl.marital,
+            enrollment_date: cl.enrollment_date,
+            art_date: cl.art_date,
+            client_type: cl.client_type,
+            gods_number: cl.GODS_NUMBER,
+            patient_source: cl.PATIENT_SOURCE,
+            file_no: cl.file_no,
+            locator_county: cl.locator_county,
+            locator_sub_county: cl.locator_sub_county,
+            locator_ward: cl.locator_ward,
+            locator_village: cl.locator_village,
+            sending_application: cl.db_source
+        }
+        console.log(client);
+
+        await Client.create(client)
+            .then(function (model) {
+                message = "OK";
+                response = "Client successfully added.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        client: _.pick(client, [
+                            "id",
+                            "f_name",
+                            "m_name",
+                            "l_name",
+                            "dob",
+                            "phone_no",
+                            "email",
+                            "partner_id",
+                            "facility_id",
+                            "status",
+                            "clinic_id",
+                            "createdAt"
+                        ])
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                console.error(err);
+
+                return res.status(400).json({
+                    response: {
+                        msg: response,
+                        errors: err.errors
+                    }
+                });
             });
 
-            let partner_id = partner[0];
+    } else if (cl.message_type === "ADT^A08") {
 
-            let clinic_number = client.clinic_number;
-
-            let cl = {
-                f_name: client.f_name,
-                m_name: client.m_name,
-                l_name: client.l_name,
-                dob: client.dob,
-                clinic_number: client.clinic_number,
-                mfl_code: client.mfl_code,
-                gender: client.gender,
-                marital: client.marital,
-                phone_no: client.phone_no,
-                GODS_NUMBER: client.GODS_NUMBER,
-                group_id: client.group_id,
-                SENDING_APPLICATION: client.SENDING_APPLICATION,
-                PATIENT_SOURCE: client.PATIENT_SOURCE,
-                db_source: client.db_source,
-                enrollment_date: client.enrollment_date,
-                art_date: client.art_date,
-                client_type: client.client_type,
-                file_no: client.patient_clinic_number,
-                locator_county: client.locator_county,
-                locator_sub_county: client.locator_sub_county,
-                locator_ward: client.locator_ward,
-                locator_village: client.locator_village,
-                partner_id: partner_id,
-
-            }
-
-            //if message code is ADT^A04 add new client else update client
-            if (client.message_type === "ADT^A04") {
-                connection.query('INSERT INTO tbl_client SET ?', cl, function (err, data) {
-                    if (err) {
-                        return console.error(err.message);
-                    } else {
-                        console.log(data);
-                        res.send(data)
-
-                    }
-                });
-
-            } else if (client.message_type === "ADT^A08") {
-
-                connection.query('UPDATE tbl_client SET ? WHERE clinic_number = ?', [cl, clinic_number], function (err, data) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log(data);
-                        res.send(data);
-
-                    }
-                });
-            }
-
-        }
-
-
-    });
+    }
 
 });
 
