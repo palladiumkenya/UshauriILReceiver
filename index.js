@@ -268,7 +268,7 @@ app.post("/hl7_message", async (req, res) => {
                     return res.status(400).json({
                         response: {
                             msg: response,
-                            errors: err.errors
+                            errors: err.errors,
                         }
                     });
                 });
@@ -590,12 +590,15 @@ app.post("/hl7_message", async (req, res) => {
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var SENDING_FACILITY;
 
+            var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+            var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
             var CCC_NUMBER;
             var APPOINTMENT_REASON;
             var APPOINTMENT_TYPE;
             var APPOINTMENT_DATE;
             var APPOINTMENT_PLACING_ENTITY;
             var PLACER_APPOINTMENT_NUMBER;
+            var PATIENT_CLINIC_NUMBER;
 
             var APPOINTMENT_LOCATION;
             //var ACTION_CODE;
@@ -667,6 +670,12 @@ app.post("/hl7_message", async (req, res) => {
                         CCC_NUMBER = result[i].value;
                     }
                 }
+
+                if (key == "ID") {
+                    if (result[i + 1].value == "PATIENT_CLINIC_NUMBER") {
+                        PATIENT_CLINIC_NUMBER = result[i].value;
+                    }
+                }
             }
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
@@ -682,6 +691,14 @@ app.post("/hl7_message", async (req, res) => {
             var ACTIVE_APP = "1";
             var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
 
+            let l = {
+                f_name: FIRST_NAME,
+                l_name: LAST_NAME,
+                clinic_number: CCC_NUMBER,
+                file_no: PATIENT_CLINIC_NUMBER,
+                sending_application: SENDING_APPLICATION,
+            }
+
             let client = await Client.findOne({
                 where: {
                     clinic_number: CCC_NUMBER
@@ -692,7 +709,11 @@ app.post("/hl7_message", async (req, res) => {
                     .status(400)
                     .json({
                         success: false,
-                        message: `Client: ${CCC_NUMBER} does not exists in the system.`
+                        message: `Client: ${CCC_NUMBER} does not exists in the system.`,
+                        response: {
+                            msg: `Client: ${CCC_NUMBER} does not exists in the system.` ,
+                            appointment: l
+                        }
                     });
             let isAppointment = await Appointment.findOne({
                 where: {
@@ -1054,6 +1075,7 @@ app.post("/hl7-sync-client", async (req, res) => {
                             "facility_id",
                             "status",
                             "clinic_id",
+                            "clinic_id",
                             "createdAt"
                         ])
                     }
@@ -1067,7 +1089,23 @@ app.post("/hl7-sync-client", async (req, res) => {
                 return res.status(400).json({
                     response: {
                         msg: response,
+                        client: _.pick(client, [
+                            "id",
+                            "f_name",
+                            "m_name",
+                            "l_name",
+                            "dob",
+                            "phone_no",
+                            "email",
+                            "partner_id",
+                            "facility_id",
+                            "status",
+                            "clinic_id",
+                            "clinic_id",
+                            "createdAt"
+                        ]),
                         errors: err.errors
+
                     }
                 });
             });
@@ -1146,6 +1184,7 @@ app.post("/hl7-sync-appointment", async (req, res) => {
                 return res.json({
                     response: {
                         msg: response,
+                        appointment: appointment,
                         error: err.errors
                     }
                 });
@@ -1177,6 +1216,7 @@ app.post("/hl7-sync-appointment", async (req, res) => {
                 return res.json({
                     response: {
                         msg: response,
+                        appointment: appointment,
                         error: err.errors
                     }
                 });
@@ -1230,7 +1270,8 @@ app.post("/hl7-sync-observation", async (req, res) => {
                 return res.json({
                     response: {
                         msg: response,
-                        errors: err.errors
+                        errors: err.errors,
+                        client: oru
                     }
                 });
             });
@@ -1263,7 +1304,8 @@ app.post("/hl7-sync-observation", async (req, res) => {
                 return res.json({
                     response: {
                         msg: response,
-                        errors: err.errors
+                        errors: err.errors,
+                        client: oru
                     }
                 });
             });
@@ -1306,7 +1348,8 @@ app.post("/hl7-sync-observation", async (req, res) => {
                 return res.status(400).json({
                     response: {
                         msg: response,
-                        errors: err.errors
+                        errors: err.errors,
+                        client: oru
                     }
                 });
             });
