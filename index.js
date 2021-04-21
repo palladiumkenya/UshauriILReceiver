@@ -978,7 +978,6 @@ app.post("/hl7-sync-client", async (req, res) => {
 
     var cl = req.body;
 
-    console.log(client);
     if (cl.message_type === "ADT^A04") {
         let client = await Client.findOne({
             where: {
@@ -1023,8 +1022,8 @@ app.post("/hl7-sync-client", async (req, res) => {
             enrollment_date: cl.enrollment_date,
             art_date: cl.art_date,
             client_type: cl.client_type,
-            gods_number: cl.GODS_NUMBER,
-            patient_source: cl.PATIENT_SOURCE,
+            gods_number: cl.gods_number,
+            patient_source: cl.patient_source,
             file_no: cl.file_no,
             locator_county: cl.locator_county,
             locator_sub_county: cl.locator_sub_county,
@@ -1086,10 +1085,10 @@ app.post("/hl7-sync-appointment", async (req, res) => {
     let appt = {
         appntmnt_date: appointment.appntmnt_date,
         app_type_1: appointment.app_type_1,
-        appointment_reason: appointment.APPOINTMENT_REASON,
+        appointment_reason: appointment.appointment_reason,
         app_status: appointment.app_status,
         active_app: appointment.active_app,
-        appointment_location: appointment.APPOINTMENT_LOCATION,
+        appointment_location: appointment.appointment_location,
         db_source: appointment.db_source,
         reason: appointment.reason,
         entity_number: appointment.placer_appointment_number,
@@ -1207,7 +1206,7 @@ app.post("/hl7-sync-observation", async (req, res) => {
     if (observation.observation_value == "Transfer Out") {
         oru.client_type = observation.observation_value
         oru.mfl_code = observation.mfl_code
-        oru.sending_application = observation.db_source
+        oru.SENDING_APPLICATION = observation.db_source
         oru.updated_at = observation.observation_datetime
 
         await Client.update(oru, {returning: true, where: {id: observation.client_number}})
@@ -1239,7 +1238,7 @@ app.post("/hl7-sync-observation", async (req, res) => {
         oru.status = observation.death_status
         oru.mfl_code =  observation.mfl_code
         oru.date_deceased = observation.observation_datetime
-        oru.sending_application = observation.db_source
+        oru.SENDING_APPLICATION = observation.db_source
         oru.updated_at = observation.observation_datetime
 
 
@@ -1270,7 +1269,7 @@ app.post("/hl7-sync-observation", async (req, res) => {
             });
     } else if (observation.observation_value == "LTFU") {
         oru.app_status = observation.observation_value
-        oru.db_source = observation.SENDING_APPLICATION
+        oru.db_source = observation.sending_application
         oru.updated_at =  observation.observation_datetime
         oru.active_app = observation.active_app
 
