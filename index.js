@@ -173,21 +173,22 @@ app.post("/hl7_message", async (req, res) => {
 
             }
 
-            if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+            var l = {
+                f_name: FIRST_NAME,
+                l_name: LAST_NAME,
+                clinic_number: CCC_NUMBER,
+                file_no: PATIENT_CLINIC_NUMBER,
+                sending_application: SENDING_APPLICATION,
+            }
 
-                let l = {
-                    f_name: FIRST_NAME,
-                    l_name: LAST_NAME,
-                    clinic_number: CCC_NUMBER,
-                    file_no: PATIENT_CLINIC_NUMBER,
-                    sending_application: SENDING_APPLICATION,
-                }
+
+            if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
 
                 return res
                     .status(400)
                     .json({
                         success: false,
-                        msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits`,
+                        msg: `Error`,
                         response: {
                             msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
                             data: l
@@ -220,7 +221,12 @@ app.post("/hl7_message", async (req, res) => {
                     .status(404)
                     .json({
                         status: false,
-                        message: `MFL CODE: ${SENDING_FACILITY} does not exist in system.`
+                        msg: `Error`,
+                        response: {
+                            message: `MFL CODE: ${SENDING_FACILITY} does not exist in system.`,
+                            data: l
+
+                        }
                     });
 
             client = {
@@ -450,21 +456,21 @@ app.post("/hl7_message", async (req, res) => {
 
             }
 
-            if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+            var l = {
+                f_name: FIRST_NAME,
+                l_name: LAST_NAME,
+                clinic_number: CCC_NUMBER,
+                file_no: PATIENT_CLINIC_NUMBER,
+                sending_application: SENDING_APPLICATION,
+            }
 
-                let l = {
-                    f_name: FIRST_NAME,
-                    l_name: LAST_NAME,
-                    clinic_number: CCC_NUMBER,
-                    file_no: PATIENT_CLINIC_NUMBER,
-                    sending_application: SENDING_APPLICATION,
-                }
+            if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
 
                 return res
                     .status(400)
                     .json({
                         success: false,
-                        msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits`,
+                        msg: `Error`,
                         response: {
                             msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
                             data: l
@@ -479,34 +485,26 @@ app.post("/hl7_message", async (req, res) => {
                 }
             });
 
+            let partner = await Partner.findOne({
+                where: {
+                    mfl_code: SENDING_FACILITY
+                }
+            });
+
+            if (_.isEmpty(partner))
+                return res
+                    .status(404)
+                    .json({
+                        status: false,
+                        msg: `Error`,
+                        response: {
+                        message: `MFL CODE: ${SENDING_FACILITY} does not exist in system.`,
+                        data: l
+
+                        }
+                    });
+
             if (_.isEmpty(isClient)) {
-                let client = await Client.findOne({
-                    where: {
-                        phone_no: PHONE_NUMBER
-                    }
-                });
-
-                // if (!_.isEmpty(client))
-                //     return res
-                //         .status(400)
-                //         .json({
-                //             success: false,
-                //             message: `Phone number: ${PHONE_NUMBER} already exists in the system.`
-                //         });
-
-                let partner = await Partner.findOne({
-                    where: {
-                        mfl_code: SENDING_FACILITY
-                    }
-                });
-
-                if (_.isEmpty(partner))
-                    return res
-                        .status(404)
-                        .json({
-                            status: false,
-                            message: `MFL CODE: ${SENDING_FACILITY} does not exist in system.`
-                        });
 
                 client = {
                     group_id: parseInt(GROUP_ID),
@@ -727,7 +725,7 @@ app.post("/hl7_message", async (req, res) => {
                     .status(400)
                     .json({
                         success: false,
-                        msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits`,
+                        msg: `Error`,
                         response: {
                             msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
                             data: l
@@ -763,7 +761,7 @@ app.post("/hl7_message", async (req, res) => {
                     .status(400)
                     .json({
                         success: false,
-                        msg: `Client: ${CCC_NUMBER} does not exists in the system.`,
+                        msg: `Error`,
                         response: {
                             msg: `Client: ${CCC_NUMBER} does not exists in the system.` ,
                             data: l
@@ -917,7 +915,7 @@ app.post("/hl7_message", async (req, res) => {
                     .status(400)
                     .json({
                         success: false,
-                        msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits`,
+                        msg: `Error`,
                         response: {
                             msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
                             data: l
@@ -956,11 +954,11 @@ app.post("/hl7_message", async (req, res) => {
                     .status(400)
                     .json({
                         success: false,
-                        msg: `Client: ${CCC_NUMBER} does not exists in the system.`,
+                        msg: `Error`,
                         response: {
                             msg: `Client: ${CCC_NUMBER} does not exists in the system.` ,
                             data: l
-                        }`Client: ${CCC_NUMBER} does not exists in the system.`
+                        }
                     });
 
             let oru = {}
@@ -1089,19 +1087,7 @@ app.post("/hl7-sync-client", async (req, res) => {
     var cl = req.body;
 
     if (cl.message_type === "ADT^A04") {
-        let client = await Client.findOne({
-            where: {
-                phone_no: cl.phone_no
-            }
-        });
-
-        if (!_.isEmpty(client))
-            return res
-                .status(400)
-                .json({
-                    success: false,
-                    message: `Phone number: ${cl.phone_no} already exists in the system.`
-                });
+        
 
         let partner = await Partner.findOne({
             where: {
@@ -1164,7 +1150,7 @@ app.post("/hl7-sync-client", async (req, res) => {
                             "facility_id",
                             "status",
                             "clinic_id",
-                            "clinic_id",
+                            "clinic_number",
                             "createdAt"
                         ])
                     }
@@ -1190,7 +1176,7 @@ app.post("/hl7-sync-client", async (req, res) => {
                             "facility_id",
                             "status",
                             "clinic_id",
-                            "clinic_id",
+                            "clinic_number",
                             "createdAt"
                         ]),
                         errors: err.errors
@@ -1200,6 +1186,73 @@ app.post("/hl7-sync-client", async (req, res) => {
             });
 
     } else if (cl.message_type === "ADT^A08") {
+
+        let partner = await Partner.findOne({
+            where: {
+                mfl_code: cl.mfl_code
+            }
+        });
+
+        if (_.isEmpty(partner))
+            return res
+                .status(404)
+                .json({
+                    status: false,
+                    message: `MFL CODE: ${cl.mfl_code} does not exist in system.`
+                });
+
+        client = {
+            group_id: parseInt(cl.group_id),
+            clinic_number: cl.clinic_number,
+            partner_id: partner.partner_id,
+            mfl_code: parseInt(cl.mfl_code),
+            art_date: cl.art_date,
+            client_type: cl.client_type,
+            patient_source: cl.patient_source,
+            file_no: cl.file_no,
+            sending_application: cl.db_source
+        }
+        console.log(client);
+
+        await Client.update(client)
+            .then(function (model) {
+                message = "OK";
+                response = "Client successfully updated.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        client: _.pick(client, [
+                            "id",
+                            "status",
+                            "clinic_id",
+                            "clinic_number",
+                            "createdAt"
+                        ])
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                console.error(err);
+
+                return res.status(400).json({
+                    response: {
+                        msg: response,
+                        client: _.pick(client, [
+                            "id",
+                            "status",
+                            "clinic_id",
+                            "clinic_numberd",
+                            "createdAt"
+                        ]),
+                        errors: err.errors
+
+                    }
+                });
+            });
 
     }
 
