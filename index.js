@@ -174,9 +174,26 @@ app.post("/hl7_message", async (req, res) => {
             }
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-                response = `Invalid CCC Number: ${CCC_NUMBER}`;
-                console.log(response);
-                return;
+
+                let l = {
+                    f_name: FIRST_NAME,
+                    l_name: LAST_NAME,
+                    clinic_number: CCC_NUMBER,
+                    file_no: PATIENT_CLINIC_NUMBER,
+                    sending_application: SENDING_APPLICATION,
+                }
+
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits`,
+                        response: {
+                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
+                            data: l
+                        }
+                    });
+
             }
             // let client = await Client.findOne({
             //     where: {
@@ -434,8 +451,26 @@ app.post("/hl7_message", async (req, res) => {
             }
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-                console.log("Invalid CCC NUMBER");
-                return;
+
+                let l = {
+                    f_name: FIRST_NAME,
+                    l_name: LAST_NAME,
+                    clinic_number: CCC_NUMBER,
+                    file_no: PATIENT_CLINIC_NUMBER,
+                    sending_application: SENDING_APPLICATION,
+                }
+
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits`,
+                        response: {
+                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
+                            data: l
+                        }
+                    });
+                
             }
 
             let isClient = await Client.findOne({
@@ -712,7 +747,7 @@ app.post("/hl7_message", async (req, res) => {
                         msg: `Client: ${CCC_NUMBER} does not exists in the system.`,
                         response: {
                             msg: `Client: ${CCC_NUMBER} does not exists in the system.` ,
-                            appointment: l
+                            data: l
                         }
                     });
             let isAppointment = await Appointment.findOne({
