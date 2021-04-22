@@ -709,7 +709,7 @@ app.post("/hl7_message", async (req, res) => {
                     .status(400)
                     .json({
                         success: false,
-                        message: `Client: ${CCC_NUMBER} does not exists in the system.`,
+                        msg: `Client: ${CCC_NUMBER} does not exists in the system.`,
                         response: {
                             msg: `Client: ${CCC_NUMBER} does not exists in the system.` ,
                             appointment: l
