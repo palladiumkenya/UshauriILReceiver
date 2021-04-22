@@ -714,8 +714,27 @@ app.post("/hl7_message", async (req, res) => {
             }
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-                console.log("Invalid CCC NUMBER");
+
+                let l = {
+                    f_name: FIRST_NAME,
+                    l_name: LAST_NAME,
+                    clinic_number: CCC_NUMBER,
+                    file_no: PATIENT_CLINIC_NUMBER,
+                    sending_application: SENDING_APPLICATION,
+                }
+
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits`,
+                        response: {
+                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
+                            data: l
+                        }
+                    });
             }
+
             if (APPOINTMENT_LOCATION == "PHARMACY" || APPOINTMENT_REASON == "REGIMEN REFILL") {
                 APPOINTMENT_TYPE = 1;
             } else {
@@ -857,6 +876,7 @@ app.post("/hl7_message", async (req, res) => {
             var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
             var SENDING_FACILITY = jsonObj.MESSAGE_HEADER.SENDING_FACILITY;
             var OBSERVATION_VALUE;
+            var PATIENT_CLINIC_NUMBER;
             var OBSERVATION_DATETIME;
 
             var result = get_json(jsonObj);
@@ -871,6 +891,10 @@ app.post("/hl7_message", async (req, res) => {
                     if (result[i + 1].value == "CCC_NUMBER") {
                         CCC_NUMBER = result[i].value;
                     }
+                } else if (key == "ID") {
+                    if (result[i + 1].value == "PATIENT_CLINIC_NUMBER") {
+                        PATIENT_CLINIC_NUMBER = result[i].value;
+                    }
                 } else if (key == "OBSERVATION_VALUE") {
                     OBSERVATION_VALUE = result[i].value;
                 } else if (key == "OBSERVATION_DATETIME") {
@@ -881,7 +905,24 @@ app.post("/hl7_message", async (req, res) => {
 
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-                console.log("Invalid CCC NUMBER");
+                let l = {
+                    f_name: FIRST_NAME,
+                    l_name: LAST_NAME,
+                    clinic_number: CCC_NUMBER,
+                    file_no: PATIENT_CLINIC_NUMBER,
+                    sending_application: SENDING_APPLICATION,
+                }
+
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits`,
+                        response: {
+                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
+                            data: l
+                        }
+                    });
             }
 
             var observation_year = OBSERVATION_DATETIME.substring(0, 4);
