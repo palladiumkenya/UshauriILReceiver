@@ -906,8 +906,8 @@ app.post("/hl7_message", async (req, res) => {
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
                 let l = {
-                    f_name: FIRST_NAME,
-                    l_name: LAST_NAME,
+                    f_name: null,
+                    l_name: null,
                     clinic_number: CCC_NUMBER,
                     file_no: PATIENT_CLINIC_NUMBER,
                     sending_application: SENDING_APPLICATION,
@@ -943,13 +943,26 @@ app.post("/hl7_message", async (req, res) => {
                 }
             })
 
+            let l = {
+                f_name: null,
+                l_name: null,
+                clinic_number: CCC_NUMBER,
+                file_no: PATIENT_CLINIC_NUMBER,
+                sending_application: SENDING_APPLICATION,
+            }
+
             if (_.isEmpty(client))
                 return res
                     .status(400)
                     .json({
                         success: false,
-                        message: `Client: ${CCC_NUMBER} does not exists in the system.`
+                        msg: `Client: ${CCC_NUMBER} does not exists in the system.`,
+                        response: {
+                            msg: `Client: ${CCC_NUMBER} does not exists in the system.` ,
+                            data: l
+                        }`Client: ${CCC_NUMBER} does not exists in the system.`
                     });
+
             let oru = {}
             if (OBSERVATION_VALUE == "TRANSFER_OUT") {
                 oru.client_type = "Transfer Out"
