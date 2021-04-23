@@ -148,10 +148,20 @@ app.post("/hl7_message", async (req, res) => {
                     }
                 }
 
-                if (key == "OBSERVATION_DATETIME") {
-                    if (result[i + 5].value == "CURRENT_REGIMEN") {
-                        ART_DATE = result[i].value;
+                if(SENDING_APPLICATION == "ADT") {
+                    if(key == "OBSERVATION_IDENTIFIER") {
+                        if (result[i].value == "ART_START") {
+                            ART_DATE = result[i+3].value;
+                        }  
+                    } 
+
+                } else if(SENDING_APPLICATION === "KENYAEMR") {
+                    if(key == "OBSERVATION_DATETIME") {
+                        if (result[i + 5].value == "CURRENT_REGIMEN") {
+                            ART_DATE = result[i].value;
+                        }  
                     }
+                        
                 }
             }
 
@@ -178,6 +188,7 @@ app.post("/hl7_message", async (req, res) => {
                 l_name: LAST_NAME,
                 clinic_number: CCC_NUMBER,
                 file_no: PATIENT_CLINIC_NUMBER,
+                message_type: message_type,
                 sending_application: SENDING_APPLICATION,
             }
 
@@ -190,7 +201,7 @@ app.post("/hl7_message", async (req, res) => {
                         success: false,
                         msg: `Error`,
                         response: {
-                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
+                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits` ,
                             data: l
                         }
                     });
@@ -461,6 +472,7 @@ app.post("/hl7_message", async (req, res) => {
                 l_name: LAST_NAME,
                 clinic_number: CCC_NUMBER,
                 file_no: PATIENT_CLINIC_NUMBER,
+                message_type: message_type,
                 sending_application: SENDING_APPLICATION,
             }
 
@@ -472,7 +484,7 @@ app.post("/hl7_message", async (req, res) => {
                         success: false,
                         msg: `Error`,
                         response: {
-                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
+                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits` ,
                             data: l
                         }
                     });
@@ -718,6 +730,7 @@ app.post("/hl7_message", async (req, res) => {
                     l_name: LAST_NAME,
                     clinic_number: CCC_NUMBER,
                     file_no: PATIENT_CLINIC_NUMBER,
+                    message_type: message_type,
                     sending_application: SENDING_APPLICATION,
                 }
 
@@ -727,7 +740,7 @@ app.post("/hl7_message", async (req, res) => {
                         success: false,
                         msg: `Error`,
                         response: {
-                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
+                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits` ,
                             data: l
                         }
                     });
@@ -763,7 +776,7 @@ app.post("/hl7_message", async (req, res) => {
                         success: false,
                         msg: `Error`,
                         response: {
-                            msg: `Client: ${CCC_NUMBER} does not exists in the system.` ,
+                            msg: `Client: ${CCC_NUMBER} does not exists in the Ushauri system.` ,
                             data: l
                         }
                     });
@@ -901,23 +914,25 @@ app.post("/hl7_message", async (req, res) => {
 
             }
 
+            var l = {
+                f_name: FIRST_NAME,
+                l_name: LAST_NAME,
+                clinic_number: CCC_NUMBER,
+                file_no: PATIENT_CLINIC_NUMBER,
+                message_type: message_type,
+                sending_application: SENDING_APPLICATION,
+            }
+
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-                let l = {
-                    f_name: null,
-                    l_name: null,
-                    clinic_number: CCC_NUMBER,
-                    file_no: PATIENT_CLINIC_NUMBER,
-                    sending_application: SENDING_APPLICATION,
-                }
-
+                
                 return res
                     .status(400)
                     .json({
                         success: false,
                         msg: `Error`,
                         response: {
-                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC should be 10 digits` ,
+                            msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits` ,
                             data: l
                         }
                     });
@@ -941,14 +956,6 @@ app.post("/hl7_message", async (req, res) => {
                 }
             })
 
-            let l = {
-                f_name: null,
-                l_name: null,
-                clinic_number: CCC_NUMBER,
-                file_no: PATIENT_CLINIC_NUMBER,
-                sending_application: SENDING_APPLICATION,
-            }
-
             if (_.isEmpty(client))
                 return res
                     .status(400)
@@ -956,7 +963,7 @@ app.post("/hl7_message", async (req, res) => {
                         success: false,
                         msg: `Error`,
                         response: {
-                            msg: `Client: ${CCC_NUMBER} does not exists in the system.` ,
+                            msg: `Client: ${CCC_NUMBER} does not exists in the Ushauri system.` ,
                             data: l
                         }
                     });
