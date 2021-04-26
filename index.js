@@ -1107,7 +1107,7 @@ app.post("/hl7-sync-client", async (req, res) => {
                 .status(404)
                 .json({
                     status: false,
-                    message: `MFL CODE: ${cl.mfl_code} does not exist in system.`
+                    message: `MFL CODE: ${cl.mfl_code} does not exist in the Ushauri system.`
                 });
 
         client = {
@@ -1205,7 +1205,7 @@ app.post("/hl7-sync-client", async (req, res) => {
                 .status(404)
                 .json({
                     status: false,
-                    message: `MFL CODE: ${cl.mfl_code} does not exist in system.`
+                    message: `MFL CODE: ${cl.mfl_code} does not exist in the Ushauri system.`
                 });
 
         client = {
@@ -1295,7 +1295,7 @@ app.post("/hl7-sync-appointment", async (req, res) => {
             .status(400)
             .json({
                 success: false,
-                message: `Client: ${appointment.clinic_number} does not exists in the system.`
+                message: `Client: ${appointment.clinic_number} does not exists in the Ushauri system.`
             });
     let isAppointment = await Appointment.findOne({
         where: {
@@ -1389,7 +1389,7 @@ app.post("/hl7-sync-observation", async (req, res) => {
             .status(400)
             .json({
                 success: false,
-                message: `Client: ${observation.clinic_number} does not exists in the system.`
+                message: `Client: ${observation.clinic_number} does not exists in the Ushauri system.`
             });
     let oru = {}
     if (observation.observation_value == "Transfer Out") {
