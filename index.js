@@ -762,6 +762,7 @@ app.post("/hl7_message", async (req, res) => {
                 f_name: FIRST_NAME,
                 l_name: LAST_NAME,
                 clinic_number: CCC_NUMBER,
+                message_type: message_type,
                 file_no: PATIENT_CLINIC_NUMBER,
                 sending_application: SENDING_APPLICATION,
             }
@@ -771,6 +772,7 @@ app.post("/hl7_message", async (req, res) => {
                     clinic_number: CCC_NUMBER
                 }
             })
+
             if (_.isEmpty(client))
                 return res
                     .status(400)
@@ -1509,8 +1511,8 @@ app.post("/hl7-sync-observation", async (req, res) => {
 
 });
 
-app.listen(1440, () => {
-    console.log("Ushauri IL listening on port 1440");
+app.listen(6000, () => {
+    console.log("Ushauri IL listening on port 6000");
 });
 
 //convert json object to key value pairs
