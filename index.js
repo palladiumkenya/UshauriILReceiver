@@ -974,7 +974,7 @@ app.post("/hl7_message", async (req, res) => {
             if (OBSERVATION_VALUE == "TRANSFER_OUT") {
                 oru.client_type = "Transfer Out"
                 oru.mfl_code = SENDING_FACILITY
-                oru.sending_application = SENDING_FACILITY
+                oru.sending_application = SENDING_APPLICATION
                 oru.updated_at = new_observation_date
 
                 await Client.update(oru, {returning: true, where: {id: client.id}})
@@ -1006,7 +1006,7 @@ app.post("/hl7_message", async (req, res) => {
                 oru.status = "Deceased"
                 oru.mfl_code = SENDING_FACILITY
                 oru.date_deceased = new_observation_date
-                oru.sending_application = SENDING_FACILITY
+                oru.sending_application = SENDING_APPLICATION
                 oru.updated_at = new_observation_date
 
 
