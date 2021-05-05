@@ -762,6 +762,7 @@ app.post("/hl7_message", async (req, res) => {
                 f_name: FIRST_NAME,
                 l_name: LAST_NAME,
                 clinic_number: CCC_NUMBER,
+                message_type: message_type,
                 file_no: PATIENT_CLINIC_NUMBER,
                 sending_application: SENDING_APPLICATION,
             }
