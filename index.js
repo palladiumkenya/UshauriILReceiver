@@ -1114,6 +1114,22 @@ app.post("/hl7-sync-client", async (req, res) => {
                     message: `MFL CODE: ${cl.mfl_code} does not exist in the Ushauri system.`
                 });
 
+        let ccc = cl.clinic_number;      
+
+        if (ccc.length != 10 || isNaN(ccc)) {
+
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    msg: `Error`,
+                    response: {
+                        msg: `Invalid CCC Number: ${ccc}, The CCC must be 10 digits` ,
+                        data: l
+                    }
+                });  
+        }              
+
         client = {
             group_id: parseInt(cl.group_id),
             clinic_number: cl.clinic_number,
