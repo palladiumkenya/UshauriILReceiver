@@ -697,16 +697,12 @@ app.post("/hl7_message", async (req, res) => {
                     CREATED_AT = BirthDate.format("YYYY-MM-DD");
                 } else if (key == "APPOINTMENT_DATE") {
                     APPOINTMENT_DATE = result[i].value;
-                    APPOINTMENT_DATE = APPOINTMENT_DATE;
 
                     var year = APPOINTMENT_DATE.substring(0, 4);
                     var month = APPOINTMENT_DATE.substring(4, 6);
                     var day = APPOINTMENT_DATE.substring(6, 8);
 
                     var app_date = year + "-" + month + "-" + day;
-
-                    var current_date = moment(new Date());
-                    var today = current_date.format("YYYY-MM-DD");
 
                     var BirthDate = moment(app_date);
                     APPOINTMENT_DATE = BirthDate.format("YYYY-MM-DD");
@@ -772,6 +768,7 @@ app.post("/hl7_message", async (req, res) => {
                     clinic_number: CCC_NUMBER
                 }
             })
+
             if (_.isEmpty(client))
                 return res
                     .status(400)
@@ -785,7 +782,8 @@ app.post("/hl7_message", async (req, res) => {
                     });
             let isAppointment = await Appointment.findOne({
                 where: {
-                    entity_number: PLACER_APPOINTMENT_NUMBER
+                    entity_number: PLACER_APPOINTMENT_NUMBER,
+                    client_id: client.id
                 }
             })
 
@@ -1107,11 +1105,23 @@ app.post("/hl7-sync-client", async (req, res) => {
 
         if (_.isEmpty(partner))
             return res
-                .status(404)
+                .status(500)
                 .json({
-                    status: false,
-                    message: `MFL CODE: ${cl.mfl_code} does not exist in the Ushauri system.`
-                });
+                    success: false,
+                    message: `MFL CODE: ${cl.mfl_code} does not exist in the Ushauri system.` ,
+                }); 
+
+        let ccc = cl.clinic_number;      
+
+        if (ccc.length != 10 || isNaN(ccc)) {
+
+            return res
+                .status(500)
+                .json({
+                    success: false,
+                    message: `Invalid CCC Number: ${ccc}, The CCC must be 10 digits` ,
+                });  
+        }              
 
         client = {
             group_id: parseInt(cl.group_id),
@@ -1167,7 +1177,6 @@ app.post("/hl7-sync-client", async (req, res) => {
                 });
             })
             .catch(function (err) {
-                code = 500;
                 response = err.message;
                 console.error(err);
 
@@ -1295,11 +1304,12 @@ app.post("/hl7-sync-appointment", async (req, res) => {
 
     if (_.isEmpty(client))
         return res
-            .status(400)
+            .status(500)
             .json({
                 success: false,
                 message: `Client: ${appointment.clinic_number} does not exists in the Ushauri system.`
             });
+
     let isAppointment = await Appointment.findOne({
         where: {
             entity_number: appointment.placer_appointment_number
@@ -1331,13 +1341,12 @@ app.post("/hl7-sync-appointment", async (req, res) => {
                 });
             })
             .catch(function (err) {
-                code = 500;
                 response = err.message;
-                return res.json({
+                return res.status(400).json({
                     response: {
                         msg: response,
                         appointment: appointment,
-                        error: err.errors
+                        errors: err.errors
                     }
                 });
             });
@@ -1363,13 +1372,12 @@ app.post("/hl7-sync-appointment", async (req, res) => {
                 });
             })
             .catch(function (err) {
-                code = 500;
                 response = err.message;
-                return res.json({
+                return res.status(400).json({
                     response: {
                         msg: response,
                         appointment: appointment,
-                        error: err.errors
+                        errors: err.errors
                     }
                 });
             });
@@ -1389,7 +1397,7 @@ app.post("/hl7-sync-observation", async (req, res) => {
 
     if (_.isEmpty(client))
         return res
-            .status(400)
+            .status(500)
             .json({
                 success: false,
                 message: `Client: ${observation.clinic_number} does not exists in the Ushauri system.`
@@ -1415,11 +1423,10 @@ app.post("/hl7-sync-observation", async (req, res) => {
                 });
             })
             .catch(function (err) {
-                code = 500;
                 response = err.message;
                 console.error(err);
 
-                return res.json({
+                return res.status(400).json({
                     response: {
                         msg: response,
                         errors: err.errors,
@@ -1449,11 +1456,10 @@ app.post("/hl7-sync-observation", async (req, res) => {
                 });
             })
             .catch(function (err) {
-                code = 500;
                 response = err.message;
                 console.error(err);
 
-                return res.json({
+                return res.status(400).json({
                     response: {
                         msg: response,
                         errors: err.errors,
@@ -1493,7 +1499,6 @@ app.post("/hl7-sync-observation", async (req, res) => {
                 });
             })
             .catch(function (err) {
-                code = 500;
                 response = err.message;
                 console.error(err);
 
@@ -1510,8 +1515,8 @@ app.post("/hl7-sync-observation", async (req, res) => {
 
 });
 
-app.listen(1440, () => {
-    console.log("Ushauri IL listening on port 1440");
+app.listen(6000, () => {
+    console.log("Ushauri IL listening on port 6000");
 });
 
 //convert json object to key value pairs
