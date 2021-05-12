@@ -182,10 +182,10 @@ router.post("/update-client", async (req, res) => {
             clinic_number: CCC_NUMBER
         }
     });
-    if (!_.isEmpty(isClient)){
+    if (!_.isEmpty(isClient)) {
         let client = {
             mfl_code: parseInt(SENDING_FACILITY),
-            art_date: new_art_date,
+            art_date: moment(new_art_date).format("YYYY-MM-DD"),
             client_type: PATIENT_TYPE,
             file_no: PATIENT_CLINIC_NUMBER,
             sending_application: SENDING_APPLICATION
@@ -236,6 +236,229 @@ router.post("/update-client", async (req, res) => {
 });
 
 router.post("/new-appointment", async (req, res) => {
+    const SENDING_APPLICATION = "AMPATH TEST";
+    let SENDING_FACILITY = req.body.mfl_code;
+
+    let CCC_NUMBER = req.body.ccc_number;
+    let APPOINTMENT_TYPE = req.body.appnt_type;
+    let APPOINTMENT_DATE = req.body.appnt_date;
+
+    let APPOINTMENT_LOCATION = req.body.appnt_location;
+    let APPOINTMENT_HONORED = req.body.previous_honoured;
+    let PLACER_APPOINTMENT_NUMBER = req.body.placer_appointment_number;
+    let CREATED_AT;
+
+    let l = {
+        clinic_number: CCC_NUMBER,
+        sending_application: SENDING_APPLICATION,
+    }
+    if (CCC_NUMBER.length !== 10 || isNaN(CCC_NUMBER)) {
+        return res
+            .status(400)
+            .json({
+                success: false,
+                msg: `Error`,
+                response: {
+                    msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+                    data: l
+                }
+            });
+    }
+
+
+    const APP_STATUS = "Booked";
+    const ACTIVE_APP = "1";
+
+    let client = await Client.findOne({
+        where: {
+            clinic_number: CCC_NUMBER
+        }
+    })
+
+    if (_.isEmpty(client))
+        return res
+            .status(400)
+            .json({
+                success: false,
+                msg: `Error`,
+                response: {
+                    msg: `Client: ${CCC_NUMBER} does not exists in the Ushauri system.`,
+                    data: l
+                }
+            });
+    let isAppointment = await Appointment.findOne({
+        where: {
+            entity_number: PLACER_APPOINTMENT_NUMBER,
+            client_id: client.id
+        }
+    })
+
+    if (_.isEmpty(isAppointment)) {
+
+        let appointment = {
+            client_id: client.id,
+            appntmnt_date: moment(APPOINTMENT_DATE).format("YYYY-MM-DD"),
+            app_type_1: APPOINTMENT_TYPE,
+            app_status: APP_STATUS,
+            db_source: SENDING_APPLICATION,
+            active_app: ACTIVE_APP,
+            appointment_location: APPOINTMENT_LOCATION,
+            entity_number: PLACER_APPOINTMENT_NUMBER,
+            visit_type: "Scheduled"
+        }
+
+        await Appointment.create(appointment)
+            .then(async function (data) {
+                console.log(data)
+                await Appointment.update({active_app: '0'}, {
+                    returning: true,
+                    where: {
+                        client_id: client.id,
+                        entity_number: {
+                            [Op.not]: PLACER_APPOINTMENT_NUMBER
+                        }
+                    }
+                });
+                message = "OK";
+                response = "Appointment successfully created.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        data: appointment
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                return res.json({
+                    response: {
+                        msg: response,
+                        error: err.errors
+                    }
+                });
+            });
+    } else {
+        return res
+            .status(400)
+            .json({
+                success: false,
+                msg: `Error`,
+                response: {
+                    msg: `Appointment with placer number: ${PLACER_APPOINTMENT_NUMBER}, Already Exists in the Ushauri system.`,
+                    data: l
+                }
+            });
+    }
+
+});
+
+router.post("/update-appointment", async (req, res) => {
+    const SENDING_APPLICATION = "AMPATH TEST";
+    let SENDING_FACILITY = req.body.mfl_code;
+
+    let CCC_NUMBER = req.body.ccc_number;
+    let APPOINTMENT_TYPE = req.body.appnt_type;
+    let APPOINTMENT_DATE = req.body.appnt_date;
+
+    let APPOINTMENT_HONORED = req.body.previous_honoured;
+    let PLACER_APPOINTMENT_NUMBER = req.body.placer_appointment_number;
+
+    let l = {
+        clinic_number: CCC_NUMBER,
+        sending_application: SENDING_APPLICATION,
+    }
+    if (CCC_NUMBER.length !== 10 || isNaN(CCC_NUMBER)) {
+        return res
+            .status(400)
+            .json({
+                success: false,
+                msg: `Error`,
+                response: {
+                    msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+                    data: l
+                }
+            });
+    }
+
+
+    const APP_STATUS = "Booked";
+    const ACTIVE_APP = "1";
+
+    let client = await Client.findOne({
+        where: {
+            clinic_number: CCC_NUMBER
+        }
+    })
+
+    if (_.isEmpty(client))
+        return res
+            .status(400)
+            .json({
+                success: false,
+                msg: `Error`,
+                response: {
+                    msg: `Client: ${CCC_NUMBER} does not exists in the Ushauri system.`,
+                    data: l
+                }
+            });
+    let isAppointment = await Appointment.findOne({
+        where: {
+            entity_number: PLACER_APPOINTMENT_NUMBER,
+            client_id: client.id
+        }
+    })
+
+    if (_.isEmpty(isAppointment)) {
+        return res.status(400).json({
+            success: false,
+            msg: `Error`,
+            response: {
+                msg: `Appointment does not exists in the Ushauri system.`,
+                data: l
+            }
+        });
+    } else {
+        let appointment = {
+            appntmnt_date: APPOINTMENT_DATE,
+            app_type_1: APPOINTMENT_TYPE,
+            app_status: APP_STATUS,
+            db_source: SENDING_APPLICATION,
+            active_app: ACTIVE_APP,
+        }
+
+        await Appointment.update(appointment, {
+            returning: true,
+            where: {
+                client_id: client.id,
+                entity_number: PLACER_APPOINTMENT_NUMBER
+            }
+        })
+            .then(function (data) {
+                message = "OK";
+                response = "Appointment successfully updated.";
+
+                return res.json({
+                    message: message,
+                    response: {
+                        msg: response,
+                        data: appointment
+                    }
+                });
+            })
+            .catch(function (err) {
+                code = 500;
+                response = err.message;
+                return res.json({
+                    response: {
+                        msg: response,
+                        error: err.errors
+                    }
+                });
+            });
+    }
 
 });
 
