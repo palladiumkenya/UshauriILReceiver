@@ -697,16 +697,12 @@ app.post("/hl7_message", async (req, res) => {
                     CREATED_AT = BirthDate.format("YYYY-MM-DD");
                 } else if (key == "APPOINTMENT_DATE") {
                     APPOINTMENT_DATE = result[i].value;
-                    APPOINTMENT_DATE = APPOINTMENT_DATE;
 
                     var year = APPOINTMENT_DATE.substring(0, 4);
                     var month = APPOINTMENT_DATE.substring(4, 6);
                     var day = APPOINTMENT_DATE.substring(6, 8);
 
                     var app_date = year + "-" + month + "-" + day;
-
-                    var current_date = moment(new Date());
-                    var today = current_date.format("YYYY-MM-DD");
 
                     var BirthDate = moment(app_date);
                     APPOINTMENT_DATE = BirthDate.format("YYYY-MM-DD");
@@ -786,7 +782,8 @@ app.post("/hl7_message", async (req, res) => {
                     });
             let isAppointment = await Appointment.findOne({
                 where: {
-                    entity_number: PLACER_APPOINTMENT_NUMBER
+                    entity_number: PLACER_APPOINTMENT_NUMBER,
+                    client_id: client.id
                 }
             })
 
