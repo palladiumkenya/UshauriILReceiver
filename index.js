@@ -764,7 +764,6 @@ app.post("/hl7_message", async (req, res) => {
                 clinic_number: CCC_NUMBER,
                 message_type: message_type,
                 file_no: PATIENT_CLINIC_NUMBER,
-		message_type: message_type,
                 sending_application: SENDING_APPLICATION,
             }
 
@@ -773,6 +772,7 @@ app.post("/hl7_message", async (req, res) => {
                     clinic_number: CCC_NUMBER
                 }
             })
+
             if (_.isEmpty(client))
                 return res
                     .status(400)
@@ -1114,6 +1114,22 @@ app.post("/hl7-sync-client", async (req, res) => {
                     message: `MFL CODE: ${cl.mfl_code} does not exist in the Ushauri system.`
                 });
 
+        let ccc = cl.clinic_number;      
+
+        if (ccc.length != 10 || isNaN(ccc)) {
+
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    msg: `Error`,
+                    response: {
+                        msg: `Invalid CCC Number: ${ccc}, The CCC must be 10 digits` ,
+                        data: l
+                    }
+                });  
+        }              
+
         client = {
             group_id: parseInt(cl.group_id),
             clinic_number: cl.clinic_number,
@@ -1211,6 +1227,22 @@ app.post("/hl7-sync-client", async (req, res) => {
                     status: false,
                     message: `MFL CODE: ${cl.mfl_code} does not exist in the Ushauri system.`
                 });
+
+        let ccc = cl.clinic_number;      
+
+        if (ccc.length != 10 || isNaN(ccc)) {
+
+            return res
+                .status(400)
+                .json({
+                    success: false,
+                    msg: `Error`,
+                    response: {
+                        msg: `Invalid CCC Number: ${ccc}, The CCC must be 10 digits` ,
+                        data: l
+                    }
+                });  
+        }          
 
         client = {
             group_id: parseInt(cl.group_id),
@@ -1532,4 +1564,5 @@ function get_json(jsonObj) {
 
     return output;
 }
+
 
