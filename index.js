@@ -1,10 +1,11 @@
 const express = require("express");
 const moment = require("moment");
 const db = require("./dbconnection.js"); //reference of dbconnection.js
-//let stringify = require('json-stringify-safe');
 
 var bodyParser = require('body-parser');
 const app = express();
+
+const ampath = require('./routes/ampath_intergetation.js');
 
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({extended: true}));
@@ -544,7 +545,6 @@ app.post("/hl7_message", async (req, res) => {
                     locator_village: VILLAGE,
                     sending_application: SENDING_APPLICATION
                 }
-                console.log(client);
 
                 await Client.create(client)
                     .then(function (model) {
@@ -1514,6 +1514,8 @@ app.post("/hl7-sync-observation", async (req, res) => {
     }
 
 });
+
+app.use("/test", ampath);
 
 app.listen(6000, () => {
     console.log("Ushauri IL listening on port 6000");
