@@ -589,7 +589,7 @@ app.post("/hl7_message", async (req, res) => {
                     group_id: parseInt(GROUP_ID),
                     mfl_code: parseInt(SENDING_FACILITY),
                     art_date: new_art_date,
-                    client_type: PATIENT_TYPE,
+                    client_status: PATIENT_TYPE,
                     file_no: PATIENT_CLINIC_NUMBER,
                     sending_application: SENDING_APPLICATION
                 }
