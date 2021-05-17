@@ -47,7 +47,6 @@ const Client = sequelize.sequelize.define(
             "LTFU"
         ),
         client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition", "PMTCT", "OI Only", "HEI" ),
-        client_status_IL: Sequelize.STRING,
         gender: Sequelize.NUMBER,
         marital: Sequelize.NUMBER,
         smsenable: Sequelize.ENUM("Yes", "No"),
