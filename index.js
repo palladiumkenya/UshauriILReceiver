@@ -1,11 +1,10 @@
 const express = require("express");
 const moment = require("moment");
 const db = require("./dbconnection.js"); //reference of dbconnection.js
+//let stringify = require('json-stringify-safe');
 
 var bodyParser = require('body-parser');
 const app = express();
-
-const ampath = require('./routes/ampath_intergetation.js');
 
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({extended: true}));
@@ -251,12 +250,13 @@ app.post("/hl7_message", async (req, res) => {
                 phone_no: PHONE_NUMBER,
                 partner_id: partner.partner_id,
                 mfl_code: parseInt(SENDING_FACILITY),
-                client_status: PATIENT_TYPE,
+                // status: ,
+                // client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
                 gender: parseInt(SEX),
                 marital: MARITAL_STATUS,
                 enrollment_date: new_enroll_date,
                 art_date: new_art_date,
-                //client_type: PATIENT_TYPE,
+                client_type: PATIENT_TYPE,
                 gods_number: GODS_NUMBER,
                 patient_source: PATIENT_SOURCE,
                 file_no: PATIENT_CLINIC_NUMBER,
@@ -528,12 +528,13 @@ app.post("/hl7_message", async (req, res) => {
                     phone_no: PHONE_NUMBER,
                     partner_id: partner.partner_id,
                     mfl_code: parseInt(SENDING_FACILITY),
-                    client_status: PATIENT_TYPE,
+                    // status: ,
+                    // client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
                     gender: parseInt(SEX),
                     marital: MARITAL_STATUS,
                     enrollment_date: new_enroll_date,
                     art_date: new_art_date,
-                    //client_type: PATIENT_TYPE,
+                    client_type: PATIENT_TYPE,
                     gods_number: GODS_NUMBER,
                     patient_source: PATIENT_SOURCE,
                     file_no: PATIENT_CLINIC_NUMBER,
@@ -543,6 +544,7 @@ app.post("/hl7_message", async (req, res) => {
                     locator_village: VILLAGE,
                     sending_application: SENDING_APPLICATION
                 }
+                console.log(client);
 
                 await Client.create(client)
                     .then(function (model) {
@@ -589,7 +591,7 @@ app.post("/hl7_message", async (req, res) => {
                     group_id: parseInt(GROUP_ID),
                     mfl_code: parseInt(SENDING_FACILITY),
                     art_date: new_art_date,
-                    client_status: PATIENT_TYPE,
+                    client_type: PATIENT_TYPE,
                     file_no: PATIENT_CLINIC_NUMBER,
                     sending_application: SENDING_APPLICATION
                 }
@@ -778,6 +780,8 @@ app.post("/hl7_message", async (req, res) => {
                             data: l
                         }
                     });
+
+            // only emr appointments have PLACER_APPOINTMENT_NUMBER       
             let isAppointment = await Appointment.findOne({
                 where: {
                     entity_number: PLACER_APPOINTMENT_NUMBER,
@@ -807,9 +811,10 @@ app.post("/hl7_message", async (req, res) => {
                             returning: true,
                             where: {
                                 client_id: client.id,
-                                entity_number: {
-                                    [Op.not]: PLACER_APPOINTMENT_NUMBER
-                                }
+                                [Op.not]: {id: data.id}
+                                // entity_number: {
+                                //     [Op.not]: PLACER_APPOINTMENT_NUMBER // placer appointment number is not true
+                                // }
                             }
                         });
                         message = "OK";
@@ -1135,7 +1140,7 @@ app.post("/hl7-sync-client", async (req, res) => {
             marital: cl.marital,
             enrollment_date: cl.enrollment_date,
             art_date: cl.art_date,
-            client_status: cl.client_type,
+            client_type: cl.client_type,
             gods_number: cl.gods_number,
             patient_source: cl.patient_source,
             file_no: cl.file_no,
@@ -1224,7 +1229,7 @@ app.post("/hl7-sync-client", async (req, res) => {
             partner_id: partner.partner_id,
             mfl_code: parseInt(cl.mfl_code),
             art_date: cl.art_date,
-            client_status: cl.client_type,
+            client_type: cl.client_type,
             patient_source: cl.patient_source,
             file_no: cl.file_no,
             sending_application: cl.db_source
@@ -1322,9 +1327,10 @@ app.post("/hl7-sync-appointment", async (req, res) => {
                     returning: true,
                     where: {
                         client_id: client.id,
-                        entity_number: {
-                            [Op.not]: appointment.placer_appointment_number
-                        }
+                        [Op.not]: {id: data.id}
+                        // entity_number: {
+                        //     [Op.not]: appointment.placer_appointment_number
+                        // }
                     }
                 });
                 message = "OK";
@@ -1513,9 +1519,7 @@ app.post("/hl7-sync-observation", async (req, res) => {
 
 });
 
-app.use("/test", ampath);
-
-app.listen(6000, () => {
+app.listen(1440, () => {
     console.log("Ushauri IL listening on port 6000");
 });
 
