@@ -814,7 +814,8 @@ app.post("/hl7_message", async (req, res) => {
                                 }
                             }
                         });
-                        message = "OK";
+                        console.log("appointment success");
+			message = "OK";
                         response = "Appointment successfully created.";
 
                         return res.json({
@@ -826,6 +827,7 @@ app.post("/hl7_message", async (req, res) => {
                         });
                     })
                     .catch(function (err) {
+			console.log("appointment fail", err); 
                         code = 500;
                         response = err.message;
                         return res.json({
