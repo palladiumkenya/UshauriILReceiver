@@ -1519,7 +1519,7 @@ app.post("/hl7-sync-observation", async (req, res) => {
 
 });
 
-app.listen(1440, () => {
+app.listen(6000, () => {
     console.log("Ushauri IL listening on port 6000");
 });
 
