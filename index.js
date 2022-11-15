@@ -69,8 +69,6 @@ app.post("/hl7_message", async (req, res) => {
 
             var result = get_json(jsonObj);
 
-            console.log(result);
-
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;
                 var value = result[i].value;
@@ -207,20 +205,6 @@ app.post("/hl7_message", async (req, res) => {
                     });
 
             }
-            // let client = await Client.findOne({
-            //     where: {
-            //         phone_no: PHONE_NUMBER
-            //     }
-            // });
-
-            // if (!_.isEmpty(client))
-            //     return res
-            //         .status(400)
-            //         .json({
-            //             success: false,
-            //             message: `Phone number: ${PHONE_NUMBER} already exists in the system.`
-            //         });
-
             let partner = await Partner.findOne({
                 where: {
                     mfl_code: SENDING_FACILITY
@@ -266,7 +250,6 @@ app.post("/hl7_message", async (req, res) => {
                 locator_village: VILLAGE,
                 sending_application: SENDING_APPLICATION
             }
-            console.log(client);
 
             await Client.create(client)
                 .then(function (model) {
@@ -297,12 +280,18 @@ app.post("/hl7_message", async (req, res) => {
                 .catch(function (err) {
                     code = 500;
                     response = err.message;
-                    console.error(err);
+                    errors = err?.errors;
 
-                    return res.status(400).json({
+                    let arr = [];
+
+                    for (var key in errors) {
+                        arr.push(errors[key].message);
+                    }
+
+                    return res.status(code).json({
                         response: {
                             msg: response,
-                            errors: err.errors,
+                            errors: arr
                         }
                     });
                 });
@@ -335,7 +324,6 @@ app.post("/hl7_message", async (req, res) => {
             var TOD_DATE = moment().format("YYYY-MM-DD");
 
             var result = get_json(jsonObj);
-            console.log(result)
 
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;
@@ -446,8 +434,6 @@ app.post("/hl7_message", async (req, res) => {
 
                 
             }
-
-            console.log("HERE", ART_DATE)
 
             var enroll_year = ENROLLMENT_DATE.substring(0, 4);
             var enroll_month = ENROLLMENT_DATE.substring(4, 6);
@@ -575,12 +561,18 @@ app.post("/hl7_message", async (req, res) => {
                     .catch(function (err) {
                         code = 500;
                         response = err.message;
-                        console.error(err);
+                        errors = err?.errors;
 
-                        return res.json({
+                        let arr = [];
+
+                        for (var key in errors) {
+                            arr.push(errors[key].message);
+                        }
+
+                        return res.status(code).json({
                             response: {
                                 msg: response,
-                                errors: err.errors
+                                errors: arr
                             }
                         });
                     });
@@ -619,12 +611,18 @@ app.post("/hl7_message", async (req, res) => {
                     .catch(function (err) {
                         code = 500;
                         response = err.message;
-                        console.error(err);
+                        errors = err?.errors;
+
+                        let arr = [];
+
+                        for (var key in errors) {
+                            arr.push(errors[key].message);
+                        }
 
                         return res.json({
                             response: {
                                 msg: response,
-                                errors: err.errors
+                                errors: arr
                             }
                         });
                     });
@@ -830,10 +828,18 @@ app.post("/hl7_message", async (req, res) => {
 			console.log("appointment fail", err); 
                         code = 500;
                         response = err.message;
-                        return res.json({
+                        errors = err?.errors;
+
+                        let arr = [];
+
+                        for (var key in errors) {
+                            arr.push(errors[key].message);
+                        }
+
+                        return res.status(code).json({
                             response: {
                                 msg: response,
-                                error: err.errors
+                                error: arr
                             }
                         });
                     });
@@ -871,10 +877,18 @@ app.post("/hl7_message", async (req, res) => {
                     .catch(function (err) {
                         code = 500;
                         response = err.message;
-                        return res.json({
+                        errors = err?.errors;
+
+                        let arr = [];
+
+                        for (var key in errors) {
+                            arr.push(errors[key].message);
+                        }
+
+                        return res.status(code).json({
                             response: {
                                 msg: response,
-                                error: err.errors
+                                error: arr
                             }
                         });
                     });
@@ -894,8 +908,6 @@ app.post("/hl7_message", async (req, res) => {
             var OBSERVATION_DATETIME;
 
             var result = get_json(jsonObj);
-
-            //console.log(result);
 
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;
@@ -951,8 +963,6 @@ app.post("/hl7_message", async (req, res) => {
 
             //transfer out happends in client table
 
-            console.log("date", new_observation_date, "value", OBSERVATION_VALUE)
-
             let client = await Client.findOne({
                 where: {
                     clinic_number: CCC_NUMBER
@@ -994,12 +1004,20 @@ app.post("/hl7_message", async (req, res) => {
                     .catch(function (err) {
                         code = 500;
                         response = err.message;
+                        errors = err?.errors;
+
+                        let arr = [];
+
+                        for (var key in errors) {
+                            arr.push(errors[key].message);
+                        }
+
                         console.error(err);
 
-                        return res.json({
+                        return res.status(code).json({
                             response: {
                                 msg: response,
-                                errors: err.errors
+                                errors: arr
                             }
                         });
                     });
@@ -1027,12 +1045,18 @@ app.post("/hl7_message", async (req, res) => {
                     .catch(function (err) {
                         code = 500;
                         response = err.message;
-                        console.error(err);
+                        errors = err?.errors;
+
+                        let arr = [];
+
+                        for (var key in errors) {
+                            arr.push(errors[key].message);
+                        }
 
                         return res.json({
                             response: {
                                 msg: response,
-                                errors: err.errors
+                                errors: arr
                             }
                         });
                     });
@@ -1069,12 +1093,18 @@ app.post("/hl7_message", async (req, res) => {
                     .catch(function (err) {
                         code = 500;
                         response = err.message;
-                        console.error(err);
+                        errors = err?.errors;
+
+                        let arr = [];
+
+                        for (var key in errors) {
+                            arr.push(errors[key].message);
+                        }
 
                         return res.status(400).json({
                             response: {
                                 msg: response,
-                                errors: err.errors
+                                errors: arr
                             }
                         });
                     });
@@ -1539,7 +1569,7 @@ app.post("/hl7-sync-observation", async (req, res) => {
 });
 
 app.listen(1440, () => {
-    console.log("Ushauri IL listening on port 6000");
+    console.log("Ushauri IL listening on port 1440");
 });
 
 //convert json object to key value pairs
