@@ -680,6 +680,13 @@ app.post("/hl7_message", async (req, res) => {
                     ACTION_CODE = result[i].value;
                 } else if (key == "APPOINTMENT_PLACING_ENTITY") {
                     APPOINTMENT_PLACING_ENTITY = result[i].value;
+                } else if (key == "CONSENT_FOR_REMINDER") {
+                    CONSENT_FOR_REMINDER = result[i].value;
+                    if(CONSENT_FOR_REMINDER=='Y'){
+                        CONSENT_FOR_REMINDER='YES';
+                    }else{
+                        CONSENT_FOR_REMINDER='NO';
+                    }
                 } else if (key == "VISIT_DATE") {
                     CREATED_AT = result[i].value;
                     var year = CREATED_AT.substring(0, 4);
@@ -797,7 +804,8 @@ app.post("/hl7_message", async (req, res) => {
                     active_app: ACTIVE_APP,
                     appointment_location: APPOINTMENT_LOCATION,
                     reason: APPOINTMENT_NOTE,
-                    entity_number: PLACER_APPOINTMENT_NUMBER
+                    entity_number: PLACER_APPOINTMENT_NUMBER,
+                    consented:CONSENT_FOR_REMINDER
                 }
 
                 await Appointment.create(appointment)

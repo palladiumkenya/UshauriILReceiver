@@ -47,7 +47,8 @@ const Appointment = sequelize.sequelize.define(
         db_source: Sequelize.STRING,
         date_attended: Sequelize.DATEONLY,
         created_by: Sequelize.INTEGER,
-        updated_by: Sequelize.INTEGER
+        updated_by: Sequelize.INTEGER,
+        consented: Sequelize.STRING
     }, {
         timestamps: true,
         paranoid: true,
