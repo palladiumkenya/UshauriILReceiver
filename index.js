@@ -30,7 +30,7 @@ app.post("/hl7_message", async (req, res) => {
     let obj1 = req;
     jsonObj = obj1.body;
 
-    //console.log(jsonObj);
+   // console.log(jsonObj);
 
     var DATE_TODAY = moment(new Date()).format("YYYY-MM-DD");
 
@@ -860,7 +860,8 @@ app.post("/hl7_message", async (req, res) => {
                     db_source: SENDING_APPLICATION,
                     active_app: ACTIVE_APP,
                     appointment_location: APPOINTMENT_LOCATION,
-                    reason: APPOINTMENT_NOTE
+                    reason: APPOINTMENT_NOTE,
+                    consented:CONSENT_FOR_REMINDER
                 }
 
                 await Appointment.update(appointment, {
