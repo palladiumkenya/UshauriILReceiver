@@ -48,6 +48,7 @@ app.post("/hl7_message", async (req, res) => {
             //this message is triggered when a new client is created
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
+            var PATIENT_NUPI_NUMBER='';
             var PATIENT_CLINIC_NUMBER;
             var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
             var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
@@ -143,6 +144,12 @@ app.post("/hl7_message", async (req, res) => {
                 if (key == "ID") {
                     if (result[i + 1].value == "PATIENT_CLINIC_NUMBER") {
                         PATIENT_CLINIC_NUMBER = result[i].value;
+                    }
+                }
+                //Get NUPI NUMBER ASSIGNED
+                if (key == "ID") {
+                    if (result[i + 1].value == "NUPI") {
+                        PATIENT_NUPI_NUMBER = result[i].value;
                     }
                 }
 
@@ -248,7 +255,8 @@ app.post("/hl7_message", async (req, res) => {
                 locator_sub_county: SUB_COUNTY,
                 locator_ward: WARD,
                 locator_village: VILLAGE,
-                sending_application: SENDING_APPLICATION
+                sending_application: SENDING_APPLICATION,
+                upi_no:PATIENT_NUPI_NUMBER
             }
 
             await Client.create(client)
@@ -321,6 +329,7 @@ app.post("/hl7_message", async (req, res) => {
             var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
             var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
             var CCC_NUMBER;
+            var PATIENT_NUPI_NUMBER='';
             var TOD_DATE = moment().format("YYYY-MM-DD");
 
             var result = get_json(jsonObj);
@@ -401,6 +410,13 @@ app.post("/hl7_message", async (req, res) => {
                 if (key == "ID") {
                     if (result[i + 1].value == "PATIENT_CLINIC_NUMBER") {
                         PATIENT_CLINIC_NUMBER = result[i].value;
+                    }
+                }
+
+                //Get NUPI NUMBER ASSIGNED
+                if (key == "ID") {
+                    if (result[i + 1].value == "NUPI") {
+                        PATIENT_NUPI_NUMBER = result[i].value;
                     }
                 }
 
@@ -528,7 +544,8 @@ app.post("/hl7_message", async (req, res) => {
                     locator_sub_county: SUB_COUNTY,
                     locator_ward: WARD,
                     locator_village: VILLAGE,
-                    sending_application: SENDING_APPLICATION
+                    sending_application: SENDING_APPLICATION,
+                    upi_no:PATIENT_NUPI_NUMBER
                 }
                 console.log(client);
 
@@ -642,6 +659,7 @@ app.post("/hl7_message", async (req, res) => {
             var APPOINTMENT_PLACING_ENTITY;
             var PLACER_APPOINTMENT_NUMBER;
             var PATIENT_CLINIC_NUMBER;
+            var PATIENT_NUPI_NUMBER='';
 
             var APPOINTMENT_LOCATION;
             //var ACTION_CODE;
@@ -651,7 +669,7 @@ app.post("/hl7_message", async (req, res) => {
 
             var result = get_json(jsonObj);
 
-            console.log(result);
+            //console.log(result);
 
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;
@@ -724,6 +742,16 @@ app.post("/hl7_message", async (req, res) => {
                         PATIENT_CLINIC_NUMBER = result[i].value;
                     }
                 }
+
+                //Get NUPI NUMBER ASSIGNED
+                if (key == "ID") {
+                    if (result[i + 1].value == "NUPI") {
+                        PATIENT_NUPI_NUMBER = result[i].value;
+                    }
+                }
+            
+
+                
             }
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
@@ -785,6 +813,26 @@ app.post("/hl7_message", async (req, res) => {
                             data: l
                         }
                     });
+            //Update NUPI NUMBER IF Client Exists 
+            console.log(PATIENT_NUPI_NUMBER);
+            if(PATIENT_NUPI_NUMBER!='')
+            {
+                let nupi_update = {
+                    upi_no: PATIENT_NUPI_NUMBER
+                }
+                await Client.update(nupi_update, {
+                    returning: true,
+                    where: {
+                        clinic_number: CCC_NUMBER,
+                        upi_no:null 
+                    }
+                })
+
+
+            }
+           
+           
+
             let isAppointment = await Appointment.findOne({
                 where: {
                     entity_number: PLACER_APPOINTMENT_NUMBER,
@@ -811,13 +859,11 @@ app.post("/hl7_message", async (req, res) => {
                 await Appointment.create(appointment)
                     .then(async function (data) {
                         console.log(data)
-                        await Appointment.update({active_app: '0'}, {
+                        await Appointment.update({active_app: '0', date_attended: CREATED_AT }, {
                             returning: true,
                             where: {
                                 client_id: client.id,
-                                entity_number: {
-                                    [Op.not]: PLACER_APPOINTMENT_NUMBER
-                                }
+                                appntmnt_date: CREATED_AT
                             }
                         });
                         console.log("appointment success");

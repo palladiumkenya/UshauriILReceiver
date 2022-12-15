@@ -82,7 +82,9 @@ const Client = sequelize.sequelize.define(
         created_by: Sequelize.INTEGER,
         updated_by: Sequelize.INTEGER,
         hei_no: Sequelize.STRING,
-        sending_application: Sequelize.STRING
+        sending_application: Sequelize.STRING,
+        upi_no: Sequelize.STRING
+
     }, {
         timestamps: true,
         paranoid: true,
