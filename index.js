@@ -88,14 +88,14 @@ app.post("/hl7_message", async (req, res) => {
                         moment(new_date).format("YYYY-MM-DD"),
                         "days"
                     );
-
-                    if (date_diff >= 5475 && date_diff <= 6935) {
+//5296
+                    if (date_diff >= 4680 && date_diff <= 6935) {
                         GROUP_ID = "2";
                     }
-                    if (date_diff >= 7300) {
+                    if (date_diff >= 6936) {
                         GROUP_ID = "1";
                     }
-                    if (date_diff <= 5110) {
+                    if (date_diff <= 4681) {
                         GROUP_ID = "6";
                     }
                 } else if (key == "SEX") {
@@ -291,14 +291,16 @@ app.post("/hl7_message", async (req, res) => {
                     errors = err?.errors;
 
                     let arr = [];
+                    var arr_string='';
 
                     for (var key in errors) {
                         arr.push(errors[key].message);
+                        arr_string=errors[key].message+' ';
                     }
 
                     return res.status(code).json({
                         response: {
-                            msg: response,
+                            msg: response+' - '+arr_string,
                             errors: arr
                         }
                     });
@@ -582,16 +584,20 @@ app.post("/hl7_message", async (req, res) => {
 
                         let arr = [];
 
+                        var arr_string='';
+
                         for (var key in errors) {
                             arr.push(errors[key].message);
+                            arr_string=errors[key].message+' ';
                         }
 
                         return res.status(code).json({
                             response: {
-                                msg: response,
+                                msg: response+' - '+arr_string,
                                 errors: arr
                             }
                         });
+            
                     });
 
 
@@ -632,13 +638,16 @@ app.post("/hl7_message", async (req, res) => {
 
                         let arr = [];
 
+                        var arr_string='';
+
                         for (var key in errors) {
                             arr.push(errors[key].message);
+                            arr_string=errors[key].message+' ';
                         }
 
-                        return res.json({
+                        return res.status(code).json({
                             response: {
-                                msg: response,
+                                msg: response+' - '+arr_string,
                                 errors: arr
                             }
                         });
@@ -887,14 +896,17 @@ app.post("/hl7_message", async (req, res) => {
 
                         let arr = [];
 
+                        var arr_string='';
+
                         for (var key in errors) {
                             arr.push(errors[key].message);
+                            arr_string=errors[key].message+' ';
                         }
 
                         return res.status(code).json({
                             response: {
-                                msg: response,
-                                error: arr
+                                msg: response+' - '+arr_string,
+                                errors: arr
                             }
                         });
                     });
@@ -938,14 +950,17 @@ app.post("/hl7_message", async (req, res) => {
 
                         let arr = [];
 
+                        var arr_string='';
+
                         for (var key in errors) {
                             arr.push(errors[key].message);
+                            arr_string=errors[key].message+' ';
                         }
 
                         return res.status(code).json({
                             response: {
-                                msg: response,
-                                error: arr
+                                msg: response+' - '+arr_string,
+                                errors: arr
                             }
                         });
                     });
@@ -1107,13 +1122,16 @@ app.post("/hl7_message", async (req, res) => {
 
                         let arr = [];
 
+                        var arr_string='';
+
                         for (var key in errors) {
                             arr.push(errors[key].message);
+                            arr_string=errors[key].message+' ';
                         }
 
-                        return res.json({
+                        return res.status(code).json({
                             response: {
-                                msg: response,
+                                msg: response+' - '+arr_string,
                                 errors: arr
                             }
                         });
@@ -1155,13 +1173,16 @@ app.post("/hl7_message", async (req, res) => {
 
                         let arr = [];
 
+                        var arr_string='';
+
                         for (var key in errors) {
                             arr.push(errors[key].message);
+                            arr_string=errors[key].message+' ';
                         }
 
-                        return res.status(400).json({
+                        return res.status(code).json({
                             response: {
-                                msg: response,
+                                msg: response+' - '+arr_string,
                                 errors: arr
                             }
                         });
