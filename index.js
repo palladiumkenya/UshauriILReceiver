@@ -818,7 +818,7 @@ app.post("/hl7_message", async (req, res) => {
                         success: false,
                         msg: `Error`,
                         response: {
-                            msg: `Client: ${CCC_NUMBER} does not exists in the Ushauri system.` ,
+                            msg: `Client: ${CCC_NUMBER} does not exist in the Ushauri system.` ,
                             data: l
                         }
                     });
@@ -1048,7 +1048,7 @@ app.post("/hl7_message", async (req, res) => {
                         success: false,
                         msg: `Error`,
                         response: {
-                            msg: `Client: ${CCC_NUMBER} does not exists in the Ushauri system.` ,
+                            msg: `Client: ${CCC_NUMBER} does not exist in the Ushauri system.` ,
                             data: l
                         }
                     });
@@ -1439,7 +1439,7 @@ app.post("/hl7-sync-appointment", async (req, res) => {
             .status(500)
             .json({
                 success: false,
-                message: `Client: ${appointment.clinic_number} does not exists in the Ushauri system.`
+                message: `Client: ${appointment.clinic_number} does not exist in the Ushauri system.`
             });
 
     let isAppointment = await Appointment.findOne({
@@ -1532,7 +1532,7 @@ app.post("/hl7-sync-observation", async (req, res) => {
             .status(500)
             .json({
                 success: false,
-                message: `Client: ${observation.clinic_number} does not exists in the Ushauri system.`
+                message: `Client: ${observation.clinic_number} does not exist in the Ushauri system.`
             });
     let oru = {}
     if (observation.observation_value == "Transfer Out") {
