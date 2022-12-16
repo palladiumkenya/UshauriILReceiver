@@ -355,13 +355,13 @@ app.post("/hl7_message", async (req, res) => {
                         "days"
                     );
 
-                    if (date_diff >= 5475 && date_diff <= 6935) {
+                    if (date_diff >= 4680 && date_diff <= 6935) {
                         GROUP_ID = "2";
                     }
-                    if (date_diff >= 7300) {
+                    if (date_diff >= 6936) {
                         GROUP_ID = "1";
                     }
-                    if (date_diff <= 5110) {
+                    if (date_diff <= 4681) {
                         GROUP_ID = "6";
                     }
                 } else if (key == "SEX") {
