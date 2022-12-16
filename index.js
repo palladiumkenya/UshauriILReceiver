@@ -222,10 +222,10 @@ app.post("/hl7_message", async (req, res) => {
                 return res
                     .status(404)
                     .json({
-                        status: false,
+                        success: false,
                         msg: `Error`,
                         response: {
-                            message: `MFL CODE: ${SENDING_FACILITY} does not exist in system.`,
+                            msg: `MFL CODE: ${SENDING_FACILITY} has not been activated in Ushauri system.`,
                             data: l
 
                         }
@@ -265,7 +265,7 @@ app.post("/hl7_message", async (req, res) => {
                     response = "Client successfully added.";
 
                     return res.json({
-                        message: message,
+                        msg: message,
                         response: {
                             msg: response,
                             data: _.pick(client, [
@@ -509,11 +509,11 @@ app.post("/hl7_message", async (req, res) => {
                 return res
                     .status(404)
                     .json({
-                        status: false,
+                        success: false,
                         msg: `Error`,
                         response: {
-                        message: `MFL CODE: ${SENDING_FACILITY} does not exist in system.`,
-                        data: l
+                            msg: `MFL CODE: ${SENDING_FACILITY} has not been activated in Ushauri system.`,
+                            data: l
 
                         }
                     });
@@ -871,7 +871,8 @@ app.post("/hl7_message", async (req, res) => {
                         response = "Appointment successfully created.";
 
                         return res.json({
-                            message: message,
+                            success: true,
+                            msg: message,
                             response: {
                                 msg: response,
                                 data: appointment
@@ -922,7 +923,8 @@ app.post("/hl7_message", async (req, res) => {
                         response = "Appointment successfully updated.";
 
                         return res.json({
-                            message: message,
+                            success: true,
+                            msg: message,
                             response: {
                                 msg: response,
                                 data: appointment
@@ -1049,7 +1051,8 @@ app.post("/hl7_message", async (req, res) => {
                         response = "ORU successfully updated.";
 
                         return res.json({
-                            message: message,
+                            success: true,
+                            msg: message,
                             response: {
                                 msg: response,
                                 data: oru
@@ -1090,7 +1093,7 @@ app.post("/hl7_message", async (req, res) => {
                         response = "ORU successfully updated.";
 
                         return res.json({
-                            message: message,
+                            msg: message,
                             response: {
                                 msg: response,
                                 data: oru
@@ -1138,7 +1141,7 @@ app.post("/hl7_message", async (req, res) => {
                         response = "ORU successfully added.";
 
                         return res.json({
-                            message: message,
+                            msg: message,
                             response: {
                                 msg: response,
                                 data: oru
