@@ -88,6 +88,8 @@ app.post("/hl7_message", async (req, res) => {
                         moment(new_date).format("YYYY-MM-DD"),
                         "days"
                     );
+
+                     GROUP_ID = "4";
 //5296
                     if (date_diff >= 4680 && date_diff <= 6935) {
                         GROUP_ID = "2";
@@ -98,6 +100,7 @@ app.post("/hl7_message", async (req, res) => {
                     if (date_diff <= 4681) {
                         GROUP_ID = "6";
                     }
+                    
                 } else if (key == "SEX") {
                     if (result[i].value == "F") {
                         SEX = "1";
@@ -355,6 +358,8 @@ app.post("/hl7_message", async (req, res) => {
                         "days"
                     );
 
+                    GROUP_ID = "4";
+
                     if (date_diff >= 4680 && date_diff <= 6935) {
                         GROUP_ID = "2";
                     }
@@ -364,6 +369,8 @@ app.post("/hl7_message", async (req, res) => {
                     if (date_diff <= 4681) {
                         GROUP_ID = "6";
                     }
+                        
+                    
                 } else if (key == "SEX") {
                     if (result[i].value == "F") {
                         SEX = "1";
@@ -823,7 +830,7 @@ app.post("/hl7_message", async (req, res) => {
                         }
                     });
             //Update NUPI NUMBER IF Client Exists 
-            console.log(PATIENT_NUPI_NUMBER);
+            //console.log(PATIENT_NUPI_NUMBER);
             if(PATIENT_NUPI_NUMBER!='')
             {
                 let nupi_update = {
@@ -840,17 +847,31 @@ app.post("/hl7_message", async (req, res) => {
 
             }
            
-           
 
-            let isAppointment = await Appointment.findOne({
+            let isAppointmentExists = await Appointment.findOne({
                 where: {
-                    entity_number: PLACER_APPOINTMENT_NUMBER,
+                   //entity_number: PLACER_APPOINTMENT_NUMBER,
+                    appntmnt_date: APPOINTMENT_DATE,
+                    app_type_1: APPOINTMENT_TYPE,
                     client_id: client.id
                 }
             })
 
-            if (_.isEmpty(isAppointment)) {
+          
 
+                let isAppointment = await Appointment.findOne({
+                    where: {
+                       entity_number: PLACER_APPOINTMENT_NUMBER,
+                       // appntmnt_date: APPOINTMENT_DATE,
+                       // app_type_1: APPOINTMENT_TYPE,
+                        client_id: client.id
+                    }
+                })
+    
+
+            if (_.isEmpty(isAppointment) && _.isEmpty(isAppointmentExists) ) {
+
+                
                 let appointment = {
                     client_id: client.id,
                     appntmnt_date: APPOINTMENT_DATE,
@@ -889,7 +910,7 @@ app.post("/hl7_message", async (req, res) => {
                         });
                     })
                     .catch(function (err) {
-			console.log("appointment fail", err); 
+			        console.log("appointment fail", err); 
                         code = 500;
                         response = err.message;
                         errors = err?.errors;
@@ -909,6 +930,9 @@ app.post("/hl7_message", async (req, res) => {
                                 errors: arr
                             }
                         });
+
+                        
+
                     });
             } else {
                 let appointment = {
