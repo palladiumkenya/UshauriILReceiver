@@ -372,11 +372,15 @@ app.post("/hl7_message", async (req, res) => {
                         
                     
                 } else if (key == "SEX") {
+                    SEX="5";
                     if (result[i].value == "F") {
                         SEX = "1";
-                    } else {
+                    }
+                    if (result[i].value == "M") {
                         SEX = "2";
                     }
+                    
+                   
                 } else if (key == "MARITAL_STATUS") {
                     if (result[i].value === "") {
                         MARITAL_STATUS = "1";
