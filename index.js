@@ -103,25 +103,25 @@ app.post("/hl7_message", async (req, res) => {
                     
                 } else if (key == "SEX") {
                     SEX="5";
-                    if (result[i].value == "F") {
+                    if (result[i].value.toUpperCase() == "F") {
                         SEX = "1";
                     }
-                    if (result[i].value == "M") {
+                    if (result[i].value.toUpperCase() == "M") {
                         SEX = "2";
                     }
                 } else if (key == "MARITAL_STATUS") {
                     if (result[i].value === "") {
                         MARITAL_STATUS = "1";
                     }
-                    if (result[i].value == "D") {
+                    if (result[i].value.toUpperCase() == "D") {
                         MARITAL_STATUS = "3";
-                    } else if (result[i].value == "M") {
+                    } else if (result[i].value.toUpperCase() == "M") {
                         MARITAL_STATUS = "2";
-                    } else if (result[i].value == "S") {
+                    } else if (result[i].value.toUpperCase() == "S") {
                         MARITAL_STATUS = "1";
-                    } else if (result[i].value == "W") {
+                    } else if (result[i].value.toUpperCase() == "W") {
                         MARITAL_STATUS = "4";
-                    } else if (result[i].value == "C") {
+                    } else if (result[i].value.toUpperCase() == "C") {
                         MARITAL_STATUS = "5";
                     } else if (result[i].value == "1") {
                         MARITAL_STATUS = "1";
@@ -375,10 +375,10 @@ app.post("/hl7_message", async (req, res) => {
                     
                 } else if (key == "SEX") {
                     SEX="5";
-                    if (result[i].value == "F") {
+                    if (result[i].value.toUpperCase() == "F") {
                         SEX = "1";
                     }
-                    if (result[i].value == "M") {
+                    if (result[i].value.toUpperCase() == "M") {
                         SEX = "2";
                     }
                     
@@ -387,15 +387,15 @@ app.post("/hl7_message", async (req, res) => {
                     if (result[i].value === "") {
                         MARITAL_STATUS = "1";
                     }
-                    if (result[i].value == "D") {
+                    if (result[i].value.toUpperCase() == "D") {
                         MARITAL_STATUS = "3";
-                    } else if (result[i].value == "M") {
+                    } else if (result[i].value.toUpperCase() == "M") {
                         MARITAL_STATUS = "2";
-                    } else if (result[i].value == "S") {
+                    } else if (result[i].value.toUpperCase() == "S") {
                         MARITAL_STATUS = "1";
-                    } else if (result[i].value == "W") {
+                    } else if (result[i].value.toUpperCase() == "W") {
                         MARITAL_STATUS = "4";
-                    } else if (result[i].value == "C") {
+                    } else if (result[i].value.toUpperCase() == "C") {
                         MARITAL_STATUS = "5";
                     } else if (result[i].value == "1") {
                         MARITAL_STATUS = "1";
