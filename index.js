@@ -25,12 +25,12 @@ const {
 
 //app.use(express.json());
 //app.use(express.urlencoded());
+ // console.log(jsonObj);
+
 app.post("/hl7_message", async (req, res) => {
 
     let obj1 = req;
     jsonObj = obj1.body;
-
-   // console.log(jsonObj);
 
     var DATE_TODAY = moment(new Date()).format("YYYY-MM-DD");
 
@@ -54,9 +54,10 @@ app.post("/hl7_message", async (req, res) => {
             var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
             var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
             var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
-            var SEX;
+            var SEX = jsonObj.PATIENT_IDENTIFICATION.SEX;
+         
             var PHONE_NUMBER = jsonObj.PATIENT_IDENTIFICATION.PHONE_NUMBER;
-            var MARITAL_STATUS;
+            var MARITAL_STATUS = jsonObj.PATIENT_IDENTIFICATION.MARITAL_STATUS;
             var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.SENDING_APPLICATION;
             var ENROLLMENT_DATE = jsonObj.PATIENT_VISIT.HIV_CARE_ENROLLMENT_DATE;
             var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
@@ -69,10 +70,12 @@ app.post("/hl7_message", async (req, res) => {
             var ART_DATE;
 
             var result = get_json(jsonObj);
+           // console.log(result);
 
             for (var i = 0; i < result.length; i++) {
                 var key = result[i].key;
                 var value = result[i].value;
+               // console.log(result[i].key);
 
                 if (key == "DATE_OF_BIRTH") {
                     var DoB = DATE_OF_BIRTH;
@@ -101,42 +104,7 @@ app.post("/hl7_message", async (req, res) => {
                         GROUP_ID = "6";
                     }
                     
-                } else if (key == "SEX") {
-                    SEX="5";
-                    if (result[i].value.toUpperCase() == "F") {
-                        SEX = "1";
-                    }
-                    if (result[i].value.toUpperCase() == "M") {
-                        SEX = "2";
-                    }
-                } else if (key == "MARITAL_STATUS") {
-                    if (result[i].value === "") {
-                        MARITAL_STATUS = "1";
-                    }
-                    if (result[i].value.toUpperCase() == "D") {
-                        MARITAL_STATUS = "3";
-                    } else if (result[i].value.toUpperCase() == "M") {
-                        MARITAL_STATUS = "2";
-                    } else if (result[i].value.toUpperCase() == "S") {
-                        MARITAL_STATUS = "1";
-                    } else if (result[i].value.toUpperCase() == "W") {
-                        MARITAL_STATUS = "4";
-                    } else if (result[i].value.toUpperCase() == "C") {
-                        MARITAL_STATUS = "5";
-                    } else if (result[i].value == "1") {
-                        MARITAL_STATUS = "1";
-                    } else if (result[i].value == "2") {
-                        MARITAL_STATUS = "2";
-                    } else if (result[i].value == "3") {
-                        MARITAL_STATUS = "3";
-                    } else if (result[i].value == "4") {
-                        MARITAL_STATUS = "4";
-                    } else if (result[i].value == "5") {
-                        MARITAL_STATUS = "5";
-                    } else {
-                        MARITAL_STATUS = "1";
-                    }
-                }
+                } 
                 if (key == "SENDING_FACILITY") {
                     SENDING_FACILITY = result[i].value;
                 }
@@ -173,7 +141,51 @@ app.post("/hl7_message", async (req, res) => {
                     }
                         
                 }
+
+                //console.log(result[i].value);  
+                
             }
+
+          //  console.log(result[i].value);
+            //SEX
+                  
+            if (SEX === "F") {
+                SEX = "1";
+            }else if(SEX === "M"){
+                SEX = "2";
+            }else{
+                SEX = "5";
+            }
+
+            //MARITAL STATUS
+            
+            if (MARITAL_STATUS === "") {
+                MARITAL_STATUS = "1";
+            }
+            if (MARITAL_STATUS == "D") {
+                MARITAL_STATUS = "3";
+            } else if (MARITAL_STATUS == "M") {
+                MARITAL_STATUS = "2";
+            } else if (MARITAL_STATUS == "S") {
+                MARITAL_STATUS = "1";
+            } else if (MARITAL_STATUS == "W") {
+                MARITAL_STATUS = "4";
+            } else if (MARITAL_STATUS == "C") {
+                MARITAL_STATUS = "5";
+            } else if (MARITAL_STATUS == "1") {
+                MARITAL_STATUS = "1";
+            } else if (MARITAL_STATUS == "2") {
+                MARITAL_STATUS = "2";
+            } else if (MARITAL_STATUS == "3") {
+                MARITAL_STATUS = "3";
+            } else if (MARITAL_STATUS == "4") {
+                MARITAL_STATUS = "4";
+            } else if (MARITAL_STATUS == "5") {
+                MARITAL_STATUS = "5";
+            } else {
+                MARITAL_STATUS = "1";
+            }
+            
 
             var enroll_year = ENROLLMENT_DATE.substring(0, 4);
             var enroll_month = ENROLLMENT_DATE.substring(4, 6);
@@ -201,8 +213,9 @@ app.post("/hl7_message", async (req, res) => {
                 message_type: message_type,
                 sending_application: SENDING_APPLICATION,
             }
-
-
+            
+           
+            
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
 
                 return res
@@ -236,6 +249,8 @@ app.post("/hl7_message", async (req, res) => {
                         }
                     });
 
+
+                   
             client = {
                 group_id: parseInt(GROUP_ID),
                 clinic_number: CCC_NUMBER,
@@ -318,9 +333,9 @@ app.post("/hl7_message", async (req, res) => {
             var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
             var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
             var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
-            var SEX;
+            var SEX = jsonObj.PATIENT_IDENTIFICATION.SEX;
             var PHONE_NUMBER = jsonObj.PATIENT_IDENTIFICATION.PHONE_NUMBER;
-            var MARITAL_STATUS;
+            var MARITAL_STATUS = jsonObj.PATIENT_IDENTIFICATION.MARITAL_STATUS;
             var PATIENT_SOURCE = jsonObj.PATIENT_VISIT.SENDING_APPLICATION;
             var ENROLLMENT_DATE = jsonObj.PATIENT_VISIT.HIV_CARE_ENROLLMENT_DATE;
             var COUNTY = jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.COUNTY;
@@ -373,45 +388,9 @@ app.post("/hl7_message", async (req, res) => {
                     }
                         
                     
-                } else if (key == "SEX") {
-                    SEX="5";
-                    if (result[i].value.toUpperCase() == "F") {
-                        SEX = "1";
-                    }
-                    if (result[i].value.toUpperCase() == "M") {
-                        SEX = "2";
-                    }
-                    
+                             
                    
-                } else if (key == "MARITAL_STATUS") {
-                    if (result[i].value === "") {
-                        MARITAL_STATUS = "1";
-                    }
-                    if (result[i].value.toUpperCase() == "D") {
-                        MARITAL_STATUS = "3";
-                    } else if (result[i].value.toUpperCase() == "M") {
-                        MARITAL_STATUS = "2";
-                    } else if (result[i].value.toUpperCase() == "S") {
-                        MARITAL_STATUS = "1";
-                    } else if (result[i].value.toUpperCase() == "W") {
-                        MARITAL_STATUS = "4";
-                    } else if (result[i].value.toUpperCase() == "C") {
-                        MARITAL_STATUS = "5";
-                    } else if (result[i].value == "1") {
-                        MARITAL_STATUS = "1";
-                    } else if (result[i].value == "2") {
-                        MARITAL_STATUS = "2";
-                    } else if (result[i].value == "3") {
-                        MARITAL_STATUS = "3";
-                    } else if (result[i].value == "4") {
-                        MARITAL_STATUS = "4";
-                    } else if (result[i].value == "5") {
-                        MARITAL_STATUS = "5";
-                    } else {
-                        MARITAL_STATUS = "1";
-                    }
-                }
-
+                } 
 
                 if (key == "SENDING_FACILITY") {
                     SENDING_FACILITY = result[i].value;
@@ -465,6 +444,47 @@ app.post("/hl7_message", async (req, res) => {
 
                 
             }
+
+
+             //SEX
+                  
+             if (SEX === "F") {
+                SEX = "1";
+            }else if(SEX === "M"){
+                SEX = "2";
+            }else{
+                SEX = "5";
+            }
+
+            //MARITAL STATUS
+            
+            if (MARITAL_STATUS === "") {
+                MARITAL_STATUS = "1";
+            }
+            if (MARITAL_STATUS == "D") {
+                MARITAL_STATUS = "3";
+            } else if (MARITAL_STATUS == "M") {
+                MARITAL_STATUS = "2";
+            } else if (MARITAL_STATUS == "S") {
+                MARITAL_STATUS = "1";
+            } else if (MARITAL_STATUS == "W") {
+                MARITAL_STATUS = "4";
+            } else if (MARITAL_STATUS == "C") {
+                MARITAL_STATUS = "5";
+            } else if (MARITAL_STATUS == "1") {
+                MARITAL_STATUS = "1";
+            } else if (MARITAL_STATUS == "2") {
+                MARITAL_STATUS = "2";
+            } else if (MARITAL_STATUS == "3") {
+                MARITAL_STATUS = "3";
+            } else if (MARITAL_STATUS == "4") {
+                MARITAL_STATUS = "4";
+            } else if (MARITAL_STATUS == "5") {
+                MARITAL_STATUS = "5";
+            } else {
+                MARITAL_STATUS = "1";
+            }
+            
 
             var enroll_year = ENROLLMENT_DATE.substring(0, 4);
             var enroll_month = ENROLLMENT_DATE.substring(4, 6);
@@ -562,7 +582,7 @@ app.post("/hl7_message", async (req, res) => {
                     sending_application: SENDING_APPLICATION,
                     upi_no:PATIENT_NUPI_NUMBER
                 }
-                console.log(client);
+               // console.log(client);
 
                 await Client.create(client)
                     .then(function (model) {
@@ -619,6 +639,8 @@ app.post("/hl7_message", async (req, res) => {
                     group_id: parseInt(GROUP_ID),
                     mfl_code: parseInt(SENDING_FACILITY),
                     art_date: new_art_date,
+                    gender: parseInt(SEX),
+                    marital: MARITAL_STATUS,
                     client_type: PATIENT_TYPE,
                     file_no: PATIENT_CLINIC_NUMBER,
                     sending_application: SENDING_APPLICATION
