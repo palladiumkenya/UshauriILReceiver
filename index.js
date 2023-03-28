@@ -215,7 +215,22 @@ app.post("/hl7_message", async (req, res) => {
             }
             
            
-            
+
+
+            if (typeof CCC_NUMBER === 'undefined') {
+
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        msg: `Error`,
+                        response: {
+                            msg: `Record Missing CCC Number` ,
+                            data: l
+                        }
+                    });
+
+            }
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
 
                 return res
@@ -238,7 +253,7 @@ app.post("/hl7_message", async (req, res) => {
 
             if (_.isEmpty(partner))
                 return res
-                    .status(404)
+                    .status(400)
                     .json({
                         success: false,
                         msg: `Error`,
@@ -504,6 +519,8 @@ app.post("/hl7_message", async (req, res) => {
 
             }
 
+           
+
             var l = {
                 f_name: FIRST_NAME,
                 l_name: LAST_NAME,
@@ -511,6 +528,20 @@ app.post("/hl7_message", async (req, res) => {
                 file_no: PATIENT_CLINIC_NUMBER,
                 message_type: message_type,
                 sending_application: SENDING_APPLICATION,
+            }
+            if (typeof CCC_NUMBER === 'undefined') {
+
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        msg: `Error`,
+                        response: {
+                            msg: `Record Missing CCC Number` ,
+                            data: l
+                        }
+                    });
+
             }
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
@@ -639,7 +670,7 @@ app.post("/hl7_message", async (req, res) => {
                     group_id: parseInt(GROUP_ID),
                     mfl_code: parseInt(SENDING_FACILITY),
                     art_date: new_art_date,
-                    gender: parseInt(SEX),
+                     gender: parseInt(SEX),
                     marital: MARITAL_STATUS,
                     client_type: PATIENT_TYPE,
                     file_no: PATIENT_CLINIC_NUMBER,
@@ -796,6 +827,30 @@ app.post("/hl7_message", async (req, res) => {
             
 
                 
+            }
+
+            if (typeof CCC_NUMBER === 'undefined') {
+
+                let l = {
+                    f_name: FIRST_NAME,
+                    l_name: LAST_NAME,
+                    clinic_number: CCC_NUMBER,
+                    file_no: PATIENT_CLINIC_NUMBER,
+                    message_type: message_type,
+                    sending_application: SENDING_APPLICATION,
+                }
+
+                return res
+                    .status(400)
+                    .json({
+                        success: false,
+                        msg: `Error`,
+                        response: {
+                            msg: `Record Missing CCC Number` ,
+                            data: l
+                        }
+                    });
+
             }
 
             if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
