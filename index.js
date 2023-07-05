@@ -913,6 +913,7 @@ app.post("/hl7_message", async (req, res) => {
 							where: {
 								client_id: client.id,
 								active_app: "1",
+								app_type_1: data.app_type_1,
 								id: {
 									[Op.ne]: data.id
 								}
