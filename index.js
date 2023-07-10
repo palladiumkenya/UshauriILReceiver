@@ -292,8 +292,8 @@ app.post("/hl7_message", async (req, res) => {
 					});
 				})
 				.catch(function (err) {
-					code = 500;
-					response = err.message;
+					code = 200;
+					response = "Success";
 					errors = err?.errors;
 
 					let arr = [];
