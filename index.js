@@ -1302,6 +1302,221 @@ app.post("/hl7_message", async (req, res) => {
 						});
 					});
 			}
+	
+		} else if (message_type == "SIU^S20") { //NEW DISCONTINUATION MESSAGES PROCESSING 
+
+			console.log(jsonObj);
+
+			var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
+			var CCC_NUMBER;
+			var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+			var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
+			var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
+			var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
+			var SENDING_FACILITY = jsonObj.MESSAGE_HEADER.SENDING_FACILITY;
+			var OBSERVATION_VALUE=jsonObj.DISCONTINUATION_MESSAGE.DISCONTINUATION_REASON;
+			var PATIENT_CLINIC_NUMBER;
+			//var OBSERVATION_DATETIME;
+
+			var result = get_json(jsonObj);
+
+			//console.log(result);
+
+			for (var i = 0; i < result.length; i++) {
+				var key = result[i].key;
+				var value = result[i].value;
+
+				if (key == "ID") {
+					if (result[i + 1].value == "CCC_NUMBER") {
+						CCC_NUMBER = result[i].value;
+					}
+				} else if (key == "ID") {
+					if (result[i + 1].value == "PATIENT_CLINIC_NUMBER") {
+						PATIENT_CLINIC_NUMBER = result[i].value;
+					}
+				} else if (key == "OBSERVATION_VALUE") {
+					OBSERVATION_VALUE = result[i].value;
+				} else if (key == "OBSERVATION_DATETIME") {
+					OBSERVATION_DATETIME = result[i].value;
+				}
+			}
+
+			var l = {
+				f_name: FIRST_NAME,
+				l_name: LAST_NAME,
+				clinic_number: CCC_NUMBER,
+				file_no: PATIENT_CLINIC_NUMBER,
+				message_type: message_type,
+				sending_application: SENDING_APPLICATION
+			};
+
+			if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+				return res.status(400).json({
+					success: false,
+					msg: `Error`,
+					response: {
+						msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+						data: l
+					}
+				});
+			}
+
+			
+
+			//transfer out happends in client table
+
+			let client = await Client.findOne({
+				where: {
+					clinic_number: CCC_NUMBER
+				}
+			});
+
+			if (_.isEmpty(client))
+				return res.status(400).json({
+					success: false,
+					msg: `Error`,
+					response: {
+						msg: `Client: ${CCC_NUMBER} does not exist in the Ushauri system.`,
+						data: l
+					}
+				});
+
+			let oru = {};
+			if (OBSERVATION_VALUE == "TRANSFER OUT") {
+				oru.client_type = "Transfer Out";
+				oru.mfl_code = SENDING_FACILITY;
+				oru.sending_application = SENDING_APPLICATION;
+				oru.updated_at = new_observation_date;
+
+				await Client.update(oru, { returning: true, where: { id: client.id } })
+					.then(function (model) {
+						message = "OK";
+						response = "Discontinuation successfully updated.";
+
+						return res.json({
+							success: true,
+							msg: message,
+							response: {
+								msg: response,
+								data: oru
+							}
+						});
+					})
+					.catch(function (err) {
+						code = 500;
+						response = err.message;
+						errors = err?.errors;
+
+						let arr = [];
+
+						for (var key in errors) {
+							arr.push(errors[key].message);
+						}
+
+						console.error(err);
+
+						return res.status(code).json({
+							response: {
+								msg: response,
+								errors: arr
+							}
+						});
+					});
+			} else if (OBSERVATION_VALUE == "DEATH") {
+				oru.status = "Deceased";
+				oru.mfl_code = SENDING_FACILITY;
+				oru.date_deceased = new_observation_date;
+				oru.sending_application = SENDING_APPLICATION;
+				oru.updated_at = new_observation_date;
+
+				await Client.update(oru, { returning: true, where: { id: client.id } })
+					.then(function (model) {
+						message = "OK";
+						response = "Discontinuation successfully updated.";
+
+						return res.json({
+							msg: message,
+							response: {
+								msg: response,
+								data: oru
+							}
+						});
+					})
+					.catch(function (err) {
+						code = 500;
+						response = err.message;
+						errors = err?.errors;
+
+						let arr = [];
+
+						var arr_string = "";
+
+						for (var key in errors) {
+							arr.push(errors[key].message);
+							arr_string = errors[key].message + " ";
+						}
+
+						return res.status(code).json({
+							response: {
+								msg: response + " - " + arr_string,
+								errors: arr
+							}
+						});
+					});
+			} else if (OBSERVATION_VALUE == "LTFU") {
+				oru.app_status = "LTFU";
+				oru.db_source = SENDING_APPLICATION;
+				oru.updated_at = new_observation_date;
+
+				let l_app = await Appointment.findAll({
+					limit: 1,
+					where: {
+						client_id: client.id
+					},
+					order: [["appntmnt_date", "DESC"]]
+				});
+
+				await Appointment.update(oru, {
+					returning: true,
+					where: {
+						id: l_app[0].id
+					}
+				})
+					.then(function (model) {
+						message = "OK";
+						response = "Discontinuation successfully added.";
+
+						return res.json({
+							msg: message,
+							response: {
+								msg: response,
+								data: oru
+							}
+						});
+					})
+					.catch(function (err) {
+						code = 500;
+						response = err.message;
+						errors = err?.errors;
+
+						let arr = [];
+
+						var arr_string = "";
+
+						for (var key in errors) {
+							arr.push(errors[key].message);
+							arr_string = errors[key].message + " ";
+						}
+
+						return res.status(code).json({
+							response: {
+								msg: response + " - " + arr_string,
+								errors: arr
+							}
+						});
+					});
+			}
+
 		} else if (message_type == "ORU^R01") {
 			var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
 			var CCC_NUMBER;
