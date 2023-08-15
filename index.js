@@ -34,11 +34,16 @@ app.post("/hl7_message", async (req, res) => {
 
 	//only post KENYAEMR and ADT appointments and clients
 
-	if (SENDING_APPLICATION === "KENYAEMR" || SENDING_APPLICATION === "ADT" || SENDING_APPLICATION === "AMRS") {
+	if (
+		SENDING_APPLICATION === "KENYAEMR" ||
+		SENDING_APPLICATION === "ADT" ||
+		SENDING_APPLICATION === "AMRS"
+	) {
 		if (message_type == "ADT^A04") {
 			//this message is triggered when a new client is created
 			var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
 			var CCC_NUMBER;
+			var PREP_NUMBER;
 			var PATIENT_NUPI_NUMBER = "";
 			var PATIENT_CLINIC_NUMBER;
 			var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
@@ -67,6 +72,10 @@ app.post("/hl7_message", async (req, res) => {
 
 			var result = get_json(jsonObj);
 			// console.log(result);
+
+			const internalPatientId =
+				jsonObj.PATIENT_IDENTIFICATION.INTERNAL_PATIENT_ID;
+			const identifierType = internalPatientId.IDENTIFIER_TYPE;
 
 			for (var i = 0; i < result.length; i++) {
 				var key = result[i].key;
@@ -118,6 +127,13 @@ app.post("/hl7_message", async (req, res) => {
 				if (key == "ID") {
 					if (result[i + 1].value == "NUPI") {
 						PATIENT_NUPI_NUMBER = result[i].value;
+					}
+				}
+
+				// Get PREP NUMBER
+				if (key == "ID") {
+					if (result[i + 1].value == "PREP_NUMBER") {
+						PREP_NUMBER = result[i].value;
 					}
 				}
 
@@ -201,25 +217,57 @@ app.post("/hl7_message", async (req, res) => {
 				sending_application: SENDING_APPLICATION
 			};
 
-			if (typeof CCC_NUMBER === "undefined") {
-				return res.status(400).json({
-					success: false,
-					msg: `Error`,
-					response: {
-						msg: `Record Missing CCC Number`,
-						data: l
-					}
-				});
-			}
-			if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-				return res.status(400).json({
-					success: false,
-					msg: `Error`,
-					response: {
-						msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
-						data: l
-					}
-				});
+			var p = {
+				f_name: FIRST_NAME,
+				l_name: LAST_NAME,
+				prep_number: PREP_NUMBER,
+				file_no: PREP_NUMBER,
+				message_type: message_type,
+				sending_application: SENDING_APPLICATION
+			};
+
+			if (identifierType === "CCC_NUMBER") {
+				if (typeof CCC_NUMBER === "undefined") {
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Record Missing CCC Number`,
+							data: l
+						}
+					});
+				}
+				if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+							data: l
+						}
+					});
+				}
+			} else {
+				if (typeof PREP_NUMBER === "undefined") {
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Record Missing PREP Number`,
+							data: p
+						}
+					});
+				}
+				if (PREP_NUMBER.length != 14 || isNaN(PREP_NUMBER)) {
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Invalid CCC Number: ${PREP_NUMBER}, The PREP Number must be 14 digits`,
+							data: p
+						}
+					});
+				}
 			}
 			let partner = await Partner.findOne({
 				where: {
@@ -236,34 +284,64 @@ app.post("/hl7_message", async (req, res) => {
 						data: l
 					}
 				});
-
-			client = {
-				group_id: parseInt(GROUP_ID),
-				clinic_number: CCC_NUMBER,
-				f_name: FIRST_NAME,
-				m_name: MIDDLE_NAME,
-				l_name: LAST_NAME,
-				dob: new_date,
-				phone_no: PHONE_NUMBER,
-				partner_id: partner.partner_id,
-				mfl_code: parseInt(SENDING_FACILITY),
-				// status: ,
-				// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
-				gender: parseInt(SEX),
-				marital: MARITAL_STATUS,
-				enrollment_date: new_enroll_date,
-				art_date: new_art_date,
-				client_type: PATIENT_TYPE,
-				gods_number: GODS_NUMBER,
-				patient_source: PATIENT_SOURCE,
-				file_no: PATIENT_CLINIC_NUMBER,
-				locator_county: COUNTY,
-				locator_sub_county: SUB_COUNTY,
-				locator_ward: WARD,
-				locator_village: VILLAGE,
-				sending_application: SENDING_APPLICATION,
-				upi_no: PATIENT_NUPI_NUMBER
-			};
+			if (identifierType === "CCC_NUMBER") {
+				client = {
+					group_id: parseInt(GROUP_ID),
+					clinic_number: CCC_NUMBER,
+					f_name: FIRST_NAME,
+					m_name: MIDDLE_NAME,
+					l_name: LAST_NAME,
+					dob: new_date,
+					phone_no: PHONE_NUMBER,
+					partner_id: partner.partner_id,
+					mfl_code: parseInt(SENDING_FACILITY),
+					// status: ,
+					// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
+					gender: parseInt(SEX),
+					marital: MARITAL_STATUS,
+					enrollment_date: new_enroll_date,
+					art_date: new_art_date,
+					client_type: PATIENT_TYPE,
+					gods_number: GODS_NUMBER,
+					patient_source: PATIENT_SOURCE,
+					file_no: PATIENT_CLINIC_NUMBER,
+					locator_county: COUNTY,
+					locator_sub_county: SUB_COUNTY,
+					locator_ward: WARD,
+					locator_village: VILLAGE,
+					sending_application: SENDING_APPLICATION,
+					upi_no: PATIENT_NUPI_NUMBER
+				};
+			} else {
+				client = {
+					group_id: parseInt(GROUP_ID),
+					clinic_number: PREP_NUMBER,
+					f_name: FIRST_NAME,
+					m_name: MIDDLE_NAME,
+					l_name: LAST_NAME,
+					dob: new_date,
+					phone_no: PHONE_NUMBER,
+					partner_id: partner.partner_id,
+					mfl_code: parseInt(SENDING_FACILITY),
+					// status: ,
+					// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
+					gender: parseInt(SEX),
+					marital: MARITAL_STATUS,
+					enrollment_date: new_enroll_date,
+					art_date: new_art_date,
+					client_type: PATIENT_TYPE,
+					gods_number: GODS_NUMBER,
+					patient_source: PATIENT_SOURCE,
+					file_no: PATIENT_CLINIC_NUMBER,
+					locator_county: COUNTY,
+					locator_sub_county: SUB_COUNTY,
+					locator_ward: WARD,
+					locator_village: VILLAGE,
+					sending_application: SENDING_APPLICATION,
+					upi_no: PATIENT_NUPI_NUMBER,
+					prep_number: PREP_NUMBER
+				};
+			}
 
 			await Client.create(client)
 				.then(function (model) {
@@ -340,10 +418,15 @@ app.post("/hl7_message", async (req, res) => {
 			var PATIENT_TYPE = jsonObj.PATIENT_VISIT.PATIENT_TYPE;
 			var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
 			var CCC_NUMBER;
+			var PREP_NUMBER;
 			var PATIENT_NUPI_NUMBER = "";
 			var TOD_DATE = moment().format("YYYY-MM-DD");
 
 			var result = get_json(jsonObj);
+
+			const internalPatientId =
+				jsonObj.PATIENT_IDENTIFICATION.INTERNAL_PATIENT_ID;
+			const identifierType = internalPatientId.IDENTIFIER_TYPE;
 
 			for (var i = 0; i < result.length; i++) {
 				var key = result[i].key;
@@ -396,6 +479,12 @@ app.post("/hl7_message", async (req, res) => {
 				if (key == "ID") {
 					if (result[i + 1].value == "NUPI") {
 						PATIENT_NUPI_NUMBER = result[i].value;
+					}
+				}
+
+				if (key == "ID") {
+					if (result[i + 1].value == "PREP_NUMBER") {
+						PREP_NUMBER = result[i].value;
 					}
 				}
 
@@ -485,28 +574,60 @@ app.post("/hl7_message", async (req, res) => {
 				message_type: message_type,
 				sending_application: SENDING_APPLICATION
 			};
-			if (typeof CCC_NUMBER === "undefined") {
-				return res.status(400).json({
-					success: false,
-					msg: `Error`,
-					response: {
-						msg: `Record Missing CCC Number`,
-						data: l
-					}
-				});
-			}
 
-			if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
-				return res.status(400).json({
-					success: false,
-					msg: `Error`,
-					response: {
-						msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
-						data: l
-					}
-				});
-			}
+			var p = {
+				f_name: FIRST_NAME,
+				l_name: LAST_NAME,
+				prep_number: PREP_NUMBER,
+				file_no: PREP_NUMBER,
+				message_type: message_type,
+				sending_application: SENDING_APPLICATION
+			};
+			if (identifierType === "CCC_NUMBER") {
+				if (typeof CCC_NUMBER === "undefined") {
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Record Missing CCC Number`,
+							data: l
+						}
+					});
+				}
 
+				if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+							data: l
+						}
+					});
+				}
+			} else {
+				if (typeof PREP_NUMBER === "undefined") {
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Record Missing CCC Number`,
+							data: l
+						}
+					});
+				}
+
+				if (PREP_NUMBER.length != 14 || isNaN(PREP_NUMBER)) {
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Invalid PREP NUMBER: ${PREP_NUMBER}, The PREP NUMBER must be 14 digits`,
+							data: l
+						}
+					});
+				}
+			}
 			let isClient = await Client.findOne({
 				where: {
 					clinic_number: CCC_NUMBER
@@ -837,268 +958,258 @@ app.post("/hl7_message", async (req, res) => {
 				}
 			});
 
-			if (_.isEmpty(client)){
+			if (_.isEmpty(client)) {
 				//Create Client
 
-			var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
-			//SENDING_FACILITY
-			//var CCC_NUMBER;
-			var PATIENT_NUPI_NUMBER = "";
-			var PATIENT_CLINIC_NUMBER;
-			var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
-			var MIDDLE_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
-			var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
-			var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
-			var SEX = jsonObj.PATIENT_IDENTIFICATION.SEX;
-			var PHONE_NUMBER = jsonObj.PATIENT_IDENTIFICATION.PHONE_NUMBER;
-			var MARITAL_STATUS = jsonObj.PATIENT_IDENTIFICATION.MARITAL_STATUS;
-			var PATIENT_SOURCE = jsonObj.SENDING_APPLICATION;
-			var ENROLLMENT_DATE = jsonObj.HIV_CARE_ENROLLMENT_DATE;
-			var PATIENT_TYPE = jsonObj.PATIENT_TYPE;
-			var SENDING_FACILITY;
-			var GROUP_ID;
-			var COUNTY =
-				jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.COUNTY;
-			var SUB_COUNTY =
-				jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS
-					.SUB_COUNTY;
-			var WARD =
-				jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.WARD;
-			var VILLAGE =
-				jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.VILLAGE;
-			var ART_DATE;
+				var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
+				//SENDING_FACILITY
+				//var CCC_NUMBER;
+				var PATIENT_NUPI_NUMBER = "";
+				var PATIENT_CLINIC_NUMBER;
+				var FIRST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.FIRST_NAME;
+				var MIDDLE_NAME =
+					jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.MIDDLE_NAME;
+				var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
+				var DATE_OF_BIRTH = jsonObj.PATIENT_IDENTIFICATION.DATE_OF_BIRTH;
+				var SEX = jsonObj.PATIENT_IDENTIFICATION.SEX;
+				var PHONE_NUMBER = jsonObj.PATIENT_IDENTIFICATION.PHONE_NUMBER;
+				var MARITAL_STATUS = jsonObj.PATIENT_IDENTIFICATION.MARITAL_STATUS;
+				var PATIENT_SOURCE = jsonObj.SENDING_APPLICATION;
+				var ENROLLMENT_DATE = jsonObj.HIV_CARE_ENROLLMENT_DATE;
+				var PATIENT_TYPE = jsonObj.PATIENT_TYPE;
+				var SENDING_FACILITY;
+				var GROUP_ID;
+				var COUNTY =
+					jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS
+						.COUNTY;
+				var SUB_COUNTY =
+					jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS
+						.SUB_COUNTY;
+				var WARD =
+					jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS.WARD;
+				var VILLAGE =
+					jsonObj.PATIENT_IDENTIFICATION.PATIENT_ADDRESS.PHYSICAL_ADDRESS
+						.VILLAGE;
+				var ART_DATE;
 
-			var result = get_json(jsonObj);
-			// console.log(result);
+				var result = get_json(jsonObj);
+				// console.log(result);
 
-			for (var i = 0; i < result.length; i++) {
-				var key = result[i].key;
-				var value = result[i].value;
-				// console.log(result[i].key);
+				for (var i = 0; i < result.length; i++) {
+					var key = result[i].key;
+					var value = result[i].value;
+					// console.log(result[i].key);
 
-				if (key == "DATE_OF_BIRTH") {
-					var DoB = DATE_OF_BIRTH;
-					if (DoB === "" || DoB === undefined) {
-						var new_date =null;
+					if (key == "DATE_OF_BIRTH") {
+						var DoB = DATE_OF_BIRTH;
+						if (DoB === "" || DoB === undefined) {
+							var new_date = null;
+						} else {
+							var year = DoB.substring(0, 4);
+							var month = DoB.substring(4, 6);
+							var day = DoB.substring(6, 8);
 
-					}else
-					{
-						var year = DoB.substring(0, 4);
-						var month = DoB.substring(4, 6);
-						var day = DoB.substring(6, 8);
-	
-						var today = DATE_TODAY;
-	
-						var new_date = year + "-" + month + "-" + day;
-						var date_diff = moment(today).diff(
-							moment(new_date).format("YYYY-MM-DD"),
-							"days"
-						);
-						
-					}
+							var today = DATE_TODAY;
 
-				
+							var new_date = year + "-" + month + "-" + day;
+							var date_diff = moment(today).diff(
+								moment(new_date).format("YYYY-MM-DD"),
+								"days"
+							);
+						}
 
-					GROUP_ID = "4";
-					//5296
-					if (date_diff >= 4680 && date_diff <= 6935) {
-						GROUP_ID = "2";
-					}
-					if (date_diff >= 6936) {
-						GROUP_ID = "1";
-					}
-					if (date_diff <= 4681) {
-						GROUP_ID = "6";
-					}
-				}
-				if (key == "SENDING_FACILITY") {
-					SENDING_FACILITY = result[i].value;
-				}
-				if (key == "ID") {
-					if (result[i + 1].value == "CCC_NUMBER") {
-						CCC_NUMBER = result[i].value;
-					}
-				}
-
-				if (key == "ID") {
-					if (result[i + 1].value == "PATIENT_CLINIC_NUMBER") {
-						PATIENT_CLINIC_NUMBER = result[i].value;
-					}
-				}
-				//Get NUPI NUMBER ASSIGNED
-				if (key == "ID") {
-					if (result[i + 1].value == "NUPI") {
-						PATIENT_NUPI_NUMBER = result[i].value;
-					}
-				}
-
-				if (SENDING_APPLICATION == "ADT") {
-					if (key == "OBSERVATION_IDENTIFIER") {
-						if (result[i].value == "ART_START") {
-							ART_DATE = result[i + 3].value;
+						GROUP_ID = "4";
+						//5296
+						if (date_diff >= 4680 && date_diff <= 6935) {
+							GROUP_ID = "2";
+						}
+						if (date_diff >= 6936) {
+							GROUP_ID = "1";
+						}
+						if (date_diff <= 4681) {
+							GROUP_ID = "6";
 						}
 					}
-				} else if (SENDING_APPLICATION === "KENYAEMR") {
-					if (key == "OBSERVATION_VALUE") {
-						if (result[i + 6].value == "ART_START") {
-							ART_DATE = result[i].value;
+					if (key == "SENDING_FACILITY") {
+						SENDING_FACILITY = result[i].value;
+					}
+					if (key == "ID") {
+						if (result[i + 1].value == "CCC_NUMBER") {
+							CCC_NUMBER = result[i].value;
 						}
 					}
+
+					if (key == "ID") {
+						if (result[i + 1].value == "PATIENT_CLINIC_NUMBER") {
+							PATIENT_CLINIC_NUMBER = result[i].value;
+						}
+					}
+					//Get NUPI NUMBER ASSIGNED
+					if (key == "ID") {
+						if (result[i + 1].value == "NUPI") {
+							PATIENT_NUPI_NUMBER = result[i].value;
+						}
+					}
+
+					if (SENDING_APPLICATION == "ADT") {
+						if (key == "OBSERVATION_IDENTIFIER") {
+							if (result[i].value == "ART_START") {
+								ART_DATE = result[i + 3].value;
+							}
+						}
+					} else if (SENDING_APPLICATION === "KENYAEMR") {
+						if (key == "OBSERVATION_VALUE") {
+							if (result[i + 6].value == "ART_START") {
+								ART_DATE = result[i].value;
+							}
+						}
+					}
+
+					//console.log(result[i].value);
 				}
 
-				//console.log(result[i].value);
-			}
+				//  console.log(result[i].value);
+				//SEX
 
-			//  console.log(result[i].value);
-			//SEX
-
-			if (SEX === "F") {
-				SEX = "1";
-			} else if (SEX === "M") {
-				SEX = "2";
-			} else {
-				SEX = "5";
-			}
-
-			//MARITAL STATUS
-
-			if (MARITAL_STATUS === "") {
-				MARITAL_STATUS = "1";
-			}
-			if (MARITAL_STATUS == "D") {
-				MARITAL_STATUS = "3";
-			} else if (MARITAL_STATUS == "M") {
-				MARITAL_STATUS = "2";
-			} else if (MARITAL_STATUS == "S") {
-				MARITAL_STATUS = "1";
-			} else if (MARITAL_STATUS == "W") {
-				MARITAL_STATUS = "4";
-			} else if (MARITAL_STATUS == "C") {
-				MARITAL_STATUS = "5";
-			} else if (MARITAL_STATUS == "1") {
-				MARITAL_STATUS = "1";
-			} else if (MARITAL_STATUS == "2") {
-				MARITAL_STATUS = "2";
-			} else if (MARITAL_STATUS == "3") {
-				MARITAL_STATUS = "3";
-			} else if (MARITAL_STATUS == "4") {
-				MARITAL_STATUS = "4";
-			} else if (MARITAL_STATUS == "5") {
-				MARITAL_STATUS = "5";
-			} else {
-				MARITAL_STATUS = "1";
-			}
-			if (ENROLLMENT_DATE === "" || ENROLLMENT_DATE === undefined) {
-				var new_enroll_date = null;
-			} else {
-				var enroll_year = ENROLLMENT_DATE.substring(0, 4);
-				var enroll_month = ENROLLMENT_DATE.substring(4, 6);
-				var enroll_day = ENROLLMENT_DATE.substring(6, 8);
-				var new_enroll_date = enroll_year + "-" + enroll_month + "-" + enroll_day;
-			}
-
-			if (ART_DATE === "" || ART_DATE === undefined) {
-				var new_art_date = null;
-			} else {
-				var art_year = ART_DATE.substring(0, 4);
-				var art_month = ART_DATE.substring(4, 6);
-				var art_day = ART_DATE.substring(6, 8);
-				var new_art_date = art_year + "-" + art_month + "-" + art_day;
-			}
-
-
-
-
-			if (ART_DATE === "" || ART_DATE === undefined) {
-				var new_art_date = null;
-			} else {
-				var art_year = ART_DATE.substring(0, 4);
-				var art_month = ART_DATE.substring(4, 6);
-				var art_day = ART_DATE.substring(6, 8);
-				var new_art_date = art_year + "-" + art_month + "-" + art_day;
-			}
-
-			 l = {
-				f_name: FIRST_NAME,
-				l_name: LAST_NAME,
-				clinic_number: CCC_NUMBER,
-				file_no: PATIENT_CLINIC_NUMBER,
-				message_type: message_type,
-				sending_application: SENDING_APPLICATION
-			};
-
-			let partner = await Partner.findOne({
-				where: {
-					mfl_code: SENDING_FACILITY
+				if (SEX === "F") {
+					SEX = "1";
+				} else if (SEX === "M") {
+					SEX = "2";
+				} else {
+					SEX = "5";
 				}
-			});
 
-			if (_.isEmpty(partner))
-				return res.status(400).json({
-					success: false,
-					msg: `Error`,
-					response: {
-						msg: `MFL CODE: ${SENDING_FACILITY} has not been activated in Ushauri system.`,
-						data: l
+				//MARITAL STATUS
+
+				if (MARITAL_STATUS === "") {
+					MARITAL_STATUS = "1";
+				}
+				if (MARITAL_STATUS == "D") {
+					MARITAL_STATUS = "3";
+				} else if (MARITAL_STATUS == "M") {
+					MARITAL_STATUS = "2";
+				} else if (MARITAL_STATUS == "S") {
+					MARITAL_STATUS = "1";
+				} else if (MARITAL_STATUS == "W") {
+					MARITAL_STATUS = "4";
+				} else if (MARITAL_STATUS == "C") {
+					MARITAL_STATUS = "5";
+				} else if (MARITAL_STATUS == "1") {
+					MARITAL_STATUS = "1";
+				} else if (MARITAL_STATUS == "2") {
+					MARITAL_STATUS = "2";
+				} else if (MARITAL_STATUS == "3") {
+					MARITAL_STATUS = "3";
+				} else if (MARITAL_STATUS == "4") {
+					MARITAL_STATUS = "4";
+				} else if (MARITAL_STATUS == "5") {
+					MARITAL_STATUS = "5";
+				} else {
+					MARITAL_STATUS = "1";
+				}
+				if (ENROLLMENT_DATE === "" || ENROLLMENT_DATE === undefined) {
+					var new_enroll_date = null;
+				} else {
+					var enroll_year = ENROLLMENT_DATE.substring(0, 4);
+					var enroll_month = ENROLLMENT_DATE.substring(4, 6);
+					var enroll_day = ENROLLMENT_DATE.substring(6, 8);
+					var new_enroll_date =
+						enroll_year + "-" + enroll_month + "-" + enroll_day;
+				}
+
+				if (ART_DATE === "" || ART_DATE === undefined) {
+					var new_art_date = null;
+				} else {
+					var art_year = ART_DATE.substring(0, 4);
+					var art_month = ART_DATE.substring(4, 6);
+					var art_day = ART_DATE.substring(6, 8);
+					var new_art_date = art_year + "-" + art_month + "-" + art_day;
+				}
+
+				if (ART_DATE === "" || ART_DATE === undefined) {
+					var new_art_date = null;
+				} else {
+					var art_year = ART_DATE.substring(0, 4);
+					var art_month = ART_DATE.substring(4, 6);
+					var art_day = ART_DATE.substring(6, 8);
+					var new_art_date = art_year + "-" + art_month + "-" + art_day;
+				}
+
+				l = {
+					f_name: FIRST_NAME,
+					l_name: LAST_NAME,
+					clinic_number: CCC_NUMBER,
+					file_no: PATIENT_CLINIC_NUMBER,
+					message_type: message_type,
+					sending_application: SENDING_APPLICATION
+				};
+
+				let partner = await Partner.findOne({
+					where: {
+						mfl_code: SENDING_FACILITY
 					}
 				});
 
-
-		
-			client_new = {
-				group_id: parseInt(GROUP_ID),
-				clinic_number: CCC_NUMBER,
-				f_name: FIRST_NAME,
-				m_name: MIDDLE_NAME,
-				l_name: LAST_NAME,
-				dob: new_date,
-				phone_no: PHONE_NUMBER,
-				partner_id: partner.partner_id,
-				mfl_code: parseInt(SENDING_FACILITY),
-				// status: ,
-				// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
-				gender: parseInt(SEX),
-				marital: MARITAL_STATUS,
-				enrollment_date: new_enroll_date,
-				art_date: new_art_date,
-				client_type: PATIENT_TYPE,
-				gods_number: GODS_NUMBER,
-				patient_source: PATIENT_SOURCE,
-				file_no: PATIENT_CLINIC_NUMBER,
-				locator_county: COUNTY,
-				locator_sub_county: SUB_COUNTY,
-				locator_ward: WARD,
-				locator_village: VILLAGE,
-				sending_application: SENDING_APPLICATION,
-				upi_no: PATIENT_NUPI_NUMBER
-			};
-
-
-			await Client.create(client_new)
-				.then(function (model) {
-					
-				})
-				.catch(function (err) {
-					code = 200;
-					response = "Success";
-					errors = err?.errors;
-
-					let arr = [];
-					var arr_string = "";
-
-					for (var key in errors) {
-						arr.push(errors[key].message);
-						arr_string = errors[key].message + " ";
-					}
-
-					return res.status(code).json({
+				if (_.isEmpty(partner))
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
 						response: {
-						msg: response + " - " + arr_string,
-						errors: arr
+							msg: `MFL CODE: ${SENDING_FACILITY} has not been activated in Ushauri system.`,
+							data: l
 						}
 					});
-				});
 
+				client_new = {
+					group_id: parseInt(GROUP_ID),
+					clinic_number: CCC_NUMBER,
+					f_name: FIRST_NAME,
+					m_name: MIDDLE_NAME,
+					l_name: LAST_NAME,
+					dob: new_date,
+					phone_no: PHONE_NUMBER,
+					partner_id: partner.partner_id,
+					mfl_code: parseInt(SENDING_FACILITY),
+					// status: ,
+					// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
+					gender: parseInt(SEX),
+					marital: MARITAL_STATUS,
+					enrollment_date: new_enroll_date,
+					art_date: new_art_date,
+					client_type: PATIENT_TYPE,
+					gods_number: GODS_NUMBER,
+					patient_source: PATIENT_SOURCE,
+					file_no: PATIENT_CLINIC_NUMBER,
+					locator_county: COUNTY,
+					locator_sub_county: SUB_COUNTY,
+					locator_ward: WARD,
+					locator_village: VILLAGE,
+					sending_application: SENDING_APPLICATION,
+					upi_no: PATIENT_NUPI_NUMBER
+				};
+
+				await Client.create(client_new)
+					.then(function (model) {})
+					.catch(function (err) {
+						code = 200;
+						response = "Success";
+						errors = err?.errors;
+
+						let arr = [];
+						var arr_string = "";
+
+						for (var key in errors) {
+							arr.push(errors[key].message);
+							arr_string = errors[key].message + " ";
+						}
+
+						return res.status(code).json({
+							response: {
+								msg: response + " - " + arr_string,
+								errors: arr
+							}
+						});
+					});
 
 				//get client ID
 
@@ -1107,7 +1218,6 @@ app.post("/hl7_message", async (req, res) => {
 						clinic_number: CCC_NUMBER
 					}
 				});
-
 			}
 			//Update NUPI NUMBER IF Client Exists
 			//console.log(PATIENT_NUPI_NUMBER);
@@ -1137,8 +1247,6 @@ app.post("/hl7_message", async (req, res) => {
 					}
 				});
 			}
-
-						
 
 			let isAppointmentExists = await Appointment.findOne({
 				where: {
@@ -1302,8 +1410,8 @@ app.post("/hl7_message", async (req, res) => {
 						});
 					});
 			}
-	
-		} else if (message_type == "SIU^S20") { //NEW DISCONTINUATION MESSAGES PROCESSING 
+		} else if (message_type == "SIU^S20") {
+			//NEW DISCONTINUATION MESSAGES PROCESSING
 
 			console.log(jsonObj);
 
@@ -1314,7 +1422,8 @@ app.post("/hl7_message", async (req, res) => {
 			var LAST_NAME = jsonObj.PATIENT_IDENTIFICATION.PATIENT_NAME.LAST_NAME;
 			var SENDING_APPLICATION = jsonObj.MESSAGE_HEADER.SENDING_APPLICATION;
 			var SENDING_FACILITY = jsonObj.MESSAGE_HEADER.SENDING_FACILITY;
-			var OBSERVATION_VALUE=jsonObj.DISCONTINUATION_MESSAGE.DISCONTINUATION_REASON;
+			var OBSERVATION_VALUE =
+				jsonObj.DISCONTINUATION_MESSAGE.DISCONTINUATION_REASON;
 			var PATIENT_CLINIC_NUMBER;
 			//var OBSERVATION_DATETIME;
 
@@ -1360,8 +1469,6 @@ app.post("/hl7_message", async (req, res) => {
 					}
 				});
 			}
-
-			
 
 			//transfer out happends in client table
 
@@ -1516,7 +1623,6 @@ app.post("/hl7_message", async (req, res) => {
 						});
 					});
 			}
-
 		} else if (message_type == "ORU^R01") {
 			var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
 			var CCC_NUMBER;
