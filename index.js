@@ -132,7 +132,7 @@ app.post("/hl7_message", async (req, res) => {
 
 				// Get PREP NUMBER
 				if (key == "ID") {
-					if (result[i + 1].value == "PREP_NUMBER") {
+					if (result[i + 1].value == "PREP UNIQUE NUMBER") {
 						PREP_NUMBER = result[i].value;
 					}
 				}
@@ -481,9 +481,9 @@ app.post("/hl7_message", async (req, res) => {
 						PATIENT_NUPI_NUMBER = result[i].value;
 					}
 				}
-
+               // Get PREP NUMBER
 				if (key == "ID") {
-					if (result[i + 1].value == "PREP_NUMBER") {
+					if (result[i + 1].value == "PREP UNIQUE NUMBER") {
 						PREP_NUMBER = result[i].value;
 					}
 				}
@@ -612,7 +612,7 @@ app.post("/hl7_message", async (req, res) => {
 						msg: `Error`,
 						response: {
 							msg: `Record Missing CCC Number`,
-							data: l
+							data: p
 						}
 					});
 				}
@@ -623,16 +623,24 @@ app.post("/hl7_message", async (req, res) => {
 						msg: `Error`,
 						response: {
 							msg: `Invalid PREP NUMBER: ${PREP_NUMBER}, The PREP NUMBER must be 14 digits`,
-							data: l
+							data: p
 						}
 					});
 				}
 			}
-			let isClient = await Client.findOne({
-				where: {
-					clinic_number: CCC_NUMBER
-				}
-			});
+			if (identifierType === "CCC_NUMBER") {
+				let isClient = await Client.findOne({
+					where: {
+						clinic_number: CCC_NUMBER
+					}
+				});
+			} else {
+				let isClient = await Client.findOne({
+					where: {
+						prep_number: PREP_NUMBER
+					}
+				});
+			}
 
 			let partner = await Partner.findOne({
 				where: {
@@ -650,139 +658,277 @@ app.post("/hl7_message", async (req, res) => {
 					}
 				});
 
-			if (_.isEmpty(isClient)) {
-				client = {
-					group_id: parseInt(GROUP_ID),
-					clinic_number: CCC_NUMBER,
-					f_name: FIRST_NAME,
-					m_name: MIDDLE_NAME,
-					l_name: LAST_NAME,
-					dob: new_date,
-					phone_no: PHONE_NUMBER,
-					partner_id: partner.partner_id,
-					mfl_code: parseInt(SENDING_FACILITY),
-					// status: ,
-					// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
-					gender: parseInt(SEX),
-					marital: MARITAL_STATUS,
-					enrollment_date: new_enroll_date,
-					art_date: new_art_date,
-					client_type: PATIENT_TYPE,
-					gods_number: GODS_NUMBER,
-					patient_source: PATIENT_SOURCE,
-					file_no: PATIENT_CLINIC_NUMBER,
-					locator_county: COUNTY,
-					locator_sub_county: SUB_COUNTY,
-					locator_ward: WARD,
-					locator_village: VILLAGE,
-					sending_application: SENDING_APPLICATION,
-					upi_no: PATIENT_NUPI_NUMBER
-				};
-				// console.log(client);
+			if (identifierType === "CCC_NUMBER") {
+				if (_.isEmpty(isClient)) {
+					client = {
+						group_id: parseInt(GROUP_ID),
+						clinic_number: CCC_NUMBER,
+						f_name: FIRST_NAME,
+						m_name: MIDDLE_NAME,
+						l_name: LAST_NAME,
+						dob: new_date,
+						phone_no: PHONE_NUMBER,
+						partner_id: partner.partner_id,
+						mfl_code: parseInt(SENDING_FACILITY),
+						// status: ,
+						// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
+						gender: parseInt(SEX),
+						marital: MARITAL_STATUS,
+						enrollment_date: new_enroll_date,
+						art_date: new_art_date,
+						client_type: PATIENT_TYPE,
+						gods_number: GODS_NUMBER,
+						patient_source: PATIENT_SOURCE,
+						file_no: PATIENT_CLINIC_NUMBER,
+						locator_county: COUNTY,
+						locator_sub_county: SUB_COUNTY,
+						locator_ward: WARD,
+						locator_village: VILLAGE,
+						sending_application: SENDING_APPLICATION,
+						upi_no: PATIENT_NUPI_NUMBER
+					};
+					// console.log(client);
 
-				await Client.create(client)
-					.then(function (model) {
-						message = "OK";
-						response = "Client successfully added.";
+					await Client.create(client)
+						.then(function (model) {
+							message = "OK";
+							response = "Client successfully added.";
 
-						return res.json({
-							message: message,
-							response: {
-								msg: response,
-								data: _.pick(client, [
-									"id",
-									"f_name",
-									"m_name",
-									"l_name",
-									"dob",
-									"phone_no",
-									"email",
-									"partner_id",
-									"facility_id",
-									"status",
-									"clinic_id",
-									"createdAt"
-								])
+							return res.json({
+								message: message,
+								response: {
+									msg: response,
+									data: _.pick(client, [
+										"id",
+										"f_name",
+										"m_name",
+										"l_name",
+										"dob",
+										"phone_no",
+										"email",
+										"partner_id",
+										"facility_id",
+										"status",
+										"clinic_id",
+										"createdAt"
+									])
+								}
+							});
+						})
+						.catch(function (err) {
+							code = 500;
+							response = err.message;
+							errors = err?.errors;
+
+							let arr = [];
+
+							var arr_string = "";
+
+							for (var key in errors) {
+								arr.push(errors[key].message);
+								arr_string = errors[key].message + " ";
 							}
+
+							return res.status(code).json({
+								response: {
+									msg: response + " - " + arr_string,
+									errors: arr
+								}
+							});
 						});
+				} else {
+					let client = {
+						group_id: parseInt(GROUP_ID),
+						mfl_code: parseInt(SENDING_FACILITY),
+						art_date: new_art_date,
+						gender: parseInt(SEX),
+						marital: MARITAL_STATUS,
+						client_type: PATIENT_TYPE,
+						file_no: PATIENT_CLINIC_NUMBER,
+						sending_application: SENDING_APPLICATION
+					};
+					await Client.update(client, {
+						returning: true,
+						where: { clinic_number: CCC_NUMBER }
 					})
-					.catch(function (err) {
-						code = 500;
-						response = err.message;
-						errors = err?.errors;
+						.then(function (model) {
+							message = "OK";
+							response = "Client successfully updated.";
 
-						let arr = [];
+							return res.json({
+								message: message,
+								response: {
+									msg: response,
+									data: _.pick(client, [
+										"group_id",
+										"art_date",
+										"client_type",
+										"file_no",
+										"sending_application",
+										"mfl_code",
+										"updatedAt"
+									])
+								}
+							});
+						})
+						.catch(function (err) {
+							code = 500;
+							response = err.message;
+							errors = err?.errors;
 
-						var arr_string = "";
+							let arr = [];
 
-						for (var key in errors) {
-							arr.push(errors[key].message);
-							arr_string = errors[key].message + " ";
-						}
+							var arr_string = "";
 
-						return res.status(code).json({
-							response: {
-								msg: response + " - " + arr_string,
-								errors: arr
+							for (var key in errors) {
+								arr.push(errors[key].message);
+								arr_string = errors[key].message + " ";
 							}
+
+							return res.status(code).json({
+								response: {
+									msg: response + " - " + arr_string,
+									errors: arr
+								}
+							});
 						});
-					});
+				}
 			} else {
-				let client = {
-					group_id: parseInt(GROUP_ID),
-					mfl_code: parseInt(SENDING_FACILITY),
-					art_date: new_art_date,
-					gender: parseInt(SEX),
-					marital: MARITAL_STATUS,
-					client_type: PATIENT_TYPE,
-					file_no: PATIENT_CLINIC_NUMBER,
-					sending_application: SENDING_APPLICATION
-				};
-				await Client.update(client, {
-					returning: true,
-					where: { clinic_number: CCC_NUMBER }
-				})
-					.then(function (model) {
-						message = "OK";
-						response = "Client successfully updated.";
+				if (_.isEmpty(isClient)) {
+					client = {
+						group_id: parseInt(GROUP_ID),
+						prep_number: PREP_NUMBER,
+						clinic_number: PREP_NUMBER,
+						f_name: FIRST_NAME,
+						m_name: MIDDLE_NAME,
+						l_name: LAST_NAME,
+						dob: new_date,
+						phone_no: PHONE_NUMBER,
+						partner_id: partner.partner_id,
+						mfl_code: parseInt(SENDING_FACILITY),
+						// status: ,
+						// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
+						gender: parseInt(SEX),
+						marital: MARITAL_STATUS,
+						enrollment_date: new_enroll_date,
+						art_date: new_art_date,
+						client_type: PATIENT_TYPE,
+						gods_number: GODS_NUMBER,
+						patient_source: PATIENT_SOURCE,
+						file_no: PATIENT_CLINIC_NUMBER,
+						locator_county: COUNTY,
+						locator_sub_county: SUB_COUNTY,
+						locator_ward: WARD,
+						locator_village: VILLAGE,
+						sending_application: SENDING_APPLICATION,
+						upi_no: PATIENT_NUPI_NUMBER
+					};
+					// console.log(client);
 
-						return res.json({
-							message: message,
-							response: {
-								msg: response,
-								data: _.pick(client, [
-									"group_id",
-									"art_date",
-									"client_type",
-									"file_no",
-									"sending_application",
-									"mfl_code",
-									"updatedAt"
-								])
+					await Client.create(client)
+						.then(function (model) {
+							message = "OK";
+							response = "Client successfully added.";
+
+							return res.json({
+								message: message,
+								response: {
+									msg: response,
+									data: _.pick(client, [
+										"id",
+										"f_name",
+										"m_name",
+										"l_name",
+										"dob",
+										"phone_no",
+										"email",
+										"partner_id",
+										"facility_id",
+										"status",
+										"clinic_id",
+										"createdAt"
+									])
+								}
+							});
+						})
+						.catch(function (err) {
+							code = 500;
+							response = err.message;
+							errors = err?.errors;
+
+							let arr = [];
+
+							var arr_string = "";
+
+							for (var key in errors) {
+								arr.push(errors[key].message);
+								arr_string = errors[key].message + " ";
 							}
+
+							return res.status(code).json({
+								response: {
+									msg: response + " - " + arr_string,
+									errors: arr
+								}
+							});
 						});
+				} else {
+					let client = {
+						group_id: parseInt(GROUP_ID),
+						mfl_code: parseInt(SENDING_FACILITY),
+						art_date: new_art_date,
+						gender: parseInt(SEX),
+						marital: MARITAL_STATUS,
+						client_type: PATIENT_TYPE,
+						file_no: PATIENT_CLINIC_NUMBER,
+						sending_application: SENDING_APPLICATION
+					};
+					await Client.update(client, {
+						returning: true,
+						where: { prep_number: PREP_NUMBER }
 					})
-					.catch(function (err) {
-						code = 500;
-						response = err.message;
-						errors = err?.errors;
+						.then(function (model) {
+							message = "OK";
+							response = "Client successfully updated.";
 
-						let arr = [];
+							return res.json({
+								message: message,
+								response: {
+									msg: response,
+									data: _.pick(client, [
+										"group_id",
+										"art_date",
+										"client_type",
+										"file_no",
+										"sending_application",
+										"mfl_code",
+										"updatedAt"
+									])
+								}
+							});
+						})
+						.catch(function (err) {
+							code = 500;
+							response = err.message;
+							errors = err?.errors;
 
-						var arr_string = "";
+							let arr = [];
 
-						for (var key in errors) {
-							arr.push(errors[key].message);
-							arr_string = errors[key].message + " ";
-						}
+							var arr_string = "";
 
-						return res.status(code).json({
-							response: {
-								msg: response + " - " + arr_string,
-								errors: arr
+							for (var key in errors) {
+								arr.push(errors[key].message);
+								arr_string = errors[key].message + " ";
 							}
+
+							return res.status(code).json({
+								response: {
+									msg: response + " - " + arr_string,
+									errors: arr
+								}
+							});
 						});
-					});
+				}
 			}
 		} else if (message_type == "SIU^S12") {
 			var GODS_NUMBER = jsonObj.PATIENT_IDENTIFICATION.EXTERNAL_PATIENT_ID.ID;
@@ -806,8 +952,13 @@ app.post("/hl7_message", async (req, res) => {
 			var APPOINTMENT_NOTE;
 			var APPOINTMENT_HONORED;
 			var CREATED_AT;
+			var PREP_NUMBER;
 
 			var result = get_json(jsonObj);
+
+			const internalPatientId =
+				jsonObj.PATIENT_IDENTIFICATION.INTERNAL_PATIENT_ID;
+			const identifierType = internalPatientId.IDENTIFIER_TYPE;
 
 			//console.log(result);
 
@@ -888,34 +1039,61 @@ app.post("/hl7_message", async (req, res) => {
 						PATIENT_NUPI_NUMBER = result[i].value;
 					}
 				}
-			}
-
-			if (typeof CCC_NUMBER === "undefined") {
-				let l = {
-					f_name: FIRST_NAME,
-					l_name: LAST_NAME,
-					clinic_number: CCC_NUMBER,
-					file_no: PATIENT_CLINIC_NUMBER,
-					message_type: message_type,
-					sending_application: SENDING_APPLICATION
-				};
-
-				return res.status(400).json({
-					success: false,
-					msg: `Error`,
-					response: {
-						msg: `Record Missing CCC Number`,
-						data: l
+                // Get PREP NUMBER
+				if (key == "ID") {
+					if (result[i + 1].value == "PREP UNIQUE NUMBER") {
+						PREP_NUMBER = result[i].value;
 					}
-				});
+				}
+			}
+			if (identifierType === "CCC_NUMBER") {
+				if (typeof CCC_NUMBER === "undefined") {
+					let l = {
+						f_name: FIRST_NAME,
+						l_name: LAST_NAME,
+						clinic_number: CCC_NUMBER,
+						file_no: PATIENT_CLINIC_NUMBER,
+						message_type: message_type,
+						sending_application: SENDING_APPLICATION
+					};
+
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Record Missing CCC Number`,
+							data: l
+						}
+					});
+				}
+			} else {
+				if (typeof PREP_NUMBER === "undefined") {
+					let l = {
+						f_name: FIRST_NAME,
+						l_name: LAST_NAME,
+						prep_number: PREP_NUMBER,
+						file_no: PREP_NUMBER,
+						message_type: message_type,
+						sending_application: SENDING_APPLICATION
+					};
+
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Record Missing PREP Number`,
+							data: l
+						}
+					});
+				}
 			}
 
-			if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+			if (PREP_NUMBER.length != 14 || isNaN(PREP_NUMBER)) {
 				let l = {
 					f_name: FIRST_NAME,
 					l_name: LAST_NAME,
-					clinic_number: CCC_NUMBER,
-					file_no: PATIENT_CLINIC_NUMBER,
+					prep_number: PREP_NUMBER,
+					file_no: PREP_NUMBER,
 					message_type: message_type,
 					sending_application: SENDING_APPLICATION
 				};
@@ -924,7 +1102,7 @@ app.post("/hl7_message", async (req, res) => {
 					success: false,
 					msg: `Error`,
 					response: {
-						msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+						msg: `Invalid Prep Number: ${PREP_NUMBER}, The Prep No must be 14 digits`,
 						data: l
 					}
 				});
@@ -952,11 +1130,28 @@ app.post("/hl7_message", async (req, res) => {
 				sending_application: SENDING_APPLICATION
 			};
 
-			var client = await Client.findOne({
-				where: {
-					clinic_number: CCC_NUMBER
-				}
-			});
+			let p = {
+				f_name: FIRST_NAME,
+				l_name: LAST_NAME,
+				prep_number: PREP_NUMBER,
+				message_type: message_type,
+				file_no: PATIENT_CLINIC_NUMBER,
+				sending_application: SENDING_APPLICATION
+			};
+
+			if (identifierType === "CCC_NUMBER") {
+				var client = await Client.findOne({
+					where: {
+						clinic_number: CCC_NUMBER
+					}
+				});
+			} else {
+				var client = await Client.findOne({
+					where: {
+						prep_number: PREP_NUMBER
+					}
+				});
+			}
 
 			if (_.isEmpty(client)) {
 				//Create Client
@@ -1050,6 +1245,12 @@ app.post("/hl7_message", async (req, res) => {
 							PATIENT_NUPI_NUMBER = result[i].value;
 						}
 					}
+					// Get PREP NUMBER
+					if (key == "ID") {
+						if (result[i + 1].value == "PREP UNIQUE NUMBER") {
+							PREP_NUMBER = result[i].value;
+						}
+					}
 
 					if (SENDING_APPLICATION == "ADT") {
 						if (key == "OBSERVATION_IDENTIFIER") {
@@ -1135,14 +1336,25 @@ app.post("/hl7_message", async (req, res) => {
 					var new_art_date = art_year + "-" + art_month + "-" + art_day;
 				}
 
-				l = {
-					f_name: FIRST_NAME,
-					l_name: LAST_NAME,
-					clinic_number: CCC_NUMBER,
-					file_no: PATIENT_CLINIC_NUMBER,
-					message_type: message_type,
-					sending_application: SENDING_APPLICATION
-				};
+				if (identifierType === "CCC_NUMBER") {
+					l = {
+						f_name: FIRST_NAME,
+						l_name: LAST_NAME,
+						clinic_number: CCC_NUMBER,
+						file_no: PATIENT_CLINIC_NUMBER,
+						message_type: message_type,
+						sending_application: SENDING_APPLICATION
+					};
+				} else {
+					l = {
+						f_name: FIRST_NAME,
+						l_name: LAST_NAME,
+						prep_number: PREP_NUMBER,
+						file_no: PREP_NUMBER,
+						message_type: message_type,
+						sending_application: SENDING_APPLICATION
+					};
+				}
 
 				let partner = await Partner.findOne({
 					where: {
@@ -1159,34 +1371,64 @@ app.post("/hl7_message", async (req, res) => {
 							data: l
 						}
 					});
-
-				client_new = {
-					group_id: parseInt(GROUP_ID),
-					clinic_number: CCC_NUMBER,
-					f_name: FIRST_NAME,
-					m_name: MIDDLE_NAME,
-					l_name: LAST_NAME,
-					dob: new_date,
-					phone_no: PHONE_NUMBER,
-					partner_id: partner.partner_id,
-					mfl_code: parseInt(SENDING_FACILITY),
-					// status: ,
-					// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
-					gender: parseInt(SEX),
-					marital: MARITAL_STATUS,
-					enrollment_date: new_enroll_date,
-					art_date: new_art_date,
-					client_type: PATIENT_TYPE,
-					gods_number: GODS_NUMBER,
-					patient_source: PATIENT_SOURCE,
-					file_no: PATIENT_CLINIC_NUMBER,
-					locator_county: COUNTY,
-					locator_sub_county: SUB_COUNTY,
-					locator_ward: WARD,
-					locator_village: VILLAGE,
-					sending_application: SENDING_APPLICATION,
-					upi_no: PATIENT_NUPI_NUMBER
-				};
+				if (identifierType === "CCC_NUMBER") {
+					client_new = {
+						group_id: parseInt(GROUP_ID),
+						clinic_number: CCC_NUMBER,
+						f_name: FIRST_NAME,
+						m_name: MIDDLE_NAME,
+						l_name: LAST_NAME,
+						dob: new_date,
+						phone_no: PHONE_NUMBER,
+						partner_id: partner.partner_id,
+						mfl_code: parseInt(SENDING_FACILITY),
+						// status: ,
+						// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
+						gender: parseInt(SEX),
+						marital: MARITAL_STATUS,
+						enrollment_date: new_enroll_date,
+						art_date: new_art_date,
+						client_type: PATIENT_TYPE,
+						gods_number: GODS_NUMBER,
+						patient_source: PATIENT_SOURCE,
+						file_no: PATIENT_CLINIC_NUMBER,
+						locator_county: COUNTY,
+						locator_sub_county: SUB_COUNTY,
+						locator_ward: WARD,
+						locator_village: VILLAGE,
+						sending_application: SENDING_APPLICATION,
+						upi_no: PATIENT_NUPI_NUMBER
+					};
+				} else {
+					client_new = {
+						group_id: parseInt(GROUP_ID),
+						clinic_number: PREP_NUMBER,
+						prep_number: PREP_NUMBER,
+						f_name: FIRST_NAME,
+						m_name: MIDDLE_NAME,
+						l_name: LAST_NAME,
+						dob: new_date,
+						phone_no: PHONE_NUMBER,
+						partner_id: partner.partner_id,
+						mfl_code: parseInt(SENDING_FACILITY),
+						// status: ,
+						// client_status: Sequelize.ENUM("ART", "Pre-Art", "On Care", "No Condition"),
+						gender: parseInt(SEX),
+						marital: MARITAL_STATUS,
+						enrollment_date: new_enroll_date,
+						art_date: new_art_date,
+						client_type: PATIENT_TYPE,
+						gods_number: GODS_NUMBER,
+						patient_source: PATIENT_SOURCE,
+						file_no: PATIENT_CLINIC_NUMBER,
+						locator_county: COUNTY,
+						locator_sub_county: SUB_COUNTY,
+						locator_ward: WARD,
+						locator_village: VILLAGE,
+						sending_application: SENDING_APPLICATION,
+						upi_no: PATIENT_NUPI_NUMBER
+					};
+				}
 
 				await Client.create(client_new)
 					.then(function (model) {})
@@ -1212,12 +1454,19 @@ app.post("/hl7_message", async (req, res) => {
 					});
 
 				//get client ID
-
-				var client = await Client.findOne({
-					where: {
-						clinic_number: CCC_NUMBER
-					}
-				});
+				if (identifierType === "CCC_NUMBER") {
+					var client = await Client.findOne({
+						where: {
+							clinic_number: CCC_NUMBER
+						}
+					});
+				} else {
+					var client = await Client.findOne({
+						where: {
+							prep_number: PREP_NUMBER
+						}
+					});
+				}
 			}
 			//Update NUPI NUMBER IF Client Exists
 			//console.log(PATIENT_NUPI_NUMBER);
@@ -1225,13 +1474,23 @@ app.post("/hl7_message", async (req, res) => {
 				let nupi_update = {
 					upi_no: PATIENT_NUPI_NUMBER
 				};
-				await Client.update(nupi_update, {
-					returning: true,
-					where: {
-						clinic_number: CCC_NUMBER,
-						upi_no: null
-					}
-				});
+				if (identifierType === "CCC_NUMBER") {
+					await Client.update(nupi_update, {
+						returning: true,
+						where: {
+							clinic_number: CCC_NUMBER,
+							upi_no: null
+						}
+					});
+				} else {
+					await Client.update(nupi_update, {
+						returning: true,
+						where: {
+							prep_number: PREP_NUMBER,
+							upi_no: null
+						}
+					});
+				}
 			}
 
 			//Update Phone Number if its not blank
@@ -1240,12 +1499,21 @@ app.post("/hl7_message", async (req, res) => {
 				let phone_number_update = {
 					phone_no: PHONE_NUMBER
 				};
-				await Client.update(phone_number_update, {
-					returning: true,
-					where: {
-						clinic_number: CCC_NUMBER
-					}
-				});
+				if (identifierType === "CCC_NUMBER") {
+					await Client.update(phone_number_update, {
+						returning: true,
+						where: {
+							clinic_number: CCC_NUMBER
+						}
+					});
+				} else {
+					await Client.update(phone_number_update, {
+						returning: true,
+						where: {
+							prep_number: PREP_NUMBER
+						}
+					});
+				}
 			}
 
 			let isAppointmentExists = await Appointment.findOne({
