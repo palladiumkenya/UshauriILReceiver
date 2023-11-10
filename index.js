@@ -75,7 +75,9 @@ app.post("/hl7_message", async (req, res) => {
 
 			const internalPatientId =
 				jsonObj.PATIENT_IDENTIFICATION.INTERNAL_PATIENT_ID;
-			const identifierType = internalPatientId.IDENTIFIER_TYPE;
+			//const identifierType = internalPatientId.IDENTIFIER_TYPE;
+			var identifierType = '';
+
 
 			for (var i = 0; i < result.length; i++) {
 				var key = result[i].key;
@@ -115,6 +117,27 @@ app.post("/hl7_message", async (req, res) => {
 				if (key == "ID") {
 					if (result[i + 1].value == "CCC_NUMBER") {
 						CCC_NUMBER = result[i].value;
+						identifierType='CCC_NUMBER';
+						//Validate that the Prep Number is Valid
+						if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+							let l = {
+								f_name: FIRST_NAME,
+								l_name: LAST_NAME,
+								clinic_number: CCC_NUMBER,
+								//file_no: PREP_NUMBER,
+								message_type: message_type,
+								sending_application: SENDING_APPLICATION
+							};
+			
+							return res.status(400).json({
+								success: false,
+								msg: `Error`,
+								response: {
+									msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC No must be 10 digits`,
+									data: l
+								}
+							});
+						}
 					}
 				}
 
@@ -134,6 +157,27 @@ app.post("/hl7_message", async (req, res) => {
 				if (key == "ID") {
 					if (result[i + 1].value == "PREP UNIQUE NUMBER") {
 						PREP_NUMBER = result[i].value;
+						identifierType='PREP_NUMBER';
+						//Validate that the Prep Number is Valid
+						if (PREP_NUMBER.length != 14 || isNaN(PREP_NUMBER)) {
+							let l = {
+								f_name: FIRST_NAME,
+								l_name: LAST_NAME,
+								prep_number: PREP_NUMBER,
+								file_no: PREP_NUMBER,
+								message_type: message_type,
+								sending_application: SENDING_APPLICATION
+							};
+			
+							return res.status(400).json({
+								success: false,
+								msg: `Error`,
+								response: {
+									msg: `Invalid Prep Number: ${PREP_NUMBER}, The Prep No must be 14 digits`,
+									data: l
+								}
+							});
+						}
 					}
 				}
 
@@ -247,7 +291,8 @@ app.post("/hl7_message", async (req, res) => {
 						}
 					});
 				}
-			} else {
+			} else if(identifierType === "PREP_NUMBER") 
+			{
 				if (typeof PREP_NUMBER === "undefined") {
 					return res.status(400).json({
 						success: false,
@@ -258,17 +303,35 @@ app.post("/hl7_message", async (req, res) => {
 						}
 					});
 				}
+
 				if (PREP_NUMBER.length != 14 || isNaN(PREP_NUMBER)) {
 					return res.status(400).json({
 						success: false,
 						msg: `Error`,
 						response: {
-							msg: `Invalid CCC Number: ${PREP_NUMBER}, The PREP Number must be 14 digits`,
+							msg: `Invalid PREP NUMBER: ${PREP_NUMBER}, The PREP NUMBER must be 14 digits`,
 							data: p
 						}
 					});
 				}
-			}
+				}else
+				{
+					let l = {
+						f_name: FIRST_NAME,
+						l_name: LAST_NAME,
+						message_type: message_type,
+						sending_application: SENDING_APPLICATION
+					};
+					return res.status(400).json({
+						success: false,
+						msg: `Error`,
+						response: {
+							msg: `Record Missing PREP/CCC Number`,
+							data: l
+						}
+					});
+
+				}
 			let partner = await Partner.findOne({
 				where: {
 					mfl_code: SENDING_FACILITY
@@ -426,7 +489,8 @@ app.post("/hl7_message", async (req, res) => {
 
 			const internalPatientId =
 				jsonObj.PATIENT_IDENTIFICATION.INTERNAL_PATIENT_ID;
-			const identifierType = internalPatientId.IDENTIFIER_TYPE;
+			//const identifierType = internalPatientId.IDENTIFIER_TYPE;
+			var identifierType = '';
 
 			for (var i = 0; i < result.length; i++) {
 				var key = result[i].key;
@@ -466,6 +530,27 @@ app.post("/hl7_message", async (req, res) => {
 				if (key == "ID") {
 					if (result[i + 1].value == "CCC_NUMBER") {
 						CCC_NUMBER = result[i].value;
+						identifierType='CCC_NUMBER';
+						//Validate that the Prep Number is Valid
+						if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+							let l = {
+								f_name: FIRST_NAME,
+								l_name: LAST_NAME,
+								clinic_number: CCC_NUMBER,
+								//file_no: PREP_NUMBER,
+								message_type: message_type,
+								sending_application: SENDING_APPLICATION
+							};
+			
+							return res.status(400).json({
+								success: false,
+								msg: `Error`,
+								response: {
+									msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC No must be 10 digits`,
+									data: l
+								}
+							});
+						}
 					}
 				}
 
@@ -485,6 +570,27 @@ app.post("/hl7_message", async (req, res) => {
 				if (key == "ID") {
 					if (result[i + 1].value == "PREP UNIQUE NUMBER") {
 						PREP_NUMBER = result[i].value;
+						identifierType='PREP_NUMBER';
+						//Validate that the Prep Number is Valid
+						if (PREP_NUMBER.length != 14 || isNaN(PREP_NUMBER)) {
+							let l = {
+								f_name: FIRST_NAME,
+								l_name: LAST_NAME,
+								prep_number: PREP_NUMBER,
+								file_no: PREP_NUMBER,
+								message_type: message_type,
+								sending_application: SENDING_APPLICATION
+							};
+			
+							return res.status(400).json({
+								success: false,
+								msg: `Error`,
+								response: {
+									msg: `Invalid Prep Number: ${PREP_NUMBER}, The Prep No must be 14 digits`,
+									data: l
+								}
+							});
+						}
 					}
 				}
 
@@ -605,13 +711,14 @@ app.post("/hl7_message", async (req, res) => {
 						}
 					});
 				}
-			} else {
+			} else if(identifierType === "PREP_NUMBER") 
+				 {
 				if (typeof PREP_NUMBER === "undefined") {
 					return res.status(400).json({
 						success: false,
 						msg: `Error`,
 						response: {
-							msg: `Record Missing CCC Number`,
+							msg: `Record Missing PREP Number`,
 							data: p
 						}
 					});
@@ -627,6 +734,23 @@ app.post("/hl7_message", async (req, res) => {
 						}
 					});
 				}
+			}else
+			{
+				let l = {
+					f_name: FIRST_NAME,
+					l_name: LAST_NAME,
+					message_type: message_type,
+					sending_application: SENDING_APPLICATION
+				};
+				return res.status(400).json({
+					success: false,
+					msg: `Error`,
+					response: {
+						msg: `Record Missing PREP/CCC Number`,
+						data: l
+					}
+				});
+
 			}
 			if (identifierType === "CCC_NUMBER") {
 				let isClient = await Client.findOne({
@@ -958,9 +1082,10 @@ app.post("/hl7_message", async (req, res) => {
 
 			const internalPatientId =
 				jsonObj.PATIENT_IDENTIFICATION.INTERNAL_PATIENT_ID;
-			const identifierType = internalPatientId.IDENTIFIER_TYPE;
+			var identifierType = '';
 
-			//console.log(result);
+
+			//console.log(identifierType);
 
 			for (var i = 0; i < result.length; i++) {
 				var key = result[i].key;
@@ -1024,6 +1149,27 @@ app.post("/hl7_message", async (req, res) => {
 				if (key == "ID") {
 					if (result[i + 1].value == "CCC_NUMBER") {
 						CCC_NUMBER = result[i].value;
+						identifierType='CCC_NUMBER';
+						//Validate that the Prep Number is Valid
+						if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+							let l = {
+								f_name: FIRST_NAME,
+								l_name: LAST_NAME,
+								clinic_number: CCC_NUMBER,
+								//file_no: PREP_NUMBER,
+								message_type: message_type,
+								sending_application: SENDING_APPLICATION
+							};
+			
+							return res.status(400).json({
+								success: false,
+								msg: `Error`,
+								response: {
+									msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC No must be 10 digits`,
+									data: l
+								}
+							});
+						}
 					}
 				}
 
@@ -1043,6 +1189,28 @@ app.post("/hl7_message", async (req, res) => {
 				if (key == "ID") {
 					if (result[i + 1].value == "PREP UNIQUE NUMBER") {
 						PREP_NUMBER = result[i].value;
+						identifierType='PREP_NUMBER';
+						//Validate that the Prep Number is Valid
+						if (PREP_NUMBER.length != 14 || isNaN(PREP_NUMBER)) {
+							let l = {
+								f_name: FIRST_NAME,
+								l_name: LAST_NAME,
+								prep_number: PREP_NUMBER,
+								file_no: PREP_NUMBER,
+								message_type: message_type,
+								sending_application: SENDING_APPLICATION
+							};
+			
+							return res.status(400).json({
+								success: false,
+								msg: `Error`,
+								response: {
+									msg: `Invalid Prep Number: ${PREP_NUMBER}, The Prep No must be 14 digits`,
+									data: l
+								}
+							});
+						}
+
 					}
 				}
 			}
@@ -1066,7 +1234,7 @@ app.post("/hl7_message", async (req, res) => {
 						}
 					});
 				}
-			} else {
+			} else if(identifierType === "PREP_NUMBER") {
 				if (typeof PREP_NUMBER === "undefined") {
 					let l = {
 						f_name: FIRST_NAME,
@@ -1086,27 +1254,26 @@ app.post("/hl7_message", async (req, res) => {
 						}
 					});
 				}
-			}
-
-			if (PREP_NUMBER.length != 14 || isNaN(PREP_NUMBER)) {
+			}else{
 				let l = {
 					f_name: FIRST_NAME,
 					l_name: LAST_NAME,
-					prep_number: PREP_NUMBER,
-					file_no: PREP_NUMBER,
 					message_type: message_type,
 					sending_application: SENDING_APPLICATION
 				};
-
 				return res.status(400).json({
 					success: false,
 					msg: `Error`,
 					response: {
-						msg: `Invalid Prep Number: ${PREP_NUMBER}, The Prep No must be 14 digits`,
+						msg: `Record Missing PREP/CCC Number`,
 						data: l
 					}
 				});
+
 			}
+			
+
+			
 
 			if (
 				APPOINTMENT_LOCATION == "PHARMACY" ||
@@ -1231,6 +1398,8 @@ app.post("/hl7_message", async (req, res) => {
 					if (key == "ID") {
 						if (result[i + 1].value == "CCC_NUMBER") {
 							CCC_NUMBER = result[i].value;
+							identifierType='CCC_NUMBER';
+							
 						}
 					}
 
@@ -1249,6 +1418,8 @@ app.post("/hl7_message", async (req, res) => {
 					if (key == "ID") {
 						if (result[i + 1].value == "PREP UNIQUE NUMBER") {
 							PREP_NUMBER = result[i].value;
+							identifierType='PREP_NUMBER';
+
 						}
 					}
 
@@ -1375,6 +1546,7 @@ app.post("/hl7_message", async (req, res) => {
 					client_new = {
 						group_id: parseInt(GROUP_ID),
 						clinic_number: CCC_NUMBER,
+						prep_number:null,
 						f_name: FIRST_NAME,
 						m_name: MIDDLE_NAME,
 						l_name: LAST_NAME,
@@ -1398,7 +1570,9 @@ app.post("/hl7_message", async (req, res) => {
 						locator_village: VILLAGE,
 						sending_application: SENDING_APPLICATION,
 						upi_no: PATIENT_NUPI_NUMBER
+						
 					};
+					//console.log(client_new);
 				} else {
 					client_new = {
 						group_id: parseInt(GROUP_ID),

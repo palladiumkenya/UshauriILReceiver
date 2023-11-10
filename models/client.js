@@ -89,7 +89,7 @@ const Client = sequelize.sequelize.define(
 				args: true,
 				msg: "The PREP number already exists."
 			},
-			allowNull: false,
+			allowNull: true,
 			len: 14
 		}
 	},
