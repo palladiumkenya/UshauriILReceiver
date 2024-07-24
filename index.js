@@ -484,6 +484,7 @@ app.post("/hl7_message", async (req, res) => {
 			var PREP_NUMBER;
 			var PATIENT_NUPI_NUMBER = "";
 			var TOD_DATE = moment().format("YYYY-MM-DD");
+			var isClient;
 
 			var result = get_json(jsonObj);
 
@@ -753,13 +754,13 @@ app.post("/hl7_message", async (req, res) => {
 
 			}
 			if (identifierType === "CCC_NUMBER") {
-				let isClient = await Client.findOne({
+				    isClient = await Client.findOne({
 					where: {
 						clinic_number: CCC_NUMBER
 					}
 				});
 			} else {
-				let isClient = await Client.findOne({
+				   isClient = await Client.findOne({
 					where: {
 						prep_number: PREP_NUMBER
 					}
@@ -1277,7 +1278,7 @@ app.post("/hl7_message", async (req, res) => {
 
 			if (
 				APPOINTMENT_LOCATION == "PHARMACY" ||
-				APPOINTMENT_REASON == "REGIMEN REFILL"
+				APPOINTMENT_REASON == "REGIMEN REFILL" || APPOINTMENT_REASON == "PREP_REFILL"
 			) {
 				APPOINTMENT_TYPE = 1;
 			} else {
