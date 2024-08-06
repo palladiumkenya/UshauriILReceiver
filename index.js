@@ -119,7 +119,7 @@ app.post("/hl7_message", async (req, res) => {
 						CCC_NUMBER = result[i].value;
 						identifierType='CCC_NUMBER';
 						//Validate that the Prep Number is Valid
-						if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+						if (((CCC_NUMBER.length != 5)) || isNaN(CCC_NUMBER)) {
 							let l = {
 								f_name: FIRST_NAME,
 								l_name: LAST_NAME,
@@ -133,7 +133,7 @@ app.post("/hl7_message", async (req, res) => {
 								success: false,
 								msg: `Error`,
 								response: {
-									msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC No must be 10 digits`,
+									msg: `Invalid KDOD Number: ${CCC_NUMBER}, The KDOD No must be 5 digits`,
 									data: l
 								}
 							});
@@ -281,12 +281,12 @@ app.post("/hl7_message", async (req, res) => {
 						}
 					});
 				}
-				if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+				if (((CCC_NUMBER.length != 5)) || isNaN(CCC_NUMBER)) {
 					return res.status(400).json({
 						success: false,
 						msg: `Error`,
 						response: {
-							msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+							msg: `Invalid KDOD Number: ${CCC_NUMBER}, The KDOD No must be 5 digits`,
 							data: l
 						}
 					});
@@ -533,7 +533,7 @@ app.post("/hl7_message", async (req, res) => {
 						CCC_NUMBER = result[i].value;
 						identifierType='CCC_NUMBER';
 						//Validate that the Prep Number is Valid
-						if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+						if (((CCC_NUMBER.length != 5)) || isNaN(CCC_NUMBER)) {
 							let l = {
 								f_name: FIRST_NAME,
 								l_name: LAST_NAME,
@@ -547,7 +547,7 @@ app.post("/hl7_message", async (req, res) => {
 								success: false,
 								msg: `Error`,
 								response: {
-									msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC No must be 10 digits`,
+									msg: `Invalid KDOD Number: ${CCC_NUMBER}, The KDOD No must be 5 digits`,
 									data: l
 								}
 							});
@@ -702,12 +702,12 @@ app.post("/hl7_message", async (req, res) => {
 					});
 				}
 
-				if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+				if (((CCC_NUMBER.length != 5)) || isNaN(CCC_NUMBER)) {
 					return res.status(400).json({
 						success: false,
 						msg: `Error`,
 						response: {
-							msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+							msg: `Invalid KDOD Number: ${CCC_NUMBER}, The KDOD No must be 5 digits`,
 							data: l
 						}
 					});
@@ -1152,7 +1152,7 @@ app.post("/hl7_message", async (req, res) => {
 						CCC_NUMBER = result[i].value;
 						identifierType='CCC_NUMBER';
 						//Validate that the Prep Number is Valid
-						if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+						if (((CCC_NUMBER.length != 5)) || isNaN(CCC_NUMBER)) {
 							let l = {
 								f_name: FIRST_NAME,
 								l_name: LAST_NAME,
@@ -1166,7 +1166,7 @@ app.post("/hl7_message", async (req, res) => {
 								success: false,
 								msg: `Error`,
 								response: {
-									msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC No must be 10 digits`,
+									msg: `Invalid KDOD Number: ${CCC_NUMBER}, The KDOD No must be 5 digits`,
 									data: l
 								}
 							});
@@ -1902,12 +1902,12 @@ app.post("/hl7_message", async (req, res) => {
 				sending_application: SENDING_APPLICATION
 			};
 
-			if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+			if (((CCC_NUMBER.length != 5)) || isNaN(CCC_NUMBER)) {
 				return res.status(400).json({
 					success: false,
 					msg: `Error`,
 					response: {
-						msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+						msg: `Invalid KDOD Number: ${CCC_NUMBER}, The KDOD No must be 5 digits`,
 						data: l
 					}
 				});
@@ -2117,12 +2117,12 @@ app.post("/hl7_message", async (req, res) => {
 				sending_application: SENDING_APPLICATION
 			};
 
-			if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+			if (((CCC_NUMBER.length != 5)) || isNaN(CCC_NUMBER)) {
 				return res.status(400).json({
 					success: false,
 					msg: `Error`,
 					response: {
-						msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+						msg: `Invalid KDOD Number: ${CCC_NUMBER}, The KDOD No must be 5 digits`,
 						data: l
 					}
 				});
@@ -2231,12 +2231,12 @@ app.post("/hl7_message", async (req, res) => {
 				sending_application: SENDING_APPLICATION
 			};
 
-			if (CCC_NUMBER.length != 10 || isNaN(CCC_NUMBER)) {
+			if (CCC_NUMBER.length != 5 || isNaN(CCC_NUMBER)) {
 				return res.status(400).json({
 					success: false,
 					msg: `Error`,
 					response: {
-						msg: `Invalid CCC Number: ${CCC_NUMBER}, The CCC must be 10 digits`,
+						msg: `Invalid KDOD Number: ${CCC_NUMBER}, The KDOD No must be 5 digits`,
 						data: l
 					}
 				});
@@ -2545,7 +2545,7 @@ app.post("/hl7-sync-client", async (req, res) => {
 
 		let ccc = cl.clinic_number;
 
-		if (ccc.length != 10 || isNaN(ccc)) {
+		if (((CCC_NUMBER.length != 5)) || isNaN(CCC_NUMBER)) {
 			return res.status(400).json({
 				success: false,
 				msg: `Error`,
